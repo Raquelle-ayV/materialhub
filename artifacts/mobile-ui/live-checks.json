@@ -1,0 +1,104 @@
+{
+  "material": "cotton canvas",
+  "checks": [
+    {
+      "name": "explore",
+      "width": 402,
+      "scrollWidth": 402,
+      "viewport": 402,
+      "firstImage": 297,
+      "nav": true
+    },
+    {
+      "name": "share",
+      "width": 402,
+      "scrollWidth": 402,
+      "viewport": 402,
+      "nav": true
+    },
+    {
+      "name": "profile-guest",
+      "width": 402,
+      "scrollWidth": 402,
+      "viewport": 402,
+      "nav": true
+    },
+    {
+      "name": "detail",
+      "width": 402,
+      "scrollWidth": 402,
+      "viewport": 402,
+      "nav": false,
+      "action": 874
+    },
+    {
+      "name": "explore",
+      "width": 393,
+      "scrollWidth": 393,
+      "viewport": 393,
+      "firstImage": 297,
+      "nav": true
+    },
+    {
+      "name": "share",
+      "width": 393,
+      "scrollWidth": 393,
+      "viewport": 393,
+      "nav": true
+    },
+    {
+      "name": "profile-guest",
+      "width": 393,
+      "scrollWidth": 393,
+      "viewport": 393,
+      "nav": true
+    },
+    {
+      "name": "detail",
+      "width": 393,
+      "scrollWidth": 393,
+      "viewport": 393,
+      "nav": false,
+      "action": 852
+    },
+    {
+      "name": "explore",
+      "width": 320,
+      "scrollWidth": 320,
+      "viewport": 320,
+      "firstImage": 297,
+      "nav": true
+    },
+    {
+      "name": "share",
+      "width": 320,
+      "scrollWidth": 320,
+      "viewport": 320,
+      "nav": true
+    },
+    {
+      "name": "profile-guest",
+      "width": 320,
+      "scrollWidth": 320,
+      "viewport": 320,
+      "nav": true
+    },
+    {
+      "name": "detail",
+      "width": 320,
+      "scrollWidth": 320,
+      "viewport": 320,
+      "nav": false,
+      "action": 740
+    },
+    {
+      "desktop": {
+        "x": 519,
+        "y": 0,
+        "width": 402,
+        "height": 1520.625
+      }
+    }
+  ],
+  "errors": []
+}

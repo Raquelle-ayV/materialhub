@@ -62,6 +62,8 @@ test('B stage one: real discovery, atomic reservations, cancellation and expiry'
       assert.equal(winner.reserved_quantity,1);await req(`/reservations/${winner.id}/cancel`,{},winner.user_id===a.data.user.id?a.cookie:b.cookie);
     });
     await t.test('insufficient available credits cannot lock another material',async()=>{
+      // This isolated fixture models tradable stock; production samples are browse-only.
+      db.prepare('UPDATE materials SET is_demo=0 WHERE id IN (1,2)').run();
       const r1=(await reserve(1,a.cookie)).data.reservation,r2=(await reserve(2,a.cookie)).data.reservation;
       assert.match((await reserve(d.material_id,a.cookie)).data.error,/credits/);assert.equal((await req(`/materials/${d.material_id}`)).data.material.status,'available');
       await req(`/reservations/${r1.id}/cancel`,{},a.cookie);await req(`/reservations/${r2.id}/cancel`,{},a.cookie);

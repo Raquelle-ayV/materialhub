@@ -8,6 +8,7 @@ import { installDepositRoutes } from './deposits.mjs';
 import { installReservationRoutes, expireReservations } from './reservations.mjs';
 import { installFulfillmentRoutes } from './fulfillment.mjs';
 import { installReviewRoutes } from './reviews.mjs';
+import { installPostManagementRoutes } from './post-management.mjs';
 const scrypt = promisify(scryptCallback);
 const digest = value => createHash('sha256').update(value).digest('hex');
 const ttl = 7 * 24 * 60 * 60 * 1000;
@@ -67,6 +68,7 @@ export function createApp(db, options = {}) {
     next();
   });
   function requireUser(req,res,next) { if (!req.user) return res.status(401).json({error:'Please log in to continue.'}); next(); }
+  installPostManagementRoutes(app, db, requireUser);
   installDepositRoutes(app, db, requireUser, options);
   installReservationRoutes(app, db, requireUser);
   installFulfillmentRoutes(app, db, requireUser);
@@ -133,13 +135,13 @@ export function createApp(db, options = {}) {
     const category = Number(req.query.category) || 0;
     const zone=Number(req.query.zone)||0, condition=String(req.query.condition||'').slice(0,80), color=String(req.query.color||'').slice(0,80), minimum=Math.max(0,Number(req.query.min_quantity)||0);
     const availability=['available','reserved','all'].includes(req.query.availability)?req.query.availability:'available';
-    res.json({materials:db.prepare(`${materialSelect} WHERE m.status IN ('available','reserved') AND (?='all' OR m.status=?) AND (?=0 OR m.category_id=?) AND (m.name LIKE ? OR m.notes LIKE ? OR c.name LIKE ? OR m.custom_category_name LIKE ? OR m.display_code LIKE ?) AND (?=0 OR m.zone_id=?) AND (?='' OR m.condition=?) AND (?='' OR m.color LIKE ?) AND m.stock_quantity>=? ORDER BY m.deposited_at DESC,m.id DESC`).all(availability,availability,category,category,...Array(5).fill(`%${q}%`),zone,zone,condition,condition,color,`%${color}%`,minimum).map(m=>({...m,available_quantity:m.status==='available'?m.stock_quantity:0}))});
+    res.json({materials:db.prepare(`${materialSelect} WHERE m.status IN ('available','reserved') AND (?='all' OR m.status=?) AND (?=0 OR m.category_id=?) AND (m.name LIKE ? OR m.notes LIKE ? OR c.name LIKE ? OR m.custom_category_name LIKE ? OR m.display_code LIKE ?) AND (?=0 OR m.zone_id=?) AND (?='' OR m.condition=?) AND (?='' OR m.color LIKE ?) AND m.stock_quantity>=? ORDER BY m.deposited_at DESC,m.id DESC`).all(availability,availability,category,category,...Array(5).fill(`%${q}%`),zone,zone,condition,condition,color,`%${color}%`,minimum).map(m=>({...m,available_quantity:!m.is_demo&&m.status==='available'?m.stock_quantity:0}))});
   });
   app.get('/api/materials/:id',(req,res) => {
-    const material = db.prepare(`${materialSelect} WHERE m.id=?`).get(Number(req.params.id) || -1);
+    const material = db.prepare(`${materialSelect} WHERE m.id=? AND NOT EXISTS (SELECT 1 FROM material_management mm WHERE mm.material_id=m.id AND mm.disposition='deleted')`).get(Number(req.params.id) || -1);
     if (!material || (material.status === 'ready_for_drop_off' && material.owner_id !== req.user?.id)) return res.status(404).json({error:'Material not found.'});
     const photos=db.prepare("SELECT x.id,CASE WHEN x.storage_key LIKE '/placeholders/%' THEN x.storage_key ELSE '/api/media/'||x.id END AS url FROM material_photos p JOIN media x ON x.id=p.media_id WHERE p.material_id=? AND p.kind='material' ORDER BY p.sort_order,p.id").all(material.id);
-    res.json({material:{...material,photos,available_quantity:material.status==='available'?material.stock_quantity:0}});
+    res.json({material:{...material,photos,available_quantity:!material.is_demo&&material.status==='available'?material.stock_quantity:0}});
   });
   app.use('/api',(req,res) => res.status(404).json({error:'This feature is not available yet.'}));
   const dist = resolve(projectRoot,'dist');

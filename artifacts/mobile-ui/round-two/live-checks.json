@@ -1,0 +1,105 @@
+{
+  "url": "http://localhost:5173",
+  "checks": [
+    {
+      "width": 402,
+      "height": 874,
+      "viewport": 402,
+      "searchHeight": 48,
+      "cards": [
+        {
+          "left": 20,
+          "right": 194,
+          "top": 284
+        },
+        {
+          "left": 208,
+          "right": 382,
+          "top": 284
+        }
+      ],
+      "arrivalIds": [
+        "/materials/12",
+        "/materials/11",
+        "/materials/10"
+      ],
+      "moreIds": [
+        "/materials/9",
+        "/materials/7"
+      ],
+      "horizontalSwipe": true,
+      "search": true,
+      "recentPersisted": true,
+      "noPageOverflow": true
+    },
+    {
+      "width": 393,
+      "height": 852,
+      "viewport": 393,
+      "searchHeight": 48,
+      "cards": [
+        {
+          "left": 20,
+          "right": 189.5,
+          "top": 284
+        },
+        {
+          "left": 203.5,
+          "right": 373,
+          "top": 284
+        }
+      ],
+      "arrivalIds": [
+        "/materials/12",
+        "/materials/11",
+        "/materials/10"
+      ],
+      "moreIds": [
+        "/materials/9",
+        "/materials/7"
+      ],
+      "horizontalSwipe": true,
+      "search": true,
+      "recentPersisted": true,
+      "noPageOverflow": true
+    },
+    {
+      "width": 320,
+      "height": 740,
+      "viewport": 320,
+      "searchHeight": 48,
+      "cards": [
+        {
+          "left": 16,
+          "right": 154,
+          "top": 284
+        },
+        {
+          "left": 166,
+          "right": 304,
+          "top": 284
+        }
+      ],
+      "arrivalIds": [
+        "/materials/12",
+        "/materials/11",
+        "/materials/10"
+      ],
+      "moreIds": [
+        "/materials/9",
+        "/materials/7"
+      ],
+      "horizontalSwipe": true,
+      "search": true,
+      "recentPersisted": true,
+      "noPageOverflow": true
+    }
+  ],
+  "desktop": {
+    "x": 519,
+    "y": 0,
+    "width": 402,
+    "height": 1104.84375
+  },
+  "errors": []
+}

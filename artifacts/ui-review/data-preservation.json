@@ -1,0 +1,151 @@
+{
+  "backup": "backups/unified-preview-2026-09-27T14-25-06-140Z-5b169c5b",
+  "tables": [
+    {
+      "table": "users",
+      "originalRows": 10,
+      "currentRows": 11,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "sessions",
+      "originalRows": 9,
+      "currentRows": 9,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "credit_accounts",
+      "originalRows": 10,
+      "currentRows": 11,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "hubs",
+      "originalRows": 1,
+      "currentRows": 1,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "zones",
+      "originalRows": 7,
+      "currentRows": 7,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "categories",
+      "originalRows": 7,
+      "currentRows": 7,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "material_code_sequence",
+      "originalRows": 1,
+      "currentRows": 1,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "materials",
+      "originalRows": 12,
+      "currentRows": 28,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "deposits",
+      "originalRows": 8,
+      "currentRows": 8,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "reservations",
+      "originalRows": 4,
+      "currentRows": 4,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "returns",
+      "originalRows": 2,
+      "currentRows": 2,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "issue_reports",
+      "originalRows": 2,
+      "currentRows": 2,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "media",
+      "originalRows": 20,
+      "currentRows": 36,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "material_photos",
+      "originalRows": 20,
+      "currentRows": 36,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "activities",
+      "originalRows": 11,
+      "currentRows": 11,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "favorites",
+      "originalRows": 0,
+      "currentRows": 0,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "interest_events",
+      "originalRows": 0,
+      "currentRows": 0,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "credit_entries",
+      "originalRows": 24,
+      "currentRows": 24,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "inventory_entries",
+      "originalRows": 16,
+      "currentRows": 16,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "deposit_requests",
+      "originalRows": 8,
+      "currentRows": 8,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "deposit_drafts",
+      "originalRows": 0,
+      "currentRows": 0,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "reservation_requests",
+      "originalRows": 4,
+      "currentRows": 4,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "issue_photos",
+      "originalRows": 1,
+      "currentRows": 1,
+      "originalRowsUnchanged": true
+    },
+    {
+      "table": "return_photos",
+      "originalRows": 2,
+      "currentRows": 2,
+      "originalRowsUnchanged": true
+    }
+  ],
+  "originalUploadCount": 16,
+  "allOriginalUploadsUnchanged": true
+}

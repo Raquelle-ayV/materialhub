@@ -61,7 +61,11 @@ test('Publisher review: owned reports, atomic relisting and permanent archival',
       assert.equal((await get(issue.id)).resolution,'removed');assert.equal((await get(i.id)).resolution,'relisted');assert.deepEqual(credits(),before);
     });
     await t.test('demo reports stay hidden and cannot be assigned to an ordinary publisher',async()=>{
-      const demo=await report(1);assert.equal((await req(`/me/issues/${demo.issue.id}`,undefined,a.cookie)).status,404);assert.equal((await req('/me/issues',undefined,a.cookie)).data.pending_count,0);assert.equal((await resolve(demo.issue.id,{resolution:'removed',confirm_remove:true,version:0})).status,404);assert.equal((await req('/materials?availability=all')).data.materials.some(m=>m.id===1),false);
+      // Build a legacy historical report in this isolated fixture; new samples cannot be reserved.
+      db.prepare('UPDATE materials SET is_demo=0 WHERE id=1').run();
+      const demo=await report(1);
+      db.prepare('UPDATE materials SET is_demo=1 WHERE id=1').run();
+      assert.equal((await req(`/me/issues/${demo.issue.id}`,undefined,a.cookie)).status,404);assert.equal((await req('/me/issues',undefined,a.cookie)).data.pending_count,0);assert.equal((await resolve(demo.issue.id,{resolution:'removed',confirm_remove:true,version:0})).status,404);assert.equal((await req('/materials?availability=all')).data.materials.some(m=>m.id===1),false);
     });
   }finally{if(server?.listening)await stop();db.close();}
 });

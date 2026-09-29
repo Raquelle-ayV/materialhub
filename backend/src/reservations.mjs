@@ -28,6 +28,7 @@ export function installReservationRoutes(app,db,requireUser) {
   app.get('/api/me/reservations',requireUser,(req,res)=>res.json({reservations:db.prepare(`${select} WHERE r.user_id=? ORDER BY CASE WHEN r.status='reserved' THEN 0 ELSE 1 END,r.expires_at ASC,r.id DESC`).all(req.user.id).map(r=>reservationDetails(db,r)),server_time:new Date().toISOString()}));
   app.get('/api/reservations/:id',requireUser,(req,res)=>res.json({reservation:reservationDetails(db,owned(req.params.id,req.user.id)),server_time:new Date().toISOString()}));
   app.post('/api/materials/:id/reserve',requireUser,(req,res)=>{
+    if(db.prepare('SELECT is_demo FROM materials WHERE id=?').get(Number(req.params.id)||-1)?.is_demo)fail('Sample materials are for browsing only and cannot be reserved. No credits are charged.');
     const {quantity,request_key:key}=req.body;
     if(!Number.isInteger(quantity)||![1,2].includes(quantity))fail('Choose a quantity of 1 or 2.',400);
     if(typeof key!=='string'||! /^[a-zA-Z0-9-]{10,100}$/.test(key))fail('Missing or invalid request identifier.',400);

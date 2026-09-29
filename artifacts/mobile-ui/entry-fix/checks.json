@@ -1,0 +1,47 @@
+{
+  "checks": [
+    {
+      "base": "http://localhost:5173",
+      "width": 402,
+      "height": 874,
+      "overflow": false,
+      "guideAccessible": true
+    },
+    {
+      "base": "http://localhost:5173",
+      "width": 393,
+      "height": 852,
+      "overflow": false,
+      "guideAccessible": true
+    },
+    {
+      "base": "http://localhost:5173",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "guideAccessible": true
+    },
+    {
+      "base": "http://localhost:5174",
+      "width": 402,
+      "height": 874,
+      "overflow": false,
+      "guideAccessible": true
+    },
+    {
+      "base": "http://localhost:5174",
+      "width": 393,
+      "height": 852,
+      "overflow": false,
+      "guideAccessible": true
+    },
+    {
+      "base": "http://localhost:5174",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "guideAccessible": true
+    }
+  ],
+  "errors": []
+}

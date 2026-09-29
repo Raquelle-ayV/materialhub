@@ -17,7 +17,7 @@ export function installDepositRoutes(app,db,requireUser,{uploadDir=process.env.U
     const d=db.prepare(`SELECT d.id,d.status AS deposit_status,d.arrived_at,d.verified_zone_id,d.zone_verified_at,d.confirmed_at,
       m.*,d.id AS deposit_id,m.id AS material_id,c.name AS category,z.name AS zone,z.qr_key
       FROM deposits d JOIN materials m ON m.id=d.material_id JOIN categories c ON c.id=m.category_id JOIN zones z ON z.id=m.zone_id
-      WHERE d.id=? AND d.user_id=?`).get(Number(id)||-1,userId);
+      WHERE d.id=? AND d.user_id=? AND NOT EXISTS (SELECT 1 FROM material_management mm WHERE mm.material_id=m.id AND mm.disposition='deleted')`).get(Number(id)||-1,userId);
     if(!d)fail('Material record not found.',404);
     const photos=db.prepare('SELECT p.media_id AS id,p.kind,p.sort_order FROM material_photos p WHERE p.material_id=? ORDER BY p.sort_order,p.id').all(d.material_id);
     const issues=db.prepare("SELECT id,reason,reason_label,notes,status,created_at,resolution,resolved_at FROM issue_reports WHERE material_id=? ORDER BY id DESC").all(d.material_id);
@@ -88,7 +88,7 @@ export function installDepositRoutes(app,db,requireUser,{uploadDir=process.env.U
     res.json({saved:true});
   });
   app.get('/api/deposits',requireUser,(req,res)=>{
-    const ids=db.prepare('SELECT id FROM deposits WHERE user_id=? ORDER BY id DESC').all(req.user.id);
+    const ids=db.prepare("SELECT d.id FROM deposits d WHERE d.user_id=? AND NOT EXISTS (SELECT 1 FROM material_management mm WHERE mm.material_id=d.material_id AND mm.disposition='deleted') ORDER BY d.id DESC").all(req.user.id);
     res.json({deposits:ids.map(d=>owned(d.id,req.user.id))});
   });
   app.get('/api/deposits/:id',requireUser,(req,res)=>res.json({deposit:owned(req.params.id,req.user.id)}));

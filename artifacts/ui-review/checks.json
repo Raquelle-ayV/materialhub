@@ -1,0 +1,314 @@
+{
+  "createdAt": "2026-09-27T14:39:40.552Z",
+  "screenshotViewport": "402 × 874",
+  "isolatedDataFolder": "C:\\Users\\郭\\Desktop\\rematerial\\test-data\\ui-review-K44oOT",
+  "samplesImport": {
+    "imported": 16,
+    "mapped": 4,
+    "backupDir": "C:\\Users\\郭\\Desktop\\rematerial\\test-data\\ui-review-K44oOT\\backups\\unified-preview-2026-09-27T14-38-57-693Z-4bf1687b",
+    "samples": 20
+  },
+  "accounts": [
+    "ui_review_maker",
+    "ui_review_collector"
+  ],
+  "screenshots": [
+    {
+      "filename": "01-home-first-screen.png",
+      "description": "Homepage: history was created by this test account opening five sample details.",
+      "route": "/",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "02-home-recommended-scrolled.png",
+      "description": "Recommended uses a two-column vertical grid of distinct sample materials.",
+      "route": "/",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "03-sample-material-details.png",
+      "description": "Sample details are clearly marked; there is no reservation or credit-spending action.",
+      "route": "/materials/20",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "04-share-home.png",
+      "description": "Three stable entries: fresh form, public Hub guide, direct drop-off.",
+      "route": "/deposit",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "05-share-public-hub-guide.png",
+      "description": "Hub guide is accessible before adding material.",
+      "route": "/hub",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "06-share-empty-drop-off.png",
+      "description": "Direct drop-off with no pending material prompts Add material and cannot complete.",
+      "route": "/deposit/drop-off",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "07-a-information-photos-before-delete.png",
+      "description": "Information form: material photos allow 1–9, each with its own remove action.",
+      "route": "/deposit/new",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "08-a-photo-removed.png",
+      "description": "The second selected photo was removed independently; other photos remain.",
+      "route": "/deposit/new",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "09-a-information-fields.png",
+      "description": "Long form, second segment: quantity, dimensions, condition, notes and draft persistence.",
+      "route": "/deposit/new",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "11-a-material-recorded.png",
+      "description": "Registered material receives a code; it is not yet shelf inventory.",
+      "route": "/deposits/1",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "12-a-drop-off-guide.png",
+      "description": "Material-specific guide identifies the assigned Zone.",
+      "route": "/deposits/1/guide",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "13-a-zone-scan.png",
+      "description": "Direct entry resumes the pending material at Zone scanning.",
+      "route": "/deposits/1/scan",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "14-a-wrong-zone-feedback.png",
+      "description": "A synthetic camera stream is decoded normally; a wrong Zone is rejected.",
+      "route": "/deposits/1/scan",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "15-a-label-and-shelf.png",
+      "description": "Correct Zone confirmation, material label/code and shelf placement instructions.",
+      "route": "/deposits/1/place",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "16-a-placement-photo.png",
+      "description": "Placement photos are a separate 1–3 photo field; progress survives refresh.",
+      "route": "/deposits/1/place",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "17-a-deposit-complete.png",
+      "description": "Drop-off completion awards exactly one credit.",
+      "route": "/deposits/1/success",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "18-b-real-material-details.png",
+      "description": "Real transaction fixture shows current status and 1-credit requirement.",
+      "route": "/materials/21",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "19-b-reservation-confirmation.png",
+      "description": "Quantity, 24-hour hold and 1-credit charge are explicit before confirmation.",
+      "route": "/materials/21/reserve",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "20-b-reservation-confirmed.png",
+      "description": "Active reservation shows its deadline and held credit.",
+      "route": "/reservations/1",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "21-management-active-reservation.png",
+      "description": "Owner management preserves an active reservation; deletion/archive is unavailable.",
+      "route": "/me/posts",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "22-b-pickup-guide.png",
+      "description": "Pickup guide is the existing B flow with Zone and placement information.",
+      "route": "/reservations/1/guide",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "23-b-zone-scan.png",
+      "description": "Pickup requires the assigned Zone camera scan.",
+      "route": "/reservations/1/scan",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "24-b-material-code.png",
+      "description": "Material code entry follows successful Zone verification.",
+      "route": "/reservations/1/check",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "25-b-material-match-confirmation.png",
+      "description": "Code is validated before final pickup or reporting a problem.",
+      "route": "/reservations/1/check",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "26-b-pickup-complete.png",
+      "description": "Pickup completes, decrements stock once and spends the held 1 credit.",
+      "route": "/reservations/1/success",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "27-profile-signed-in.png",
+      "description": "Profile uses the isolated maker account and its actual test credit balance.",
+      "route": "/me",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "28-my-posts.png",
+      "description": "My posts includes current state, history and permitted management actions.",
+      "route": "/me/posts",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "29-delete-material-confirmation.png",
+      "description": "Deletion asks for confirmation and applies only to the owner’s eligible material.",
+      "route": "/me/posts",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "30-archive-material-confirmation.png",
+      "description": "A material with transaction history is archived while records and credits remain.",
+      "route": "/me/posts",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "31-my-posts-archived.png",
+      "description": "Archived materials stay in My posts with transaction history.",
+      "route": "/me/posts",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "32-b-return-guide.png",
+      "description": "The existing 24-hour return remains available after the owner archives.",
+      "route": "/reservations/1/return",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "33-b-return-placement.png",
+      "description": "Return requires new placement evidence and explicit placement confirmation.",
+      "route": "/reservations/1/return-place",
+      "viewport": "402 × 874"
+    },
+    {
+      "filename": "34-b-returned-history.png",
+      "description": "Return preserves history and refunds exactly 1 credit.",
+      "route": "/me/reservations",
+      "viewport": "402 × 874"
+    }
+  ],
+  "checks": [
+    "Sample materials are browse-only and cannot reserve or spend credits; real detail clicks create persistent deduplicated account history.",
+    "A flow used the real form, autosaved draft, remove/re-add photo, exit/resume, refresh, camera QR validation, placement, completion and one-time reward; fresh Add remains blank after completion; own material details appear in history.",
+    "B flow used real detail/reserve/guide/camera/code/match/pickup actions; original 24-hour/1-credit/stock behavior was preserved. Active reservation management was checked from the owner account.",
+    "Owner delete/archive UI was exercised; archive preserves historical reservation and post-archive return/refund, and does not grant an extra reward."
+  ],
+  "responsiveChecks": [
+    {
+      "width": 402,
+      "route": "/",
+      "overflow": false
+    },
+    {
+      "width": 402,
+      "route": "/deposit",
+      "overflow": false
+    },
+    {
+      "width": 402,
+      "route": "/me",
+      "overflow": false
+    },
+    {
+      "width": 402,
+      "route": "/materials/20",
+      "overflow": false
+    },
+    {
+      "width": 402,
+      "route": "/me/posts",
+      "overflow": false
+    },
+    {
+      "width": 402,
+      "route": "/deposit/new?fresh=1",
+      "overflow": false
+    },
+    {
+      "width": 393,
+      "route": "/",
+      "overflow": false
+    },
+    {
+      "width": 393,
+      "route": "/deposit",
+      "overflow": false
+    },
+    {
+      "width": 393,
+      "route": "/me",
+      "overflow": false
+    },
+    {
+      "width": 393,
+      "route": "/materials/20",
+      "overflow": false
+    },
+    {
+      "width": 393,
+      "route": "/me/posts",
+      "overflow": false
+    },
+    {
+      "width": 393,
+      "route": "/deposit/new?fresh=1",
+      "overflow": false
+    },
+    {
+      "width": 320,
+      "route": "/",
+      "overflow": false
+    },
+    {
+      "width": 320,
+      "route": "/deposit",
+      "overflow": false
+    },
+    {
+      "width": 320,
+      "route": "/me",
+      "overflow": false
+    },
+    {
+      "width": 320,
+      "route": "/materials/20",
+      "overflow": false
+    },
+    {
+      "width": 320,
+      "route": "/me/posts",
+      "overflow": false
+    },
+    {
+      "width": 320,
+      "route": "/deposit/new?fresh=1",
+      "overflow": false
+    }
+  ],
+  "pageErrors": []
+}
