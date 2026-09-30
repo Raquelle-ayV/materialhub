@@ -17,6 +17,7 @@ test('A flow through actual camera decoding, wrong zone, refresh, placement and 
   await page.getByLabel('Category',{exact:false}).selectOption('1');
   await page.getByLabel('Quantity',{exact:false}).fill('2');await page.getByLabel('Unit',{exact:false}).fill('sheets');
   await page.getByLabel('Dimensions / specifications',{exact:false}).fill('A3, 5 mm');await page.getByLabel('Color',{exact:false}).fill('White');await page.getByLabel('Condition',{exact:false}).selectOption('Good');
+  await page.getByText('Additional details (optional)',{exact:true}).click();
   await page.getByLabel('Notes',{exact:false}).fill('Camera-tested end-to-end sample.');
   await page.getByLabel('Material photos from gallery').setInputFiles({name:'foam.png',mimeType:'image/png',buffer:image});
   await expect(page.getByAltText('Material photos 1')).toBeVisible();

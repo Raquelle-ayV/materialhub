@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Re:Material 风格方案</title>
+<!-- Standalone preview. Not imported by the app; safe to delete. Fonts fall back to system fonts offline. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f4efe6; --paper-2:#ebe4d7; --paper-3:#fbf8f2;
+  --ink:#1c1a17; --ink-2:#5f584e; --line:#d9cfbf;
+  --tomato:#e8452c; --cobalt:#1f4fd8; --yellow:#f5c01a; --pink:#f29bc0;
+  --sans:'Inter Tight',system-ui,'Segoe UI','Microsoft YaHei',Arial,sans-serif;
+  --mono:'IBM Plex Mono',Consolas,'Courier New',monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e0d5;color:var(--ink);font-family:var(--sans);padding:32px 20px 60px}
+.intro{max-width:1040px;margin:0 auto 28px}
+.intro h1{font-size:30px;margin:0 0 8px;letter-spacing:-.5px}
+.intro p{margin:4px 0;color:var(--ink-2);line-height:1.6;font-size:15px}
+.swatches{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.swatch{display:flex;align-items:center;gap:8px;font-size:13px;background:var(--paper-3);border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 5px}
+.swatch i{width:22px;height:22px;border-radius:50%;display:block;border:1px solid #0000001a}
+
+.scheme{max-width:1040px;margin:0 auto 44px}
+.scheme-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin-bottom:6px}
+.scheme-head h2{margin:0;font-size:22px}
+.scheme-head span{font-size:13px;color:var(--ink-2);border:1px solid var(--line);border-radius:999px;padding:2px 10px;background:var(--paper-3)}
+.scheme > p{margin:0 0 14px;color:var(--ink-2);font-size:14px;line-height:1.6;max-width:760px}
+.phones{display:flex;gap:22px;overflow-x:auto;padding:4px 2px 14px}
+
+/* ---------- Phone mock (shared) ---------- */
+.phone{flex:0 0 300px;height:620px;position:relative;overflow:hidden;border-radius:30px;background:var(--paper);border:1px solid #cfc5b4;box-shadow:0 18px 40px -24px #3a2e1c55;font-family:var(--body);color:var(--ink)}
+.screen{position:absolute;inset:0;padding:22px 18px 80px;overflow:hidden}
+.phone-label{position:absolute;top:-1px;right:18px;font:500 10px var(--mono);color:var(--ink-2);background:var(--paper-2);padding:3px 8px;border-radius:0 0 6px 6px;letter-spacing:.5px}
+.h1{font-family:var(--head);font-size:var(--h1);line-height:1.05;margin:6px 0 0;font-weight:var(--head-weight);letter-spacing:var(--head-track)}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.credits{font-size:11px;font-weight:600;border:1px solid var(--ink);border-radius:999px;padding:5px 9px;white-space:nowrap;margin-top:6px}
+.search{margin:14px 0 10px;height:38px;border-radius:var(--radius);background:var(--paper-3);border:1px solid var(--line);display:flex;align-items:center;gap:8px;padding:0 12px;font-size:12px;color:var(--ink-2)}
+.search svg{width:14px;height:14px;flex-shrink:0}
+.chips{display:flex;gap:6px;overflow:hidden;margin-bottom:14px}
+.chip{flex-shrink:0;font-size:11px;padding:6px 10px;border:1px solid var(--line);border-radius:var(--chip-radius);background:var(--paper-3);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.chip.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.section{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 10px}
+.section b{font-family:var(--head);font-size:15px}
+.section small{font-size:11px;color:var(--ink-2)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 10px}
+.card{min-width:0;position:relative}
+.img{aspect-ratio:1;border-radius:var(--card-radius);overflow:hidden;background:var(--paper-2);position:relative}
+.img img{width:100%;height:100%;object-fit:cover;display:block}
+.card h3{font-family:var(--head);font-size:12.5px;line-height:1.25;margin:7px 0 2px;font-weight:600}
+.meta{font-size:10.5px;color:var(--ink-2);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.code{font-family:var(--mono);font-weight:600;letter-spacing:.3px}
+.tag{font-size:10px;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.nav{position:absolute;left:0;right:0;bottom:0;height:62px;border-top:1px solid var(--line);background:var(--paper);display:flex;justify-content:space-around;align-items:center;font-size:10.5px;color:var(--ink-2)}
+.nav span{display:flex;flex-direction:column;align-items:center;gap:4px}
+.nav span.on{color:var(--ink);font-weight:600}
+.nav i{width:18px;height:3px;border-radius:2px;background:transparent}
+.nav .on i{background:var(--ink)}
+
+/* detail */
+.back{font-size:11px;color:var(--ink-2);margin-bottom:10px;display:block}
+.hero-img{aspect-ratio:1.15;border-radius:var(--card-radius);overflow:hidden;background:var(--paper-2);position:relative}
+.hero-img img{width:100%;height:100%;object-fit:cover;display:block}
+.status-row{display:flex;justify-content:space-between;align-items:center;margin:12px 0 4px;font-size:11px}
+.pill{border:1px solid var(--ink);border-radius:999px;padding:3px 9px;font-weight:600;font-size:10.5px}
+.title{font-family:var(--head);font-size:var(--h2);line-height:1.1;margin:4px 0 10px;font-weight:var(--head-weight);letter-spacing:var(--head-track)}
+.specs{border-top:1px solid var(--line)}
+.specs div{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:11.5px}
+.specs dt{color:var(--ink-2)}
+.specs dd{margin:0;text-align:right}
+.cta{position:absolute;left:18px;right:18px;bottom:18px;height:44px;border-radius:var(--radius);background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:13px}
+.cta small{font-weight:400;opacity:.75}
+
+/* share */
+.sub{font-size:12px;color:var(--ink-2);margin:8px 0 16px;line-height:1.5}
+.steps{display:grid;gap:10px}
+.step{background:var(--paper-3);border:1px solid var(--line);border-radius:var(--card-radius);padding:14px;position:relative;overflow:hidden}
+.step-top{display:flex;align-items:center;gap:9px}
+.num{font-family:var(--mono);font-size:11px;font-weight:600}
+.step h4{margin:0;font-family:var(--head);font-size:14.5px}
+.step p{font-size:11px;color:var(--ink-2);margin:6px 0 10px;line-height:1.45}
+.btn{height:34px;border-radius:var(--radius);border:1px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+.btn.fill{background:var(--ink);color:var(--paper)}
+
+/* ---------- A · 克制 ---------- */
+.s-a{--head:'Inter Tight',system-ui,'Segoe UI',Arial,sans-serif;--body:var(--head);--h1:25px;--h2:22px;--head-weight:700;--head-track:-.6px;--radius:10px;--chip-radius:999px;--card-radius:10px}
+.s-a .ribbon{position:absolute;top:0;left:0;right:0;height:4px;display:flex}
+.s-a .ribbon i{flex:1}
+.s-a .card .tag{margin-top:3px}
+
+/* ---------- B · 平衡 ---------- */
+.s-b{--head:'Space Grotesk','Segoe UI',Arial,sans-serif;--body:'Inter Tight',system-ui,'Segoe UI',Arial,sans-serif;--h1:31px;--h2:26px;--head-weight:700;--head-track:-1px;--radius:6px;--chip-radius:6px;--card-radius:6px}
+.s-b .card .img{border-top:5px solid var(--c)}
+.s-b .chip{background:transparent}
+.s-b .chip:not(.on){border-bottom:3px solid var(--c)}
+.s-b .card-code{position:absolute;left:6px;top:11px;background:var(--paper-3);font:600 9.5px var(--mono);padding:2px 5px;border-radius:3px}
+.s-b .hero-img{border-top:6px solid var(--yellow)}
+.s-b .step{border-left:5px solid var(--c)}
+.s-b .h1 .accent{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--tomato);margin-left:4px;vertical-align:.45em}
+
+/* ---------- C · 大胆 ---------- */
+.s-c{--head:'Bricolage Grotesque','Arial Black','Segoe UI',Arial,sans-serif;--body:'Inter Tight',system-ui,'Segoe UI',Arial,sans-serif;--h1:44px;--h2:34px;--head-weight:800;--head-track:-2px;--radius:2px;--chip-radius:2px;--card-radius:2px}
+.s-c .h1{text-transform:none}
+.s-c .h1 em{font-style:normal;color:var(--paper);background:var(--ink);padding:0 6px}
+.s-c .search{border:0;border-bottom:2px solid var(--ink);border-radius:0;background:transparent;padding:0 2px}
+.s-c .chip{background:transparent;border-color:var(--ink)}
+.s-c .tape{position:absolute;top:8px;left:-4px;padding:3px 8px 3px 10px;font:600 9.5px var(--mono);color:var(--ink);background:color-mix(in srgb,var(--c) 88%,transparent);transform:rotate(-3deg);letter-spacing:.3px}
+.s-c .card h3{font-size:13.5px;font-weight:800;letter-spacing:-.3px}
+.s-c .big-code{font:600 12px var(--mono);color:var(--c)}
+.s-c .step{background:transparent;border:0;border-top:2px solid var(--ink);border-radius:0;padding:10px 0 4px}
+.s-c .step .num{font-family:var(--head);font-size:30px;font-weight:800;line-height:1;color:var(--c);letter-spacing:-1px}
+.s-c .detail-code{font:600 26px var(--mono);letter-spacing:1px;color:var(--ink);display:flex;align-items:center;gap:8px}
+.s-c .detail-code i{display:block;width:28px;height:10px;background:var(--yellow)}
+.s-c .nav{border-top:2px solid var(--ink)}
+
+@media (max-width:640px){body{padding:20px 16px 40px}.intro h1{font-size:24px}}
+</style>
+</head>
+<body>
+
+<header class="intro">
+  <h1>Re:Material 风格方案预览</h1>
+  <p>三个方案用的是同一套基础：暖米白底色、深墨色文字，番茄红、钴蓝、明黄、粉色只做少量点缀，并且每个分类固定对应一种颜色。三者的区别在于颜色出现得多少、字体和版式有多大胆。</p>
+  <p>这只是静态预览，不会影响现在的 App。左右滑动可以看每个方案的 3 个页面。</p>
+  <div class="swatches">
+    <span class="swatch"><i style="background:var(--paper)"></i>米白底 #F4EFE6</span>
+    <span class="swatch"><i style="background:var(--ink)"></i>墨色字 #1C1A17</span>
+    <span class="swatch"><i style="background:var(--yellow)"></i>明黄 · Board &amp; Foam</span>
+    <span class="swatch"><i style="background:var(--cobalt)"></i>钴蓝 · Paper &amp; Sheet</span>
+    <span class="swatch"><i style="background:var(--pink)"></i>粉色 · Fabric &amp; Textile</span>
+    <span class="swatch"><i style="background:var(--tomato)"></i>番茄红 · Wood</span>
+  </div>
+</header>
+
+<section class="scheme s-a" data-scheme="a">
+  <div class="scheme-head"><h2>方案 A · 克制</h2><span>颜色最少</span></div>
+  <p>颜色只出现在两处：顶部一条细细的四色彩带，以及分类标签前面的小圆点。字体干净，圆角偏柔和，最接近现在的 App，改动风险最小。</p>
+  <div class="phones"></div>
+</section>
+
+<section class="scheme s-b" data-scheme="b">
+  <div class="scheme-head"><h2>方案 B · 平衡</h2><span>推荐起点</span></div>
+  <p>每张材料卡顶部有一条分类颜色的彩带，材料编号用等宽字体贴在图片角上，标题换成更有版式感的 Space Grotesk。颜色依然是线和边，不铺大面积色块。</p>
+  <div class="phones"></div>
+</section>
+
+<section class="scheme s-c" data-scheme="c">
+  <div class="scheme-head"><h2>方案 C · 大胆</h2><span>最有设计学院感</span></div>
+  <p>超大粗标题，直角、黑色粗线；材料编号做成斜贴的彩色胶带标签（边缘是直的，不是手绘风）；步骤卡用分类颜色的大号数字。颜色仍然只是点缀，但存在感最强。</p>
+  <div class="phones"></div>
+</section>
+
+<script>
+const IMG = n => `../public/placeholders/${n}.svg`;
+const M = [
+  {name:'White mounting board', qty:'4 sheets', code:'M012', cat:'Board & Foam', c:'var(--yellow)', img:'foam'},
+  {name:'Tracing paper', qty:'8 sheets', code:'M014', cat:'Paper & Sheet', c:'var(--cobalt)', img:'paper'},
+  {name:'Red cotton', qty:'2 pieces', code:'M009', cat:'Fabric & Textile', c:'var(--pink)', img:'fabric'},
+  {name:'Balsa wood', qty:'4 sheets', code:'M011', cat:'Wood', c:'var(--tomato)', img:'wood'},
+];
+const searchIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
+const nav = on => `<div class="nav">${['Explore','Share','Profile'].map(x=>`<span class="${x===on?'on':''}"><i></i>${x}</span>`).join('')}</div>`;
+const ribbon = '<div class="ribbon"><i style="background:var(--tomato)"></i><i style="background:var(--cobalt)"></i><i style="background:var(--yellow)"></i><i style="background:var(--pink)"></i></div>';
+
+function card(m, s){
+  const tag = `<span class="tag"><span class="dot" style="background:${m.c}"></span>${m.cat}</span>`;
+  if(s==='a') return `<div class="card"><div class="img"><img src="${IMG(m.img)}" alt=""></div><h3>${m.name}</h3><div class="meta">${m.qty} · <span class="code">${m.code}</span></div>${tag}</div>`;
+  if(s==='b') return `<div class="card" style="--c:${m.c}"><div class="img"><img src="${IMG(m.img)}" alt=""></div><span class="card-code">${m.code}</span><h3>${m.name}</h3><div class="meta">${m.qty}</div>${tag}</div>`;
+  return `<div class="card" style="--c:${m.c}"><div class="img"><img src="${IMG(m.img)}" alt=""></div><span class="tape">${m.code} · ${m.cat.split(' ')[0].toUpperCase()}</span><h3>${m.name}</h3><div class="meta">${m.qty}</div></div>`;
+}
+function explore(s){
+  const title = s==='c' ? 'Explore<br><em>materials</em>' : s==='b' ? 'Explore<span class="accent"></span>' : 'Explore materials';
+  const chips = [{n:'All',on:1},...M.map(m=>({n:m.cat.split(' ')[0],c:m.c}))]
+    .map(x=>`<span class="chip ${x.on?'on':''}" style="--c:${x.c||'transparent'}">${!x.on&&s==='a'?`<span class="dot" style="background:${x.c}"></span>`:''}${x.n}</span>`).join('');
+  return `<div class="phone"><span class="phone-label">EXPLORE</span>${s==='a'?ribbon:''}<div class="screen">
+    <div class="top"><div class="h1">${title}</div><span class="credits">2 credits</span></div>
+    <div class="search">${searchIcon}Search materials</div>
+    <div class="chips">${chips}</div>
+    <div class="section"><b>${s==='c'?'Just arrived':'Recommended'}</b><small>${M.length} available</small></div>
+    <div class="grid">${M.map(m=>card(m,s)).join('')}</div>
+  </div>${nav('Explore')}</div>`;
+}
+function detail(s){
+  const m = M[0];
+  const code = s==='c' ? `<div class="detail-code"><i></i>${m.code}</div>` : '';
+  return `<div class="phone"><span class="phone-label">DETAIL</span>${s==='a'?ribbon:''}<div class="screen">
+    <span class="back">← Explore</span>
+    <div class="hero-img"><img src="${IMG(m.img)}" alt=""></div>
+    <div class="status-row"><span class="pill">Available</span><span>1 credit to reserve</span></div>
+    ${code}<div class="title">${m.name}</div>
+    <dl class="specs" style="margin:0">
+      <div><dt>Category</dt><dd><span class="tag"><span class="dot" style="background:${m.c}"></span>${m.cat}</span></dd></div>
+      <div><dt>In stock</dt><dd>${m.qty}</dd></div>
+      ${s==='c'?'':`<div><dt>Material code</dt><dd class="code">${m.code}</dd></div>`}
+      <div><dt>Zone</dt><dd>Building 17 · L1 · ${m.cat}</dd></div>
+    </dl>
+  </div><div class="cta">Reserve <small>· held 24h</small></div></div>`;
+}
+function share(s){
+  const steps = [
+    {t:'Add information', d:'Add material details and 1–9 photos.', b:'Add material', fill:1, c:'var(--yellow)'},
+    {t:'Go to the Hub', d:'Building 17 · L1. Find the zone for your category.', b:'View guide', c:'var(--cobalt)'},
+    {t:'Drop off material', d:'Scan the Zone QR, attach your label, add a placement photo.', b:"I'm at the Hub", c:'var(--tomato)'},
+  ];
+  const title = s==='c' ? 'Share<br><em>material</em>' : s==='b' ? 'Share material<span class="accent"></span>' : 'Share material';
+  return `<div class="phone"><span class="phone-label">SHARE</span>${s==='a'?ribbon:''}<div class="screen">
+    <div class="h1">${title}</div>
+    <p class="sub">Earn 1 credit after your drop-off is confirmed.</p>
+    <div class="steps">${steps.map((x,i)=>`<div class="step" style="--c:${x.c}"><div class="step-top"><span class="num">0${i+1}</span><h4>${x.t}</h4></div><p>${x.d}</p><div class="btn ${x.fill?'fill':''}">${x.b}</div></div>`).join('')}</div>
+  </div>${nav('Share')}</div>`;
+}
+document.querySelectorAll('.scheme').forEach(sec=>{
+  const s = sec.dataset.scheme;
+  sec.querySelector('.phones').innerHTML = explore(s) + detail(s) + share(s);
+});
+</script>
+</body>
+</html>

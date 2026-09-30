@@ -126,6 +126,7 @@ try {
   await page.getByLabel('Dimensions / specifications', { exact: false }).fill('A3, 5 mm');
   await page.getByLabel('Color', { exact: false }).fill('White');
   await page.getByLabel('Condition', { exact: false }).selectOption('Good');
+  await page.getByText('Additional details (optional)', { exact: true }).click();
   await page.getByLabel('Notes', { exact: false }).fill('Isolated UI review material. No real user records or credits are used.');
   await expect(page.getByText('Draft saved to your account.', { exact: true })).toBeVisible();
   await shot('07-a-information-photos-before-delete', 'Information form: material photos allow 1–9, each with its own remove action.', { top: true });
