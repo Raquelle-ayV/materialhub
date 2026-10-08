@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, existsSync } from 'node:fs';
+import { mkdtempSync, existsSync, readFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { request } from 'node:http';
@@ -40,6 +41,11 @@ test('through an https tunnel: sign-up, log-in cookie, uploads, the built page, 
     if (existsSync('dist/index.html')) {
       const page = await send(port, 'GET', '/materials/1', viaTunnel('203.0.113.7'));
       assert.equal(page.status, 200); assert.match(page.text, /<div id="root">/, 'the built app is served on the same port');
+      const script = page.text.match(/\/assets\/[^"]+\.js/)[0];
+      const zipped = await new Promise((done, failed) => { const r = request({ host: '127.0.0.1', port, path: script, headers: { ...viaTunnel('203.0.113.7'), 'Accept-Encoding': 'gzip, br' } }, res => { const c = []; res.on('data', d => c.push(d)); res.on('end', () => done({ headers: res.headers, body: Buffer.concat(c) })); }); r.on('error', failed); r.end(); });
+      assert.equal(zipped.headers['content-encoding'], 'gzip', 'scripts are compressed for the slow tunnel');
+      assert.match(zipped.headers['cache-control'], /immutable/);
+      assert.deepEqual(gunzipSync(zipped.body), readFileSync(join('dist', script)), 'the compressed script is identical once unpacked');
     }
     const forged = await post('/api/auth/register', { username: 'forged_user', password: 'tunnel-pass-1' }, viaTunnel('203.0.113.7', { Origin: 'https://evil.example' }));
     assert.equal(forged.status, 403, 'other websites still cannot post on a tester’s behalf');

@@ -1,8 +1,9 @@
 import express from 'express';
 import { randomBytes, createHash, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'node:util';
-import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { extname, resolve, sep } from 'node:path';
+import { gzipSync } from 'node:zlib';
 import { transaction, projectRoot } from './database.mjs';
 import { installDepositRoutes } from './deposits.mjs';
 import { installReservationRoutes, expireReservations } from './reservations.mjs';
@@ -167,7 +168,21 @@ export function createApp(db, options = {}) {
   });
   app.use('/api',(req,res) => res.status(404).json({error:'This feature is not available yet.'}));
   const dist = resolve(projectRoot,'dist');
-  if (existsSync(dist)) { app.use(express.static(dist)); app.get('/{*path}',(req,res) => res.sendFile(resolve(dist,'index.html'))); }
+  if (existsSync(dist)) {
+    // Built files have content hashes in their names: send them gzipped and let phones cache them.
+    // This matters behind a slow tunnel, where the main script is the largest download.
+    const assets = resolve(dist,'assets'), gzipped = new Map(), types = {'.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml'};
+    app.get('/assets/{*file}',(req,res,next) => {
+      const file = resolve(assets, ...[].concat(req.params.file)), type = types[extname(file)];
+      if (!type || !file.startsWith(assets + sep) || !existsSync(file)) return next();
+      res.set('Cache-Control','public, max-age=31536000, immutable').set('Vary','Accept-Encoding').type(type);
+      if (!/gzip/.test(req.headers['accept-encoding'] || '')) return res.sendFile(file);
+      if (!gzipped.has(file)) gzipped.set(file, gzipSync(readFileSync(file), { level: 9 }));
+      res.set('Content-Encoding','gzip').send(gzipped.get(file));
+    });
+    app.use(express.static(dist));
+    app.get('/{*path}',(req,res) => res.sendFile(resolve(dist,'index.html')));
+  }
   app.use((error,req,res,next) => {
     if (error.type === 'entity.parse.failed') return res.status(400).json({error:'Invalid JSON request.'});
     if (error.type === 'entity.too.large') return res.status(413).json({error:req.path==='/api/uploads'?'Each photo must be 10MB or smaller.':'This request is too large.'});
