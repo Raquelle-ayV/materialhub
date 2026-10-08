@@ -46,14 +46,14 @@ export function ManagedPosts() {
     <ActionRequired count={posts.reduce((count,post)=>count+post.issues.filter(issue=>issue.status==='open').length,0)}/>
     {!ready?<p>Loading your posts…</p>:<div className="post-list">
       {draft&&<article className="managed-post">
-        <Link className="active-task" to="/deposit/new"><FileText size={24}/><div><b>{draft.name||'Untitled material'}</b><small>Draft · Continue adding information</small></div><ChevronRight size={18}/></Link>
+        <Link className="active-task" to="/deposit/new"><FileText size={24}/><div><b>{draft.name||'Untitled material'}</b><small>Draft. Continue adding information</small></div><ChevronRight size={18}/></Link>
         <div className="post-management-actions"><button className="button outline" onClick={()=>{setError('');setSelection({action:'draft',name:draft.name||'Untitled material',draft});}}><Trash2 size={17}/>Delete draft</button></div>
       </article>}
       {posts.map(post=>{
         const state=management.find(item=>item.material_id===post.material_id), archived=state?.disposition==='archived'||post.status==='closed';
         const status=archived?'Removed / Archived':post.deposit_status!=='confirmed'?'Ready for drop-off':post.status==='unavailable'?'Needs Review':post.status.charAt(0).toUpperCase()+post.status.slice(1);
         return <article className="managed-post" key={post.id}>
-          <Link className="active-task" to={`/deposits/${post.id}${post.deposit_status==='confirmed'?'/success':''}`}><MaterialPhoto src={post.photos[0]?.url} alt=""/><div><span>{post.display_code}</span><b>{post.name}</b><small>{status} · {formatQuantity(post.deposit_status==='confirmed'?post.stock_quantity:post.initial_quantity,post.unit)}</small>{post.deposit_status==='confirmed'&&<small className="post-update">{formatQuantity(post.collected_quantity,post.unit)} collected · {post.stock_quantity} remaining</small>}{post.issues.map(issue=><small className="post-update" key={issue.id}>Reported: {issue.reason_label||issue.reason.replaceAll('_',' ')} · {issue.status}</small>)}</div><ChevronRight size={18}/></Link>
+          <Link className="active-task" to={`/deposits/${post.id}${post.deposit_status==='confirmed'?'/success':''}`}><MaterialPhoto src={post.photos[0]?.url} alt=""/><div><span>{post.display_code}</span><b>{post.name}</b><small>{status}, {formatQuantity(post.deposit_status==='confirmed'?post.stock_quantity:post.initial_quantity,post.unit)}</small>{post.deposit_status==='confirmed'&&<small className="post-update">{formatQuantity(post.collected_quantity,post.unit)} collected, {post.stock_quantity} remaining</small>}{post.issues.map(issue=><small className="post-update" key={issue.id}>Reported: {issue.reason_label||issue.reason.replaceAll('_',' ')} ({issue.status})</small>)}</div><ChevronRight size={18}/></Link>
           {state&&!archived&&<div className="post-management-actions">
             <button className="button outline" disabled={!state.can_delete&&!state.can_archive} onClick={()=>{setError('');setSelection({action:state.has_history?'archive':'delete',name:post.name,post,state});}}>{state.has_history?<Archive size={17}/>:<Trash2 size={17}/>} {state.has_history?'Archive material':'Delete material'}</button>
             {state.blocked_reason&&<p>{state.blocked_reason}</p>}

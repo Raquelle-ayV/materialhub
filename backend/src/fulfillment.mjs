@@ -61,8 +61,7 @@ export function installFulfillmentRoutes(app,db,requireUser) {
   route('verify-material',(r,b)=>{active(r);code(r,b.material_code);db.prepare('UPDATE reservations SET material_code_verified_at=? WHERE id=?').run(now(),r.id);});
   route('pickup',(r,b)=>{
     if(['collected','returned'].includes(r.status))return;
-    // The person confirms they found the labelled material; the Zone scan is the location check.
-    active(r);zone(r);
+    active(r);code(r,b.material_code);if(!r.material_code_verified_at)fail('Confirm the material label first.');
     if(b.matches!==true)fail('Confirm that the material matches the listing.',400);
     if(!['available','reserved'].includes(r.material_status)||r.stock_quantity<r.reserved_quantity)fail('This material cannot be collected.');
     const date=now(),deadline=new Date(Date.parse(date)+86400000).toISOString();

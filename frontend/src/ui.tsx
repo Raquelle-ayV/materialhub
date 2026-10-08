@@ -19,10 +19,10 @@ export function ZoomablePhoto({src,alt}:{src?:string;alt:string}) {
 }
 
 /** Shared finish screen for drop-off and pickup: no back arrow, Done returns to Explore. */
-export function SuccessPage({title,subtitle,material,credit,secondary,children}:{title:string;subtitle?:string;material:{id:number;name:string;code:string;image?:string;detail?:string};credit:string;secondary:{to:string;label:string};children?:ReactNode}) {
+export function SuccessPage({title,subtitle,material,credit,secondary,children}:{title:string;subtitle?:string;material:{id:number;name:string;code:string;image?:string;detail?:string};credit:{title:string;note:string};secondary:{to:string;label:string};children?:ReactNode}) {
   return <section className="success-page"><span className="success-icon"><Check size={30}/></span><div className="page-heading"><h1>{title}</h1>{subtitle&&<p>{subtitle}</p>}</div>
-    <Link className="success-material" to={`/materials/${material.id}`}><MaterialPhoto src={material.image} alt={material.name}/><div><b>{material.name}</b><small>{material.code}{material.detail?` · ${material.detail}`:''}</small></div><ChevronRight size={18}/></Link>
-    <p className="success-credit">{credit}</p>{children}
+    <Link className="success-material" to={`/materials/${material.id}`}><MaterialPhoto src={material.image} alt={material.name}/><div><b>{material.name}</b><small>{material.code}</small>{material.detail&&<small>{material.detail}</small>}</div><ChevronRight size={18}/></Link>
+    <p className="success-credit"><b>{credit.title}</b><span>{credit.note}</span></p>{children}
     <div className="flow-action"><Link className="button dark full" to="/">Done</Link><Link className="button outline full" to={secondary.to}>{secondary.label}</Link></div></section>;
 }
 
@@ -77,13 +77,16 @@ export function formatQuantity(n:number,unit:string) {
   return [n,next,...rest].join(' ');
 }
 
-/** "Due tomorrow, 3:36 PM · 23h left" — no seconds or time zone. */
+/** "Due tomorrow, 3:36 PM (23h left)" — no seconds or time zone. */
 export function formatDue(iso:string,now=Date.now()) {
   const due=new Date(iso),today=new Date(now);const dayOffset=Math.round((new Date(due.getFullYear(),due.getMonth(),due.getDate()).getTime()-new Date(today.getFullYear(),today.getMonth(),today.getDate()).getTime())/86400000);
   const day=dayOffset===0?'today':dayOffset===1?'tomorrow':due.toLocaleDateString('en',{weekday:'short',month:'short',day:'numeric'});
   const time=due.toLocaleTimeString('en',{hour:'numeric',minute:'2-digit'});const mins=Math.ceil((due.getTime()-now)/60000);
   const left=mins<=0?'deadline passed':mins<60?`${mins}m left`:`${Math.floor(mins/60)}h left`;
-  return `Due ${day}, ${time} · ${left}`;
+  return `Due ${day}, ${time} (${left})`;
 }
+
+/** "1 credit", "5 credits" */
+export const credits=(n:number)=>`${n} credit${n===1?'':'s'}`;
 
 export const formatMoment=(date:string)=>new Date(date).toLocaleString('en',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});

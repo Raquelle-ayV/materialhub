@@ -27,8 +27,8 @@ test('A flow through actual camera decoding, wrong zone, refresh, placement and 
   await page.screenshot({path:'test-results/add-information-402.png',fullPage:true});
   await page.getByRole('button',{name:'Next',exact:true}).click();await expect(page.getByRole('heading',{name:'Go to the Hub',exact:true})).toBeVisible();
   const recordURL=page.url().split('?')[0];const code=await page.locator('.material-strip-text small').innerText();expect(code).toMatch(/^M\d{3,}$/);
-  await expect(page.getByRole('status').filter({hasText:'Material recorded'})).toHaveText(`Material recorded · ${code}`);await expect(page.getByText(/registered but not on the shelf|Tap .* above/)).toHaveCount(0);await expect(page.locator('img[src*="/qr"]')).toHaveCount(0);await expect(page.getByLabel('Illustration of the Board & Foam zone sign')).toBeVisible();
-  await page.reload();await expect(page.getByRole('status').filter({hasText:'Material recorded'})).toHaveCount(0);
+  await expect(page.getByRole('status').filter({hasText:/Material M\d+ recorded/})).toHaveText(`Material ${code} recorded`);await expect(page.getByText(/registered but not on the shelf|Tap .* above/)).toHaveCount(0);await expect(page.locator('img[src*="/qr"]')).toHaveCount(0);await expect(page.getByLabel('Illustration of the Board & Foam zone sign')).toBeVisible();
+  await page.reload();await expect(page.getByRole('status').filter({hasText:/Material M\d+ recorded/})).toHaveCount(0);
   await page.locator('.strip-toggle').click();await expect(page.locator('.material-strip-details')).toContainText('ColorWhite');await expect(page.locator('.material-strip-details')).toContainText('ConditionGood');await expect(page.locator('.material-strip-details')).not.toContainText('Zone');await page.locator('.strip-toggle').click();
   await expect.poll(async()=>(await(await page.request.get('/api/auth/me')).json()).user.available).toBe(2);
   await page.locator('.flow-progress').getByRole('link',{name:/Go to the Hub/}).click();await expect(page.getByRole('heading',{name:'Go to the Hub',exact:true})).toBeVisible();
@@ -50,7 +50,7 @@ test('A flow through actual camera decoding, wrong zone, refresh, placement and 
   await page.getByLabel('Username',{exact:true}).fill(username);await page.getByLabel('Password',{exact:true}).fill('provider-test-2026');await page.getByRole('button',{name:'Log in',exact:true}).click();await expect(page.getByRole('heading',{name:username,exact:true})).toBeVisible();
   await page.goto(recordURL);await expect(page.getByRole('heading',{name:'Drop off',exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Confirm drop-off',exact:true}).click();await expect(page.getByRole('heading',{name:'Your material is on the shelf'})).toBeVisible();await expect(page.getByText('Now live on Explore',{exact:true})).toBeVisible();await expect(page.locator('.back-link')).toHaveCount(0);await expect(page.getByRole('link',{name:'Share another'})).toHaveAttribute('href','/deposit/new?fresh=1');
-  await expect(page.locator('.success-credit')).toHaveText('+1 credit · Balance 3');await expect.poll(async()=>(await(await page.request.get('/api/auth/me')).json()).user.available).toBe(3);
+  await expect(page.locator('.success-credit')).toHaveText('+1 credit earnedYou now have 3 credits');await expect.poll(async()=>(await(await page.request.get('/api/auth/me')).json()).user.available).toBe(3);
   await page.reload();await expect.poll(async()=>(await(await page.request.get('/api/auth/me')).json()).user.available).toBe(3);await page.screenshot({path:'test-results/completion-402.png',fullPage:true});
   await page.getByRole('link',{name:'Done',exact:true}).click();await expect(page.getByRole('heading',{name:'New on the shelf'})).toBeVisible();
   await expect(page.locator('.material-card').filter({hasText:`Test foam ${username}`})).toBeVisible();
@@ -64,12 +64,11 @@ test('A flow through actual camera decoding, wrong zone, refresh, placement and 
   expect(errors).toEqual([]);
 });
 
-test('camera denial explains recovery and opens zone-code entry',async({page})=>{
+test('camera denial explains recovery and offers no manual zone entry',async({page})=>{
   const username=`denied_${Date.now().toString(36)}`;await page.goto('/register');await page.getByLabel('Username',{exact:true}).fill(username);await page.getByLabel('Password',{exact:true}).fill('camera-denied-test');await page.getByRole('button',{name:'Create account',exact:true}).click();await expect(page.getByRole('heading',{name:username})).toBeVisible();
   const upload=await page.request.post('/api/uploads',{headers:{'Content-Type':'image/png','X-File-Name':'test.png'},data:image});const photo=(await upload.json()).photo;
   const saved=await page.request.post('/api/deposits',{data:{request_key:crypto.randomUUID(),name:'Camera permission test',category_id:1,quantity:1,unit:'sheet',dimensions_spec:'A4',color:'White',condition:'Good',photo_ids:[photo.id]}});const d=(await saved.json()).deposit;
   await page.request.post(`/api/deposits/${d.id}/arrive`,{data:{}});
   await page.addInitScript(()=>{navigator.mediaDevices.getUserMedia=()=>Promise.reject(new DOMException('Denied','NotAllowedError'));});
-  await page.goto(`/deposits/${d.id}/scan`);await expect(page.getByRole('alert')).toContainText('Camera permission was denied.');await expect(page.getByRole('button',{name:'Retry camera'})).toBeVisible();
-  await page.getByLabel('Zone code').fill('bf');await expect(page.getByLabel('Zone code')).toHaveValue('BF');await page.getByRole('button',{name:'Confirm zone'}).click();await expect(page.getByRole('heading',{name:'Drop off',exact:true})).toBeVisible();
+  await page.goto(`/deposits/${d.id}/scan`);await expect(page.getByRole('alert')).toContainText('Camera permission was denied.');await expect(page.getByRole('button',{name:'Retry camera'})).toBeVisible();await expect(page.locator('input')).toHaveCount(0);
 });

@@ -1,10 +1,8 @@
-// Shared Zone checks for drop-off, pickup and return: accepts a scanned sign QR or the 2-letter code printed on it.
+// Shared Zone checks for drop-off, pickup and return: the scanned sign QR says which zone the person is at.
 export const zoneCodes = { BOARD_FOAM:'BF', PAPER_SHEET:'PS', FABRIC_TEXTILE:'FT', WOOD:'WD', PLASTIC_ACRYLIC:'PA', CABLES_BUTTONS_SMALL_ITEMS:'SI', OTHER:'OT' };
 const fail = message => { throw Object.assign(new Error(message), { status:400 }); };
 
 export function findZone(db, body) {
-  const code = typeof body?.zone_code === 'string' ? body.zone_code.trim() : '';
-  if (code) return db.prepare('SELECT * FROM zones WHERE code=? COLLATE NOCASE').get(code) || null;
   const match = typeof body?.qr === 'string' ? /^REMATERIAL\|ZONE\|([A-Z_]+)$/.exec(body.qr) : null;
   return match ? db.prepare('SELECT * FROM zones WHERE qr_key=?').get(match[1]) || null : null;
 }
@@ -12,7 +10,7 @@ export function findZone(db, body) {
 /** Throws a message that names both the zone the person is at and the zone they need. */
 export function requireZone(db, body, expected, verb='goes to') {
   const zone = findZone(db, body);
-  if (!zone) fail(typeof body?.zone_code === 'string' && body.zone_code.trim() ? 'That zone code isn’t recognised. Check the sign and try again.' : 'This isn’t a Re:Material zone sign.');
+  if (!zone) fail('This isn’t a Rematerial zone sign.');
   if (zone.id !== expected.id) fail(`This is the ${zone.name} zone. Your material ${verb} ${expected.name}.`);
   return zone;
 }

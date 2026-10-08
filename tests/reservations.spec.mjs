@@ -20,10 +20,10 @@ test('B browse, reserve from the bottom sheet, duplicate click, persistence and 
   await page.locator('.material-gallery').evaluate(el=>el.scrollLeft=el.scrollWidth);expect(await page.locator('.material-gallery').evaluate(el=>el.scrollWidth>el.clientWidth)).toBe(true);
   await expect(page.getByText('Collect within 24 hours')).toHaveCount(0);
   await page.getByRole('button',{name:'Reserve',exact:true}).click();const sheet=page.getByRole('dialog',{name:'Reserve'});await expect(sheet).toBeVisible();
-  await expect(sheet).toContainText('1 credit · Balance 2 → 1');await expect(sheet).toContainText('Free cancellation before the deadline.');await expect(sheet.getByRole('button',{name:'Fewer'})).toBeDisabled();
+  await expect(sheet).toContainText('Costs 1 credit');await expect(sheet).toContainText('You’ll have 1 credit left');await expect(sheet).toContainText('Free cancellation before the deadline.');await expect(sheet.getByRole('button',{name:'Fewer'})).toBeDisabled();
   await sheet.getByRole('button',{name:'More'}).click();await expect(sheet.locator('output')).toHaveText('2 sheets');await expect(sheet.getByRole('button',{name:'More'})).toBeDisabled();await page.screenshot({path:'test-results/reservation-sheet-402.png'});
   await sheet.getByRole('button',{name:'Confirm reservation',exact:true}).evaluate(el=>{el.click();el.click();});
-  await expect(page.locator('.reservation-code')).toHaveText(d.display_code);await expect(page.locator('.status-badge')).toHaveText('Active');await expect(page.locator('.due-line')).toContainText(/^Due (today|tomorrow), \d{1,2}:\d{2} [AP]M · \d+h left$/);
+  await expect(page.locator('.reservation-code')).toHaveText(d.display_code);await expect(page.locator('.status-badge')).toHaveText('Active');await expect(page.locator('.due-line')).toContainText(/^Due (today|tomorrow), \d{1,2}:\d{2} [AP]M \(\d+h left\)$/);
   await expect(page.getByRole('link',{name:'Start pickup'})).toBeVisible();await expect.poll(async()=>(await(await page.request.get('/api/auth/me')).json()).user.available).toBe(1);
   const url=page.url(),time=await page.locator('time').getAttribute('datetime');await page.reload();await expect(page.locator('time')).toHaveAttribute('datetime',time);await expect(page.locator('.active-task')).toContainText('2 sheets');
   const m=(await(await page.request.get(`/api/materials/${d.material_id}`)).json()).material;expect(m.status).toBe('reserved');expect(m.stock_quantity).toBe(2);expect(m.available_quantity).toBe(0);
@@ -43,7 +43,7 @@ test('B browse, reserve from the bottom sheet, duplicate click, persistence and 
 test('B partial reservations, stale sheet, own material, filters, empty results and load failure',async({page,browser})=>{
   await register(page.request,'stock_provider');const d=await material(page.request,3);
   await page.goto(`/materials/${d.material_id}`);await expect(page.getByText('This is your material',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Reserve'})).toHaveCount(0);await expect(page.locator('.detail-gallery .favorite-button')).toHaveCount(0);
-  await page.goto(`/materials?q=${d.display_code}`);await expect(page.locator('.material-card .yours-tag')).toHaveText('Yours');await expect(page.locator('.material-card .favorite-button')).toHaveCount(0);
+  await page.goto(`/materials?q=${d.display_code}`);await expect(page.locator('.material-card .yours-tag')).toHaveCount(0);await expect(page.locator('.material-card')).toHaveCount(1);await expect(page.locator('.material-card .favorite-button')).toHaveCount(0);
   await page.request.post('/api/auth/logout',{data:{}});await register(page.request,'stock_collector');
   const other=await browser.newContext({baseURL:'http://127.0.0.1:15173'});await register(other.request,'stock_other');
   expect((await other.request.post(`/api/materials/${d.material_id}/reserve`,{data:{quantity:1,request_key:crypto.randomUUID()}})).status()).toBe(201);

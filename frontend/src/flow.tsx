@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Camera, Clock3, MapPin } from 'lucide-react';
 import type { IScannerControls } from '@zxing/browser';
@@ -16,31 +16,27 @@ export function FlowPage({back,steps,current,strip,children,action,hint}:{back:{
 }
 
 /** Illustration of the sign at each zone. Deliberately not a real, scannable QR. */
-export function ZoneSign({name,code}:{name:string;code?:string}) {
+export function ZoneSign({name}:{name:string}) {
   const seed=[...name].reduce((n,c)=>n*31+c.charCodeAt(0)>>>0,7);
   const finder=(x:number,y:number)=>x<3&&y<3||x>5&&y<3||x<3&&y>5;
   const cells=Array.from({length:81},(_,i)=>{const x=i%9,y=Math.floor(i/9);return finder(x,y)?(x%6===1&&y%6===1?false:true):((seed>>>(i%29))+i*7)%3===0;});
-  return <figure className="zone-sign" aria-label={`Illustration of the ${name} zone sign`}><svg viewBox="0 0 9 9" aria-hidden="true">{cells.map((on,i)=>on&&<rect key={i} x={i%9} y={Math.floor(i/9)} width="1" height="1"/>)}</svg><div><small>ZONE</small><b>{name}</b>{code&&<strong>{code}</strong>}</div><figcaption>Illustration · scan the QR on the real sign</figcaption></figure>;
+  return <figure className="zone-sign" aria-label={`Illustration of the ${name} zone sign`}><svg viewBox="0 0 9 9" aria-hidden="true">{cells.map((on,i)=>on&&<rect key={i} x={i%9} y={Math.floor(i/9)} width="1" height="1"/>)}</svg><div><small>ZONE</small><b>{name}</b></div><figcaption>Illustration. Scan the QR on the real sign.</figcaption></figure>;
 }
 
 /** Hub location, hours, route map and zone sign. Empty settings in hub-config.ts are simply left out. */
-export function HubGuide({zone,zoneCode}:{zone?:string;zoneCode?:string}) {
+export function HubGuide({zone}:{zone?:string}) {
   const photo=zone?hubConfig.zonePhotos[zone]:'';
   return <div className="hub-guide">
     {(hubConfig.location||hubConfig.hours)&&<section className="hub-card"><b>{hubConfig.name}</b>{hubConfig.location&&<p><MapPin size={16}/>{hubConfig.location}</p>}{hubConfig.hours&&<p><Clock3 size={16}/>{hubConfig.hours}</p>}</section>}
     {hubConfig.routeMap&&<figure className="hub-figure"><img src={hubConfig.routeMap} alt={`Route to the ${hubConfig.name}`}/></figure>}
-    {zone&&<section className="guide-block"><h2>Find the {zone} zone</h2><p>Look for this sign.</p><ZoneSign name={zone} code={zoneCode}/>{photo&&<figure className="hub-figure"><img src={photo} alt={`${zone} zone`}/></figure>}</section>}
+    {zone&&<section className="guide-block"><h2>Find the {zone} zone</h2><p>Look for this sign.</p><ZoneSign name={zone}/>{photo&&<figure className="hub-figure"><img src={photo} alt={`${zone} zone`}/></figure>}</section>}
   </div>;
 }
 
-/** Zone check by camera, with a typed 2-letter code as the fallback (always offered, opened automatically if the camera fails). */
-export function FindArea({zone,onVerify}:{zone:string;onVerify:(body:{qr?:string;zone_code?:string})=>Promise<void>}) {
-  const [manual,setManual]=useState(false);const [code,setCode]=useState('');const [busy,setBusy]=useState(false);const [error,setError]=useState<Message>('');
-  async function submit(e:FormEvent){e.preventDefault();if(busy||code.trim().length<2)return;setBusy(true);setError('');try{await onVerify({zone_code:code.trim()});}catch(err){setError(messageOf(err));}finally{setBusy(false);}}
+/** Zone check by camera; a wrong zone names both the zone you are at and the one you need. */
+export function FindArea({zone,onVerify}:{zone:string;onVerify:(body:{qr:string})=>Promise<void>}) {
   return <><div className="zone-confirm"><MapPin size={21}/><div><small>YOUR MATERIAL ZONE</small><b>{zone}</b></div></div>
-    <CameraScanner autoStart onScan={qr=>onVerify({qr})} onUnavailable={()=>setManual(true)}/>
-    {manual?<form className="manual-zone material-form" noValidate onSubmit={submit}><label>Zone code<input value={code} onChange={e=>setCode(e.target.value.toUpperCase())} maxLength={2} autoCapitalize="characters" autoComplete="off" spellCheck={false} placeholder="e.g. BF"/></label><p className="field-help">It’s printed under the QR on the zone sign.</p><ErrorMessage error={error}/><button className="button outline full" disabled={busy||code.trim().length<2}>{busy?'Checking…':'Confirm zone'}</button></form>
-      :<button type="button" className="text-link manual-toggle" onClick={()=>setManual(true)}>Can’t scan? Enter zone code</button>}</>;
+    <CameraScanner autoStart onScan={qr=>onVerify({qr})}/></>;
 }
 
 export function CameraScanner({onScan,autoStart=false,onUnavailable}:{onScan:(qr:string)=>Promise<void>;autoStart?:boolean;onUnavailable?:()=>void}) { const {t}=useI18n(); 
