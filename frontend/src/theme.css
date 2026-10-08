@@ -97,3 +97,13 @@ select option{color:var(--text)}
 .material-form .segmented label{display:flex;align-items:center;justify-content:center;min-height:46px;margin:0;padding:0 6px;font-size:var(--fs-help);line-height:1.2}
 .optional-details summary{display:flex;align-items:center;gap:6px}
 .optional-details summary .optional-tag{margin-left:0;margin-right:auto}
+
+/* Photo carousel: one photo per swipe, dots instead of a scrollbar */
+.carousel{position:relative;margin-bottom:18px}
+.carousel .carousel-track{display:flex;gap:0;margin:0;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;-ms-overflow-style:none;border-radius:var(--radius-card)}
+.carousel .carousel-track::-webkit-scrollbar{display:none}
+.carousel .carousel-track img{flex:0 0 100%;width:100%;max-width:none;height:300px;object-fit:cover;border-radius:0;scroll-snap-align:center;scroll-snap-stop:always;user-select:none}
+.carousel-dots{display:flex;justify-content:center;gap:6px;margin-top:10px}
+.carousel-dots button{width:6px;height:6px;padding:0;border:0;border-radius:3px;background:#c9d0ca;cursor:pointer;transition:width .2s,background .2s}
+.carousel-dots button.active{width:18px;background:var(--green)}
+.placement-photos .carousel .carousel-track img{height:190px;max-height:none;width:100%}

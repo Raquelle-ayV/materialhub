@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Auth, api, type User } from './lib';
 import { rememberMaterial } from './recent-materials';
 import { ReservationOutcome, type FulfillmentFields } from './fulfillment';
-import { FavoriteButton, BottomSheet, MaterialPhoto, TopBar, MaterialCode, StatusBadge, capitalize, formatQuantity, formatDue, credits as creditsLabel } from './ui';
+import { FavoriteButton, BottomSheet, MaterialPhoto, PhotoCarousel, TopBar, MaterialCode, StatusBadge, capitalize, formatQuantity, formatDue, credits as creditsLabel } from './ui';
 import { hubConfig } from './hub-config';
 
 type Material = {id:number;owner_id:number;name:string;display_code:string;category:string;custom_category_name:string|null;zone:string;stock_quantity:number;available_quantity:number;unit:string;dimensions_spec:string;dimensions_not_applicable:number;condition:string;color:string;notes:string;reference_url:string|null;status:string;is_demo:number;is_favorite?:boolean;photos:{id:number;url:string}[]};
@@ -34,7 +34,7 @@ export function MaterialDetail(){
   const own=m.owner_id===user?.id;const credits=user?.available??0;
   const canReserve=!m.is_demo&&!own&&m.status==='available'&&m.available_quantity>=1;
   return <div className="flow-page material-detail"><TopBar to="/" title="Material details"/>
-    <div className="detail-gallery"><div className="material-gallery" tabIndex={0} aria-label="Material photos">{m.photos.map((p,i)=><img key={p.id} src={p.url} alt={`${m.name} — photo ${i+1}`}/>)}</div>{!own&&<FavoriteButton className="gallery-favorite" materialId={m.id} initial={!!m.is_favorite}/>}</div>{m.photos.length>1&&<p className="field-help">Swipe horizontally to view all {m.photos.length} photos.</p>}
+    <div className="detail-gallery"><PhotoCarousel photos={m.photos} label="Material photos" altFor={i=>`${m.name} — photo ${i+1}`}/>{!own&&<FavoriteButton className="gallery-favorite" materialId={m.id} initial={!!m.is_favorite}/>}</div>
     <div className="detail-status">{m.is_demo?<StatusBadge status="sample" label="Sample material"/>:<StatusBadge status={m.status}/>}{!m.is_demo&&<span>1 credit per reservation</span>}</div><h2 className="detail-title">{capitalize(m.name)}</h2>
     <h2 className="spec-heading">Material information</h2><dl className="specs"><div><dt>Category</dt><dd>{m.category}{m.custom_category_name?` (${m.custom_category_name})`:''}</dd></div><div><dt>{m.is_demo?'Example quantity':'Available'}</dt><dd>{formatQuantity(m.is_demo?m.stock_quantity:m.available_quantity,m.unit)}</dd></div>{!m.dimensions_not_applicable&&m.dimensions_spec&&<div><dt>Dimensions</dt><dd>{m.dimensions_spec}</dd></div>}<div><dt>Condition</dt><dd>{m.condition}</dd></div><div><dt>Color</dt><dd>{capitalize(m.color)}</dd></div></dl>
     <h2 className="spec-heading">{m.is_demo?'Sample reference':'Pickup details'}</h2><dl className="specs"><div><dt>Hub</dt><dd>{hubConfig.location||hubConfig.name}</dd></div><div><dt>Zone</dt><dd>{m.zone}</dd></div></dl>

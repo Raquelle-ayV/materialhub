@@ -18,6 +18,9 @@ test('B browse, reserve from the bottom sheet, duplicate click, persistence and 
   await page.locator('.material-card').click();await expect(page.locator('.material-gallery img')).toHaveCount(2);await expect(page.getByRole('link',{name:'Purchase / reference link'})).toHaveAttribute('href','https://example.com/paper');
   await expect(page.locator('.specs').first()).toContainText('Available2 sheets');await expect(page.getByText('In stock')).toHaveCount(0);await expect(page.locator('.detail-gallery .favorite-button')).toBeVisible();
   await page.locator('.material-gallery').evaluate(el=>el.scrollLeft=el.scrollWidth);expect(await page.locator('.material-gallery').evaluate(el=>el.scrollWidth>el.clientWidth)).toBe(true);
+  const dots=page.locator('.carousel-dots button');await expect(dots).toHaveCount(2);await expect(dots.nth(1)).toHaveAttribute('aria-current','true');await expect(page.getByText(/Swipe horizontally/)).toHaveCount(0);
+  expect(await page.locator('.material-gallery').evaluate(el=>getComputedStyle(el).scrollbarWidth)).toBe('none');
+  await dots.nth(0).click();await expect(dots.nth(0)).toHaveAttribute('aria-current','true');
   await expect(page.getByText('Collect within 24 hours')).toHaveCount(0);
   await page.getByRole('button',{name:'Reserve',exact:true}).click();const sheet=page.getByRole('dialog',{name:'Reserve'});await expect(sheet).toBeVisible();
   await expect(sheet).toContainText('Costs 1 credit');await expect(sheet).toContainText('You’ll have 1 credit left');await expect(sheet).toContainText('Free cancellation before the deadline.');await expect(sheet.getByRole('button',{name:'Fewer'})).toBeDisabled();

@@ -5,7 +5,7 @@ import { Auth, api, type User } from './lib';
 import { PhotoUpload } from './deposits';
 import { FlowPage, HubGuide, FindArea } from './flow';
 import type { Reservation } from './reservations';
-import { MaterialStrip, SuccessPage, TopBar, MaterialCode, capitalize, formatQuantity, credits } from './ui';
+import { MaterialStrip, SuccessPage, PhotoCarousel, TopBar, MaterialCode, capitalize, formatQuantity, credits } from './ui';
 
 type Photo={id:number;url:string};
 export type FulfillmentFields={verified_zone_id:number|null;zone_id_snapshot:number;material_code_verified_at:string|null;completed_at:string|null;return_deadline_at:string|null;can_return:boolean;dimensions_spec:string;dimensions_not_applicable:number;condition:string;color:string;category:string;custom_category_name:string|null;zone_code:string|null;placement_photos:Photo[];issue:{reason_label:string;reason:string;notes:string;status:string;resolution:string|null;photos:Photo[]}|null;return:{verified_zone_id:number|null;status:string;photos:Photo[]}|null};
@@ -19,7 +19,7 @@ export function ReservationOutcome({r}:{r:Reservation}) {
   </>;
 }
 function ReservationDetails({r}:{r:Reservation}) {return <dl className="specs"><div><dt>Reserved</dt><dd>{formatQuantity(r.reserved_quantity,r.unit_snapshot)}</dd></div><div><dt>Category</dt><dd>{r.category}{r.custom_category_name?` (${r.custom_category_name})`:''}</dd></div>{!r.dimensions_not_applicable&&r.dimensions_spec&&<div><dt>Dimensions</dt><dd>{r.dimensions_spec}</dd></div>}<div><dt>Color</dt><dd>{capitalize(r.color)}</dd></div><div><dt>Condition</dt><dd>{r.condition}</dd></div></dl>;}
-function PlacementPhotos({r}:{r:Reservation}) {return r.placement_photos.length?<section className="placement-photos"><h2>Where it was placed</h2><div className="material-gallery">{r.placement_photos.map(p=><img key={p.id} src={p.url} alt="Material placement"/>)}</div></section>:null;}
+function PlacementPhotos({r}:{r:Reservation}) {return r.placement_photos.length?<section className="placement-photos"><h2>Where it was placed</h2><PhotoCarousel photos={r.placement_photos} label="Placement photos" altFor={()=>'Material placement'}/></section>:null;}
 export function FulfillmentPage(){
   const{id,stage}=useParams();const{user,loading,setUser}=useContext(Auth);const navigate=useNavigate();
   const[r,setR]=useState<Reservation|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[revision,setRevision]=useState(0);

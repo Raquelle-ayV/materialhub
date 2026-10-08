@@ -48,6 +48,15 @@ export function TopBar({to,title,end}:{to:string;title:string;end?:ReactNode}) {
   return <header className="top-bar"><Link className="top-back" to={to} aria-label="Back"><ArrowLeft size={22}/></Link><h1>{title}</h1><span className="top-end">{end}</span></header>;
 }
 
+/** Swipeable photos, one at a time, with dots underneath instead of a scrollbar. */
+export function PhotoCarousel({photos,altFor,label='Photos'}:{photos:{id:number;url:string}[];altFor:(index:number)=>string;label?:string}) {
+  const track=useRef<HTMLDivElement>(null);const [index,setIndex]=useState(0);
+  const onScroll=()=>{const el=track.current;if(el&&el.clientWidth)setIndex(Math.min(photos.length-1,Math.round(el.scrollLeft/el.clientWidth)));};
+  const go=(i:number)=>{const el=track.current;if(el)el.scrollTo({left:i*el.clientWidth,behavior:'smooth'});};
+  return <div className="carousel"><div className="material-gallery carousel-track" ref={track} onScroll={onScroll} tabIndex={0} aria-label={label}>{photos.map((p,i)=><img key={p.id} src={p.url} alt={altFor(i)} draggable={false}/>)}</div>
+    {photos.length>1&&<div className="carousel-dots" role="group" aria-label={`Photo ${index+1} of ${photos.length}`}>{photos.map((p,i)=><button key={p.id} type="button" aria-label={`Show photo ${i+1}`} aria-current={i===index?'true':undefined} className={i===index?'active':''} onClick={()=>go(i)}/>)}</div>}</div>;
+}
+
 export type FlowStep = {label:string;to?:string;onClick?:()=>void;disabled?:boolean};
 /** Step bar for offline flows: completed and unlocked steps can be revisited; locked steps stay greyed out. */
 export function StepBar({steps,current}:{steps:FlowStep[];current:number}) {
