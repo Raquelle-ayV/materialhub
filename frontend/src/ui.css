@@ -52,3 +52,109 @@
 .share-active{margin-top:22px}
 .share-active .field-help{margin:4px 0 12px}
 .toast{position:fixed;left:50%;bottom:calc(92px + var(--app-bottom-inset,0px));transform:translateX(-50%);z-index:50;max-width:calc(100% - 32px);padding:11px 16px;border-radius:12px;background:#23372b;color:#fff;font-size:14px;box-shadow:0 6px 18px #0000002e;white-space:nowrap}
+
+/* Shared flow template: fixed action bar at the bottom of every step */
+.flow-page:has(.flow-action){padding-bottom:170px}
+.flow-action{position:fixed;z-index:12;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:402px;padding:12px 16px calc(14px + var(--app-bottom-inset,0px));background:#fffffff5;border-top:1px solid var(--line);backdrop-filter:blur(12px);display:grid;gap:8px}
+.flow-action .button{margin:0}
+.flow-hint{margin:0;font-size:13px;color:var(--text-secondary);text-align:center}
+.report-link{justify-self:center;font-size:14px;padding:6px 0}
+@media (hover:none) and (pointer:coarse) and (max-width:600px){.flow-action{max-width:none}}
+
+/* Bottom sheet (reserve, filters, confirmations) */
+.bottom-sheet{position:fixed;inset:auto 0 0 0;margin:0 auto;width:100%;max-width:402px;max-height:85vh;padding:0;border:0;border-radius:20px 20px 0 0;background:#fff;color:var(--text);box-shadow:0 -8px 30px #0000002e}
+.bottom-sheet[open]{animation:sheet-up .22s ease-out}
+.bottom-sheet::backdrop{background:#1b261f73}
+@keyframes sheet-up{from{transform:translateY(100%)}to{transform:none}}
+.sheet-body{padding:8px 20px calc(20px + var(--app-bottom-inset,0px));display:grid;gap:14px}
+.sheet-grip{justify-self:center;width:40px;height:4px;border-radius:2px;background:#d5ddd5}
+.bottom-sheet .panel-heading{display:flex;justify-content:space-between;align-items:center}
+.bottom-sheet .panel-heading h2{font-size:20px;margin:0}
+.bottom-sheet .panel-heading button{width:40px;height:40px;border:0;border-radius:50%;background:var(--surface);display:grid;place-items:center;cursor:pointer;color:var(--text)}
+.sheet-line{margin:0;font-size:15px}
+.sheet-line.muted{color:var(--text-secondary);font-size:14px}
+.quantity-stepper{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);border-radius:14px;padding:6px}
+.quantity-stepper button{width:44px;height:44px;border:0;border-radius:10px;background:var(--surface);color:var(--green);display:grid;place-items:center;cursor:pointer}
+.quantity-stepper button:disabled{opacity:.35;cursor:not-allowed}
+.quantity-stepper output{font-size:18px;font-weight:700}
+.filter-form{display:grid;gap:16px}
+.filter-form label{display:grid;gap:6px;font-size:14px;font-weight:600}
+.switch-row{grid-template-columns:1fr auto;align-items:center}
+.switch-row small{display:block;font-weight:400;color:var(--text-secondary);font-size:12px;margin-top:2px}
+.switch-row input{appearance:none;width:46px;height:28px;border-radius:14px;background:#cfd7cf;position:relative;cursor:pointer;transition:background .2s;margin:0}
+.switch-row input::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0003;transition:transform .2s}
+.switch-row input:checked{background:var(--green)}
+.switch-row input:checked::after{transform:translateX(18px)}
+.filter-form .filter-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.filter-count{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;margin-left:6px;border-radius:9px;background:var(--green);color:#fff;font-size:11px;font-weight:700}
+
+/* Hub guide and zone sign */
+.hub-guide{display:grid;gap:18px}
+.hub-card{padding:16px;border-radius:var(--radius-card);background:var(--surface);display:grid;gap:8px}
+.hub-card p{margin:0;display:flex;gap:8px;align-items:center;font-size:15px}
+.hub-figure{margin:0}
+.hub-figure img{width:100%;border-radius:var(--radius-card);display:block}
+.hub-guide .guide-block h2{font-size:18px;margin:0 0 4px}
+.hub-guide .guide-block>p{margin:0 0 10px;color:var(--text-secondary);font-size:14px}
+.zone-sign{margin:0;display:grid;grid-template-columns:92px 1fr;gap:14px;align-items:center;padding:16px;border:2px solid var(--green);border-radius:14px;background:#fff}
+.zone-sign svg{width:92px;height:92px;color:var(--green);fill:currentColor;opacity:.85}
+.zone-sign small{display:block;font-size:11px;letter-spacing:.12em;color:var(--text-secondary)}
+.zone-sign b{display:block;font-size:17px;margin:2px 0 4px;overflow-wrap:anywhere}
+.zone-sign strong{font:700 30px ui-monospace,monospace;letter-spacing:3px;color:var(--green)}
+.zone-sign figcaption{grid-column:1/-1;font-size:12px;color:var(--text-secondary)}
+
+/* Find area: manual zone code */
+.manual-toggle{display:block;margin:14px auto 0;background:none;border:0;font-size:15px;cursor:pointer}
+.manual-zone{margin-top:16px;padding:16px;border-radius:var(--radius-card);background:var(--surface)}
+.manual-zone input{font:700 22px ui-monospace,monospace;letter-spacing:4px;text-transform:uppercase}
+
+/* Pickup step 3 */
+.placement-photos h2{font-size:16px;margin:18px 0 8px}
+.find-label{margin:22px 0 0;display:grid;gap:10px;font-size:16px;font-weight:600}
+.find-label .label-code{font-size:44px}
+
+/* Shared success page */
+.success-page{display:grid;gap:16px;padding-top:28px}
+.success-icon{width:64px;height:64px;border-radius:50%;background:#e8efe6;color:var(--green);display:grid;place-items:center}
+.success-page .page-heading{padding:0}
+.success-page .page-heading p{margin-top:6px}
+.success-material{display:flex;align-items:center;gap:14px;padding:14px;border-radius:var(--radius-card);background:var(--surface);color:inherit;text-decoration:none}
+.success-material>.material-photo,.success-material>.photo-fallback{width:72px;height:72px;border-radius:12px;object-fit:cover;flex-shrink:0}
+.success-material>div{flex:1;min-width:0;display:grid;gap:4px}
+.success-material b{font-size:17px;overflow-wrap:anywhere}
+.success-material small{font-size:14px;color:var(--text-secondary)}
+.success-credit{margin:0;padding:14px 16px;border-radius:var(--radius-card);border:1px solid var(--border);font-weight:700;font-size:16px}
+
+/* Reservation page */
+.reservation-hero{display:grid;justify-items:center;text-align:center;gap:6px;padding:24px 16px;margin:4px 0 16px;border-radius:var(--radius-card);background:var(--surface)}
+.reservation-hero p{margin:6px 0 0;font-size:14px;color:var(--text-secondary)}
+.reservation-code{font:700 60px/1.05 ui-monospace,monospace;letter-spacing:4px;color:var(--text)}
+.reservation-hero small{font-size:13px;color:var(--text-secondary)}
+.due-line{margin:4px 0;font-size:15px;font-weight:600;color:var(--text)}
+.reservation-hero .due-line{color:var(--text)}
+.status-badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#e3ede0;color:var(--green)}
+.status-badge.status-cancelled,.status-badge.status-expired{background:#eceeea;color:#6c766e}
+.status-badge.status-issue_reported{background:var(--danger-soft);color:var(--danger)}
+.cancel-link{display:block;margin:28px auto 0;background:none;border:0;color:var(--text-secondary);font-size:14px;text-decoration:underline;cursor:pointer}
+.reservation-card .status-badge{margin-top:10px}
+
+/* Detail page */
+.detail-gallery{position:relative}
+.gallery-favorite{top:12px;right:12px;width:40px;height:40px}
+.own-note{margin:0;text-align:center;color:var(--text-secondary);font-size:15px;padding:10px 0}
+
+/* Cards */
+.yours-tag{position:absolute;top:8px;right:8px;z-index:1;padding:4px 9px;border-radius:999px;background:#ffffffe6;color:var(--green);font-size:12px;font-weight:700}
+.material-card.unavailable .material-image{filter:grayscale(1);opacity:.55}
+.material-card.unavailable h3,.material-card.unavailable .material-status{color:#8a938c}
+
+/* Codes people read off labels and signs: one monospace face everywhere */
+:root{--font-code:Consolas,"SF Mono",Menlo,"Roboto Mono","Courier New",monospace}
+.zone-sign strong,.reservation-code,.label-code,.manual-zone input,.material-strip-text small{font-family:var(--font-code)}
+.manual-zone input::placeholder{text-transform:none;letter-spacing:normal;font-weight:400;font-family:inherit}
+/* Pick up: keep "Find the label" above the fold */
+.placement-photos .material-gallery{margin-bottom:0}
+.placement-photos .material-gallery img{max-height:190px;width:auto;max-width:100%;object-fit:cover;border-radius:12px}
+.find-label{margin-top:16px}
+/* Filter sheet fields */
+.filter-form select{min-height:48px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-field);background:#fff;font:inherit;font-weight:400;color:var(--text)}

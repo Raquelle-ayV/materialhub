@@ -6,6 +6,7 @@ import { mkdir, writeFile, unlink } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { projectRoot, transaction } from './database.mjs';
 import { placementPhotos } from './fulfillment.mjs';
+import { requireZone } from './zones.mjs';
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const MIME = {jpeg:'image/jpeg',png:'image/png',webp:'image/webp'};
@@ -15,7 +16,7 @@ const text = (value,max=200) => typeof value === 'string' ? value.trim().slice(0
 export function installDepositRoutes(app,db,requireUser,{uploadDir=process.env.UPLOAD_DIR || resolve(projectRoot,'uploads')}={}) {
   function owned(id,userId) {
     const d=db.prepare(`SELECT d.id,d.status AS deposit_status,d.arrived_at,d.verified_zone_id,d.zone_verified_at,d.confirmed_at,
-      m.*,d.id AS deposit_id,m.id AS material_id,c.name AS category,z.name AS zone,z.qr_key
+      m.*,d.id AS deposit_id,m.id AS material_id,c.name AS category,z.name AS zone,z.qr_key,z.code AS zone_code
       FROM deposits d JOIN materials m ON m.id=d.material_id JOIN categories c ON c.id=m.category_id JOIN zones z ON z.id=m.zone_id
       WHERE d.id=? AND d.user_id=? AND NOT EXISTS (SELECT 1 FROM material_management mm WHERE mm.material_id=m.id AND mm.disposition='deleted')`).get(Number(id)||-1,userId);
     if(!d)fail('Material record not found.',404);
@@ -125,7 +126,7 @@ export function installDepositRoutes(app,db,requireUser,{uploadDir=process.env.U
   app.post('/api/deposits/:id/verify-zone',requireUser,(req,res)=>{
     const d=owned(req.params.id,req.user.id);editable(d);
     if(!d.arrived_at)fail('Confirm that you are at the Hub before scanning.',409);
-    if(req.body.qr!==`REMATERIAL|ZONE|${d.qr_key}`)fail(`Wrong zone. Please scan the QR code for ${d.zone}.`,400,'Wrong zone. Please scan the QR code for {{zone}}.',{zone:d.zone});
+    requireZone(db,req.body,{id:d.zone_id,name:d.zone});
     db.prepare('UPDATE deposits SET verified_zone_id=?,zone_verified_at=? WHERE id=?').run(d.zone_id,now(),d.id);res.json({deposit:owned(d.id,req.user.id)});
   });
   app.post('/api/deposits/:id/placement',requireUser,(req,res)=>{
@@ -157,6 +158,6 @@ export function installDepositRoutes(app,db,requireUser,{uploadDir=process.env.U
   });
   app.get('/zone-codes',(req,res)=>{
     const zones=db.prepare('SELECT * FROM zones ORDER BY id').all();
-    res.type('html').send(`<!doctype html><html lang="en"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Material Hub — Zone QR cards</title><style>body{font:16px system-ui;max-width:1000px;margin:30px auto;padding:20px}main{display:flex;flex-wrap:wrap;gap:20px}article{border:1px solid #ccc;padding:20px;text-align:center;break-inside:avoid}img{width:230px}code{display:block;font-size:10px}h2{font-size:18px}</style><h1>Material Hub · Zone QR cards</h1><p>Local demonstration signs. Print these cards or display on a second screen for the camera to scan. These are zone identifiers, not web links.</p><main>${zones.map(z=>`<article><h2>${z.name.replaceAll('&','&amp;')}</h2><img src="/api/zones/${z.id}/qr" alt="${z.name.replaceAll('&','&amp;')} Zone QR"><code>REMATERIAL|ZONE|${z.qr_key}</code></article>`).join('')}</main></html>`);
+    res.type('html').send(`<!doctype html><html lang="en"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Material Hub — Zone QR cards</title><style>body{font:16px system-ui;max-width:1000px;margin:30px auto;padding:20px}main{display:flex;flex-wrap:wrap;gap:20px}article{border:1px solid #ccc;padding:20px;text-align:center;break-inside:avoid}img{width:230px}code{display:block;font-size:10px}h2{font-size:18px}.zone-code{font:700 40px ui-monospace,monospace;letter-spacing:4px;margin:8px 0}</style><h1>Material Hub · Zone QR cards</h1><p>Print one card per zone sign. People can scan the QR or type the 2-letter code under it. These are zone identifiers, not web links.</p><main>${zones.map(z=>`<article><h2>${z.name.replaceAll('&','&amp;')}</h2><img src="/api/zones/${z.id}/qr" alt="${z.name.replaceAll('&','&amp;')} Zone QR"><p class="zone-code">${z.code}</p><code>REMATERIAL|ZONE|${z.qr_key}</code></article>`).join('')}</main></html>`);
   });
 }

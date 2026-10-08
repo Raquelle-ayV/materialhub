@@ -5,7 +5,7 @@ test('mobile registration, persisted login, credits, logout, and preview navigat
   await page.goto('/');
   await expect(page.getByRole('heading',{name:'Explore materials',exact:true})).toBeVisible();
   await expect(page.getByRole('heading',{name:'Good materials. New beginnings.'})).toHaveCount(0);
-  await expect(page.getByRole('heading',{name:'Recommended'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'New on the shelf'})).toBeVisible();
   await expect(page.locator('.arrival-rail .image-badge')).toHaveCount(0);
   await page.screenshot({path:'test-results/explore-mobile.png',fullPage:true});
   await page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Profile'}).click();
@@ -44,11 +44,11 @@ test('mobile registration, persisted login, credits, logout, and preview navigat
   await expect(page.getByRole('link',{name:'Reserve',exact:true})).toHaveCount(0);
   await page.setViewportSize({width:320,height:740});
   await page.goto('/');
-  await expect(page.getByRole('heading',{name:'Recommended'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'New on the shelf'})).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({path:'test-results/explore-320.png',fullPage:true});
   await page.setViewportSize({width:1440,height:1000});await page.reload();
-  await expect(page.getByRole('heading',{name:'Recommended'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'New on the shelf'})).toBeVisible();
   await page.screenshot({path:'test-results/explore-desktop.png',fullPage:true});
   expect(errors).toEqual([]);
   console.log(`Verified browser account: ${username}; balance: 2 credits; one welcome entry.`);

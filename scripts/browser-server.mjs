@@ -9,7 +9,7 @@ import { createApp } from '../backend/src/app.mjs';
 const folder = mkdtempSync(join(tmpdir(), 'rematerial-browser-'));
 process.env.FRONTEND_ORIGIN = 'http://127.0.0.1:15173';
 const db = openDatabase(join(folder, 'test.sqlite'));
-const api = createApp(db, { uploadDir: join(folder, 'uploads') }).listen(13001, '127.0.0.1');
+const api = createApp(db, { uploadDir: join(folder, 'uploads'), authAttemptsPerMinute: 1000 }).listen(13001, '127.0.0.1');
 await new Promise((resolve, reject) => { api.once('listening', resolve); api.once('error', reject); });
 const vite = await createServer({ server: { host: '127.0.0.1', port:15173, strictPort:true, proxy:{ '/api':'http://127.0.0.1:13001', '/zone-codes':'http://127.0.0.1:13001' } } });
 await vite.listen();

@@ -49,7 +49,7 @@ test('Publisher review: owned reports, atomic relisting and permanent archival',
     });
     await t.test('old relist replays cannot clear a later reservation or another report',async()=>{
       const active=(await req(`/materials/${d.material_id}/reserve`,{quantity:1,request_key:randomUUID()},b.cookie)).data.reservation;
-      await resolve(i.id,relist(i));assert.equal((await get(i.id)).material_status,'reserved');await req(`/reservations/${active.id}/cancel`,{},b.cookie);
+      await resolve(i.id,relist(i));assert.equal((await get(i.id)).material_status,'available');assert.equal((await req(`/reservations/${active.id}`,undefined,b.cookie)).data.reservation.status,'reserved');await req(`/reservations/${active.id}/cancel`,{},b.cookie);
       const next=await report(d.material_id);await resolve(i.id,relist(i));assert.equal((await get(i.id)).material_status,'unavailable');assert.equal((await get(next.issue.id)).status,'open');
       const open=await get(next.issue.id);await resolve(open.id,relist(open));
     });

@@ -1,4 +1,5 @@
 import { transaction } from './database.mjs';
+import { requireZone, refreshMaterialStatus } from './zones.mjs';
 
 const fail=(message,status=409)=>{throw Object.assign(new Error(message),{status});};
 const now=()=>new Date().toISOString();
@@ -11,7 +12,7 @@ export function placementPhotos(db,materialId) {
     ORDER BY p.sort_order,p.id`).all(materialId,materialId);
 }
 export function reservationDetails(db,r) {
-  const m=db.prepare('SELECT dimensions_spec,dimensions_not_applicable,condition FROM materials WHERE id=?').get(r.material_id);
+  const m=db.prepare('SELECT m.dimensions_spec,m.dimensions_not_applicable,m.condition,m.color,c.name AS category,m.custom_category_name,z.code AS zone_code FROM materials m JOIN categories c ON c.id=m.category_id JOIN zones z ON z.id=? WHERE m.id=?').get(r.zone_id_snapshot,r.material_id);
   const issue=db.prepare('SELECT * FROM issue_reports WHERE reservation_id=?').get(r.id);
   if(issue)issue.photos=db.prepare("SELECT media_id AS id,'/api/media/'||media_id AS url FROM issue_photos WHERE issue_id=? ORDER BY sort_order").all(issue.id);
   const ret=db.prepare('SELECT * FROM returns WHERE reservation_id=?').get(r.id);
@@ -21,7 +22,7 @@ export function reservationDetails(db,r) {
 }
 export function installFulfillmentRoutes(app,db,requireUser) {
   function owned(id,user) {
-    const r=db.prepare(`SELECT r.*,m.display_code,m.name,m.stock_quantity,m.owner_id,m.status AS material_status,z.name AS zone,z.qr_key
+    const r=db.prepare(`SELECT r.*,m.display_code,m.name,m.stock_quantity,m.owner_id,m.status AS material_status,z.name AS zone,z.qr_key,z.id AS zone_id
       FROM reservations r JOIN materials m ON m.id=r.material_id JOIN zones z ON z.id=r.zone_id_snapshot WHERE r.id=? AND r.user_id=?`).get(Number(id)||-1,user);
     if(!r)fail('Reservation not found.',404);return r;
   }
@@ -56,16 +57,18 @@ export function installFulfillmentRoutes(app,db,requireUser) {
   function route(path,action) {app.post(`/api/reservations/:id/${path}`,requireUser,(req,res)=>{
     const reservation=transaction(db,()=>{const r=owned(req.params.id,req.user.id);action(r,req.body);return reservationDetails(db,owned(r.id,req.user.id));});res.json({reservation});
   });}
-  route('verify-zone',(r,b)=>{active(r);if(b.qr!==`REMATERIAL|ZONE|${r.qr_key}`)fail(`Wrong zone. Please scan the QR code for ${r.zone}.`,400);db.prepare('UPDATE reservations SET verified_zone_id=?,zone_verified_at=? WHERE id=?').run(r.zone_id_snapshot,now(),r.id);});
+  route('verify-zone',(r,b)=>{active(r);requireZone(db,b,{id:r.zone_id_snapshot,name:r.zone},'is in');db.prepare('UPDATE reservations SET verified_zone_id=?,zone_verified_at=? WHERE id=?').run(r.zone_id_snapshot,now(),r.id);});
   route('verify-material',(r,b)=>{active(r);code(r,b.material_code);db.prepare('UPDATE reservations SET material_code_verified_at=? WHERE id=?').run(now(),r.id);});
   route('pickup',(r,b)=>{
     if(['collected','returned'].includes(r.status))return;
-    active(r);code(r,b.material_code);if(!r.material_code_verified_at)fail('Confirm the material label first.');
+    // The person confirms they found the labelled material; the Zone scan is the location check.
+    active(r);zone(r);
     if(b.matches!==true)fail('Confirm that the material matches the listing.',400);
-    if(r.material_status!=='reserved'||r.stock_quantity<r.reserved_quantity)fail('This material cannot be collected.');
+    if(!['available','reserved'].includes(r.material_status)||r.stock_quantity<r.reserved_quantity)fail('This material cannot be collected.');
     const date=now(),deadline=new Date(Date.parse(date)+86400000).toISOString();
     db.prepare("UPDATE reservations SET status='collected',collected_quantity=reserved_quantity,completed_at=?,return_deadline_at=? WHERE id=?").run(date,deadline,r.id);
-    db.prepare("UPDATE materials SET stock_quantity=stock_quantity-?,status=CASE WHEN stock_quantity-?>0 THEN 'available' ELSE 'collected' END,version=version+1 WHERE id=?").run(r.reserved_quantity,r.reserved_quantity,r.material_id);
+    db.prepare("UPDATE materials SET stock_quantity=stock_quantity-?,status=CASE WHEN stock_quantity-?>0 THEN status ELSE 'collected' END,version=version+1 WHERE id=?").run(r.reserved_quantity,r.reserved_quantity,r.material_id);
+    refreshMaterialStatus(db,r.material_id);
     ledger(r,'pickup_spend',-1,-1,date);inventory(r,'pickup',-r.reserved_quantity,date);activity(r,'material_collected',date);
   });
   route('issues',(r,b)=>{
@@ -88,7 +91,7 @@ export function installFulfillmentRoutes(app,db,requireUser) {
     db.prepare("INSERT OR IGNORE INTO returns(reservation_id,user_id,quantity,status,created_at) VALUES (?,?,?,'draft',?)").run(r.id,r.user_id,r.collected_quantity,now());
   });
   function draft(r) {returnable(r);const ret=db.prepare("SELECT * FROM returns WHERE reservation_id=? AND status='draft'").get(r.id);if(!ret)fail('Open the Return Guide first.');return ret;}
-  route('return/verify-zone',(r,b)=>{const ret=draft(r);if(b.qr!==`REMATERIAL|ZONE|${r.qr_key}`)fail(`Wrong zone. Please scan the QR code for ${r.zone}.`,400);db.prepare('UPDATE returns SET verified_zone_id=?,zone_verified_at=? WHERE id=?').run(r.zone_id_snapshot,now(),ret.id);});
+  route('return/verify-zone',(r,b)=>{const ret=draft(r);requireZone(db,b,{id:r.zone_id_snapshot,name:r.zone},'goes back to');db.prepare('UPDATE returns SET verified_zone_id=?,zone_verified_at=? WHERE id=?').run(r.zone_id_snapshot,now(),ret.id);});
   route('return/photos',(r,b)=>{
     const ret=draft(r);if(ret.verified_zone_id!==r.zone_id_snapshot)fail('Scan the original Zone QR before uploading return photos.');
     const ids=freshPhotos(b.photo_ids,r,0,ret.id);db.prepare('DELETE FROM return_photos WHERE return_id=?').run(ret.id);ids.forEach((id,i)=>db.prepare('INSERT INTO return_photos VALUES (?,?,?)').run(ret.id,id,i));
@@ -102,7 +105,8 @@ export function installFulfillmentRoutes(app,db,requireUser) {
     db.prepare("UPDATE reservations SET status='returned' WHERE id=?").run(r.id);
     db.prepare("UPDATE returns SET status='confirmed',confirmed_at=? WHERE id=?").run(date,ret.id);
     // Never overwrite a later reservation or a review/closure lock.
-    db.prepare("UPDATE materials SET stock_quantity=stock_quantity+?,status=CASE WHEN status IN ('reserved','unavailable','closed') THEN status ELSE 'available' END,version=version+1 WHERE id=?").run(r.collected_quantity,r.material_id);
+    db.prepare("UPDATE materials SET stock_quantity=stock_quantity+?,status=CASE WHEN status IN ('unavailable','closed') THEN status ELSE 'available' END,version=version+1 WHERE id=?").run(r.collected_quantity,r.material_id);
+    refreshMaterialStatus(db,r.material_id);
     ids.forEach((id,i)=>db.prepare("INSERT INTO material_photos(material_id,media_id,kind,return_id,sort_order,created_at) VALUES (?,?,'placement',?,?,?)").run(r.material_id,id,ret.id,i,date));
     ledger(r,'return_refund',1,0,date,ret.id);inventory(r,'return',r.collected_quantity,date,ret.id);activity(r,'material_returned',date,ret.id);
   });

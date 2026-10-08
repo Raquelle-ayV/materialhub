@@ -73,7 +73,7 @@ test('My posts: owner management preserves reservations, rewards, inventory and 
       const before=credits();
       assert.match((await management(d.material_id)).blocked_reason,/active reservation/);
       assert.equal((await manage(d,'delete')).status,409);assert.equal((await manage(d,'archive')).status,409);
-      assert.deepEqual(credits(),before);assert.equal(stock(d.material_id).status,'reserved');
+      assert.deepEqual(credits(),before);assert.equal(stock(d.material_id).status,'available');
       await req(`/reservations/${reservation.id}/cancel`,{},buyer.cookie);
       assert.equal((await manage(d,'delete')).status,409);assert.equal((await manage(d,'archive')).status,200);
       assert.equal((await management(d.material_id)).disposition,'archived');

@@ -91,10 +91,10 @@ test('B fulfillment: durable pickup, issue freeze and full returns',async t=>{
       assert.equal((await state(res)).can_return,false);assert.equal((await post(res,'return/start')).status,409);assert.equal((await post(res,'return/confirm',{placed:true})).status,409);assert.equal(stock(item).stock_quantity,0);
       db.prepare('UPDATE reservations SET return_deadline_at=? WHERE id=?').run(new Date(Date.now()+86400000).toISOString(),res.id);await post(res,'return/confirm',{placed:true});assert.equal(stock(item).stock_quantity,2);
     });
-    await t.test('older return keeps later active reservation locked; issue and closed locks also survive',async()=>{
+    await t.test('older return keeps a later reservation active and stock reservable; issue and closed locks also survive',async()=>{
       for(const lock of ['reserved','unavailable','closed']){const item=await material(),first=await reserve(item);await verify(first,item);await pickup(first,item);await prepareReturn(first);
         const second=await reserve(item,c.cookie);if(lock==='unavailable'){await verify(second,item,c.cookie);await post(second,'issues',{reason:'Damaged'},c.cookie);}if(lock==='closed'){await post(second,'cancel',{},c.cookie);db.prepare("UPDATE materials SET status='closed' WHERE id=?").run(item.material_id);}
-        await post(first,'return/confirm',{placed:true});assert.equal(stock(item).status,lock);assert.equal(stock(item).stock_quantity,3);
+        await post(first,'return/confirm',{placed:true});assert.equal(stock(item).status,lock==='reserved'?'available':lock);assert.equal(stock(item).stock_quantity,3);
         if(lock==='reserved'){assert.equal((await state(second,c.cookie)).status,'reserved');await post(second,'cancel',{},c.cookie);assert.equal(stock(item).status,'available');}
       }
     });

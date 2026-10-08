@@ -1,4 +1,4 @@
-import { MaterialPhoto } from './ui';
+import { MaterialPhoto, formatQuantity } from './ui';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Archive, ArrowLeft, ChevronRight, FileText, Plus, Trash2 } from 'lucide-react';
@@ -53,7 +53,7 @@ export function ManagedPosts() {
         const state=management.find(item=>item.material_id===post.material_id), archived=state?.disposition==='archived'||post.status==='closed';
         const status=archived?'Removed / Archived':post.deposit_status!=='confirmed'?'Ready for drop-off':post.status==='unavailable'?'Needs Review':post.status.charAt(0).toUpperCase()+post.status.slice(1);
         return <article className="managed-post" key={post.id}>
-          <Link className="active-task" to={`/deposits/${post.id}${post.deposit_status==='confirmed'?'/success':''}`}><MaterialPhoto src={post.photos[0]?.url} alt=""/><div><span>{post.display_code}</span><b>{post.name}</b><small>{status} · {post.deposit_status==='confirmed'?post.stock_quantity:post.initial_quantity} {post.unit}</small>{post.deposit_status==='confirmed'&&<small className="post-update">{post.collected_quantity} {post.unit} collected · {post.stock_quantity} remaining</small>}{post.issues.map(issue=><small className="post-update" key={issue.id}>Reported: {issue.reason_label||issue.reason.replaceAll('_',' ')} · {issue.status}</small>)}</div><ChevronRight size={18}/></Link>
+          <Link className="active-task" to={`/deposits/${post.id}${post.deposit_status==='confirmed'?'/success':''}`}><MaterialPhoto src={post.photos[0]?.url} alt=""/><div><span>{post.display_code}</span><b>{post.name}</b><small>{status} · {formatQuantity(post.deposit_status==='confirmed'?post.stock_quantity:post.initial_quantity,post.unit)}</small>{post.deposit_status==='confirmed'&&<small className="post-update">{formatQuantity(post.collected_quantity,post.unit)} collected · {post.stock_quantity} remaining</small>}{post.issues.map(issue=><small className="post-update" key={issue.id}>Reported: {issue.reason_label||issue.reason.replaceAll('_',' ')} · {issue.status}</small>)}</div><ChevronRight size={18}/></Link>
           {state&&!archived&&<div className="post-management-actions">
             <button className="button outline" disabled={!state.can_delete&&!state.can_archive} onClick={()=>{setError('');setSelection({action:state.has_history?'archive':'delete',name:post.name,post,state});}}>{state.has_history?<Archive size={17}/>:<Trash2 size={17}/>} {state.has_history?'Archive material':'Delete material'}</button>
             {state.blocked_reason&&<p>{state.blocked_reason}</p>}

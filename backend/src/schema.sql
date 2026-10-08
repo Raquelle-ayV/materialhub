@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS reservations (
  created_at TEXT NOT NULL, expires_at TEXT NOT NULL, verified_zone_id INTEGER REFERENCES zones(id), zone_verified_at TEXT, material_code_verified_at TEXT,
  completed_at TEXT, return_deadline_at TEXT, cancelled_at TEXT, cancel_reason TEXT
 );
-CREATE UNIQUE INDEX IF NOT EXISTS one_active_reservation_per_material ON reservations(material_id) WHERE status='reserved';
+CREATE UNIQUE INDEX IF NOT EXISTS one_active_reservation_per_user_material ON reservations(material_id,user_id) WHERE status='reserved';
 CREATE TABLE IF NOT EXISTS returns (
  id INTEGER PRIMARY KEY, reservation_id INTEGER NOT NULL UNIQUE REFERENCES reservations(id), user_id INTEGER NOT NULL REFERENCES users(id),
  quantity INTEGER NOT NULL CHECK(quantity > 0), reason TEXT, status TEXT NOT NULL CHECK(status IN ('draft','confirmed')),

@@ -1,7 +1,8 @@
 import QRCode from 'qrcode';
 import sharp from 'sharp';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 
 export async function cameraFixture(){
   const width=640,height=480;
@@ -16,7 +17,8 @@ export async function cameraFixture(){
     return Buffer.concat([Buffer.from('FRAME\n'),out]);
   }
   const wrong=await frame('REMATERIAL|ZONE|WOOD');const right=await frame('REMATERIAL|ZONE|BOARD_FOAM');
-  const folder=resolve('.cache/test-camera');await mkdir(folder,{recursive:true});const path=resolve(folder,`zones-${process.pid}.y4m`);
+  // One reusable file outside the project: per-run copies used to pile up gigabytes that Vite then had to watch.
+  const folder=join(tmpdir(),'rematerial-test-camera');await mkdir(folder,{recursive:true});const path=join(folder,'zones.y4m');
   // A real QR appears in the camera stream: wrong zone for 6s, then correct zone.
   await writeFile(path,Buffer.concat([Buffer.from(`YUV4MPEG2 W${width} H${height} F5:1 Ip A1:1 C420jpeg\n`),...Array(30).fill(wrong),...Array(90).fill(right)]));
   return path;

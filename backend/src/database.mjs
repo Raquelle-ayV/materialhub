@@ -2,6 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { zoneCodes, refreshMaterialStatus } from './zones.mjs';
 export const projectRoot = fileURLToPath(new URL('../../', import.meta.url));
 export function openDatabase(filename = process.env.DATABASE_PATH || resolve(projectRoot, 'data/rematerial.sqlite')) {
   if (filename !== ':memory:') mkdirSync(dirname(resolve(filename)), { recursive: true });
@@ -42,6 +43,16 @@ export function openDatabase(filename = process.env.DATABASE_PATH || resolve(pro
     db.exec('ALTER TABLE material_photos ADD COLUMN review_issue_id INTEGER REFERENCES issue_reports(id)');
   }
   db.exec('PRAGMA user_version=6');
+  // v7: 2-letter zone codes for manual entry; reservations lock only their quantity.
+  if (!db.prepare('PRAGMA table_info(zones)').all().some(c => c.name === 'code')) db.exec('ALTER TABLE zones ADD COLUMN code TEXT');
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS zones_code ON zones(code)');
+  if (db.prepare('PRAGMA user_version').get().user_version < 7) {
+    transaction(db, () => {
+      db.exec('DROP INDEX IF EXISTS one_active_reservation_per_material');
+      for (const m of db.prepare("SELECT id FROM materials WHERE status IN ('available','reserved')").all()) refreshMaterialStatus(db, m.id);
+      db.exec('PRAGMA user_version=7');
+    });
+  }
   seed(db);
   return db;
 }
@@ -55,7 +66,7 @@ function seed(db) {
     db.prepare('INSERT OR IGNORE INTO hubs VALUES (1, ?, ?, ?, 1)').run('Material Hub', 'Location to be confirmed', 'Opening hours to be confirmed');
     const names = ['Board & Foam','Paper & Sheet','Fabric & Textile','Wood','Plastic & Acrylic','Cables, Buttons & Small Items','Other'];
     const keys = ['BOARD_FOAM','PAPER_SHEET','FABRIC_TEXTILE','WOOD','PLASTIC_ACRYLIC','CABLES_BUTTONS_SMALL_ITEMS','OTHER'];
-    names.forEach((name,i) => { db.prepare('INSERT OR IGNORE INTO zones VALUES (?,1,?,?)').run(i+1,name,keys[i]); db.prepare('INSERT OR IGNORE INTO categories VALUES (?,?,?,?)').run(i+1,name,i+1,i); });
+    names.forEach((name,i) => { db.prepare('INSERT OR IGNORE INTO zones(id,hub_id,name,qr_key) VALUES (?,1,?,?)').run(i+1,name,keys[i]); db.prepare('UPDATE zones SET code=? WHERE qr_key=? AND code IS NULL').run(zoneCodes[keys[i]],keys[i]); db.prepare('INSERT OR IGNORE INTO categories VALUES (?,?,?,?)').run(i+1,name,i+1,i); });
     db.prepare('INSERT OR IGNORE INTO material_code_sequence VALUES (1,1)').run();
     // A non-login demo owner. No shared default password or synthetic account reward.
     db.prepare('INSERT OR IGNORE INTO users(username,username_key,password_hash) VALUES (?,?,?)').run('Material Hub Demo','__demo_owner__','disabled');

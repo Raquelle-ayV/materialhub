@@ -31,9 +31,10 @@ test('B stage one: real discovery, atomic reservations, cancellation and expiry'
     });
     await t.test('auth, own material, quantity and insufficient stock are rejected without credit changes',async()=>{
       assert.equal((await reserve(d.material_id,'')).status,401);assert.equal((await reserve(d.material_id,provider.cookie)).status,409);
-      for(const q of [0,3,-1,1.5,'1'])assert.equal((await reserve(d.material_id,a.cookie,q)).status,400);
+      for(const q of [0,-1,1.5,'1'])assert.equal((await reserve(d.material_id,a.cookie,q)).status,400);
+      assert.match((await reserve(d.material_id,a.cookie,3)).data.error,/Only 2 left/);
       db.prepare('UPDATE materials SET stock_quantity=1 WHERE id=?').run(d.material_id);
-      assert.match((await reserve(d.material_id,a.cookie,2)).data.error,/stock/);assert.equal((await account(a.cookie)).held,0);
+      assert.match((await reserve(d.material_id,a.cookie,2)).data.error,/Only 1 left/);assert.equal((await account(a.cookie)).held,0);
       db.prepare('UPDATE materials SET stock_quantity=2 WHERE id=?').run(d.material_id);
     });
     await t.test('quantity two, concurrent duplicate clicks and changed keys cannot double hold',async()=>{
@@ -57,9 +58,16 @@ test('B stage one: real discovery, atomic reservations, cancellation and expiry'
       assert.equal(db.prepare("SELECT count(*) n FROM activities WHERE type='reservation_cancelled' AND material_id=?").get(d.material_id).n,1);
       assert.equal((await reserve(d.material_id,a.cookie,2,key)).data.reservation.status,'cancelled');assert.equal((await account(a.cookie)).held,0);
     });
-    await t.test('competing users can only create one reservation even for quantity one',async()=>{
-      const results=await Promise.all([reserve(d.material_id,a.cookie),reserve(d.material_id,b.cookie)]);assert.deepEqual(results.map(r=>r.status).sort(),[201,409]);const winner=results.find(r=>r.status===201).data.reservation;
-      assert.equal(winner.reserved_quantity,1);await req(`/reservations/${winner.id}/cancel`,{},winner.user_id===a.data.user.id?a.cookie:b.cookie);
+    await t.test('reservations lock only their quantity: two people share the stock, one active reservation each',async()=>{
+      const results=await Promise.all([reserve(d.material_id,a.cookie),reserve(d.material_id,b.cookie)]);assert.deepEqual(results.map(r=>r.status),[201,201]);
+      const [ra,rb]=results.map(r=>r.data.reservation);assert.equal(ra.reserved_quantity,1);assert.equal(rb.reserved_quantity,1);
+      let m=(await req(`/materials/${d.material_id}`)).data.material;assert.equal(m.stock_quantity,2);assert.equal(m.available_quantity,0);assert.equal(m.status,'reserved');
+      assert.match((await reserve(d.material_id,a.cookie)).data.error,/already have an active reservation/);
+      await req(`/reservations/${ra.id}/cancel`,{},a.cookie);
+      m=(await req(`/materials/${d.material_id}`)).data.material;assert.equal(m.available_quantity,1);assert.equal(m.status,'available');
+      assert.equal((await reserve(d.material_id,a.cookie,2)).status,409,'only the unreserved quantity can be taken');
+      await req(`/reservations/${rb.id}/cancel`,{},b.cookie);
+      m=(await req(`/materials/${d.material_id}`)).data.material;assert.equal(m.available_quantity,2);assert.equal(m.status,'available');
     });
     await t.test('insufficient available credits cannot lock another material',async()=>{
       // This isolated fixture models tradable stock; production samples are browse-only.

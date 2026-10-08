@@ -1,5 +1,6 @@
 import { transaction } from './database.mjs';
 import { reservationDetails } from './fulfillment.mjs';
+import { refreshMaterialStatus } from './zones.mjs';
 
 const fail = (message, status=409) => { throw Object.assign(new Error(message), {status}); };
 export function expireReservations(db, time=Date.now()) {
@@ -13,7 +14,7 @@ export function expireReservations(db, time=Date.now()) {
 function settle(db,r,status,date) {
   const expired=status==='expired';
   db.prepare('UPDATE reservations SET status=?,cancelled_at=? WHERE id=? AND status=\'reserved\'').run(status,expired?null:date,r.id);
-  db.prepare("UPDATE materials SET status='available',version=version+1 WHERE id=? AND status='reserved'").run(r.material_id);
+  refreshMaterialStatus(db,r.material_id);
   const a=db.prepare('UPDATE credit_accounts SET held=held-1,balance=balance-? WHERE user_id=? RETURNING *').get(expired?1:0,r.user_id);
   db.prepare('INSERT INTO credit_entries(user_id,type,balance_delta,held_delta,balance_after,held_after,reservation_id,operation_key,created_at) VALUES (?,?,?,-1,?,?,?,?,?)').run(r.user_id,expired?'expiry_spend':'cancellation_release',expired?-1:0,a.balance,a.held,r.id,`reservation:settle:${r.id}`,date);
   const m=db.prepare('SELECT owner_id,stock_quantity FROM materials WHERE id=?').get(r.material_id);
@@ -30,7 +31,7 @@ export function installReservationRoutes(app,db,requireUser) {
   app.post('/api/materials/:id/reserve',requireUser,(req,res)=>{
     if(db.prepare('SELECT is_demo FROM materials WHERE id=?').get(Number(req.params.id)||-1)?.is_demo)fail('Sample materials are for browsing only and cannot be reserved. No credits are charged.');
     const {quantity,request_key:key}=req.body;
-    if(!Number.isInteger(quantity)||![1,2].includes(quantity))fail('Choose a quantity of 1 or 2.',400);
+    if(!Number.isInteger(quantity)||quantity<1)fail('Choose a quantity of at least 1.',400);
     if(typeof key!=='string'||! /^[a-zA-Z0-9-]{10,100}$/.test(key))fail('Missing or invalid request identifier.',400);
     const result=transaction(db,()=>{
       const previous=db.prepare('SELECT reservation_id FROM reservation_requests WHERE user_id=? AND request_key=?').get(req.user.id,key);
@@ -38,13 +39,15 @@ export function installReservationRoutes(app,db,requireUser) {
       const m=db.prepare('SELECT * FROM materials WHERE id=?').get(Number(req.params.id)||-1);
       if(!m||m.status==='ready_for_drop_off')fail('Material not found.',404);
       if(m.owner_id===req.user.id)fail('You cannot reserve your own material.');
-      if(m.status!=='available')fail('This material is no longer available. It may have just been reserved by someone else.');
-      if(m.stock_quantity<quantity)fail('Not enough stock. Choose a smaller quantity.');
+      if(db.prepare("SELECT id FROM reservations WHERE material_id=? AND user_id=? AND status='reserved'").get(m.id,req.user.id))fail('You already have an active reservation for this material.');
+      const free=m.stock_quantity-db.prepare("SELECT coalesce(sum(reserved_quantity),0) AS n FROM reservations WHERE material_id=? AND status='reserved'").get(m.id).n;
+      if(m.status!=='available'||free<1)fail('This material is no longer available. It may have just been reserved by someone else.');
+      if(free<quantity)fail(`Only ${free} left. Choose a smaller quantity.`);
       const a=db.prepare('UPDATE credit_accounts SET held=held+1 WHERE user_id=? AND balance-held>=1 RETURNING *').get(req.user.id);
       if(!a)fail('Not enough credits. You need 1 available credit to reserve.');
       const date=new Date(),expires=new Date(date.getTime()+24*60*60*1000).toISOString();
       const id=Number(db.prepare("INSERT INTO reservations(material_id,user_id,status,reserved_quantity,unit_snapshot,zone_id_snapshot,created_at,expires_at) VALUES (?,?,'reserved',?,?,?,?,?)").run(m.id,req.user.id,quantity,m.unit,m.zone_id,date.toISOString(),expires).lastInsertRowid);
-      db.prepare("UPDATE materials SET status='reserved',version=version+1 WHERE id=? AND status='available'").run(m.id);
+      refreshMaterialStatus(db,m.id);
       db.prepare('INSERT INTO reservation_requests VALUES (?,?,?)').run(req.user.id,key,id);
       db.prepare("INSERT INTO credit_entries(user_id,type,balance_delta,held_delta,balance_after,held_after,reservation_id,operation_key) VALUES (?,'reservation_hold',0,1,?,?,?,?)").run(req.user.id,a.balance,a.held,id,`reservation:hold:${id}`);
       db.prepare("INSERT INTO inventory_entries(material_id,type,quantity_delta,quantity_after,reservation_id,operation_key,created_at) VALUES (?,'reservation_lock',0,?,?,?,?)").run(m.id,m.stock_quantity,id,`reservation:hold:${id}`,date.toISOString());
