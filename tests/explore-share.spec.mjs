@@ -12,9 +12,9 @@ test('Share tab lists only pending materials with their current step; steps are 
  expect((await account()).balance).toBe(3);
  const items=page.locator('.share-active .active-task');
  await page.goto('/deposit');await expect(page.getByText('Nothing in progress',{exact:true})).toBeVisible();await expect(items).toHaveCount(0);await expect(page.getByText('Completed material')).toHaveCount(0);
- await page.getByRole('link',{name:'Add new material',exact:true}).click();await expect(page.getByRole('heading',{name:'Add Information'})).toBeVisible();await expect(page.getByLabel('Material name',{exact:false})).toHaveValue('');
+ await page.getByRole('link',{name:'Add new material',exact:true}).click();await expect(page.getByRole('heading',{name:'Add information'})).toBeVisible();await expect(page.getByLabel('Material name',{exact:false})).toHaveValue('');
  await expect(page.locator('.flow-progress li.locked')).toHaveCount(3);
- await page.getByLabel('Material name',{exact:false}).fill('Unfinished draft');await expect(page.getByText('Draft saved to your account.',{exact:true})).toBeVisible();
+ await page.getByLabel('Material name',{exact:false}).fill('Unfinished draft');await expect(page.locator('.autosave')).toHaveText('Saved');
  await page.goto('/deposit');await expect(page.getByRole('link',{name:'Continue draft: Unfinished draft'})).toBeVisible();await page.getByRole('link',{name:'Add new material',exact:true}).click();await expect(page.getByLabel('Material name',{exact:false})).toHaveValue('');
  const a=await create('Pending A');const before=(await(await page.request.get(`/api/deposits/${a.id}`)).json()).deposit;
  await page.goto('/deposit');await expect(items).toHaveCount(1);await expect(items.first()).toContainText('Step 2 of 4: Go to the Hub');
@@ -37,6 +37,6 @@ test('Recent history is genuine, ordered, persistent, keyboard-scrollable and ha
  expect(await page.locator('.recent-rail').evaluate(e=>getComputedStyle(e).scrollbarWidth)).toBe('none');
  await page.getByRole('link',{name:'View all recently viewed materials'}).click();await expect(page).toHaveURL(/\/recently-viewed$/);await expect(page.locator('.material-card')).toHaveCount(3);
  await page.goto('/');await expect(page.locator('.more-materials,.arrival-rail,.compact-task,.filter-toolbar')).toHaveCount(0);await expect(page.locator('.recommended-materials .card-bottom')).toHaveCount(0);
- const cat=await page.locator('.category-strip').boundingBox(),filter=await page.getByRole('button',{name:'More filters'}).boundingBox();expect(Math.abs(cat.y-filter.y)).toBeLessThan(5);
- await page.getByRole('button',{name:'More filters'}).click();await page.getByLabel('Condition',{exact:true}).selectOption('Good');await page.getByRole('button',{name:'Apply filters'}).click();await expect(page).toHaveURL(/condition=Good/);
+ const search=await page.locator('.search-bar').boundingBox(),filter=await page.getByRole('button',{name:'More filters'}).boundingBox(),cat=await page.locator('.category-strip').boundingBox();expect(Math.abs((search.y+search.height/2)-(filter.y+filter.height/2))).toBeLessThan(3);expect(cat.y).toBeGreaterThanOrEqual(filter.y+filter.height);expect(filter.x).toBeGreaterThan(search.x+search.width);
+ await page.getByRole('button',{name:'More filters'}).click();await page.getByLabel('Condition',{exact:true}).selectOption('Used');await page.getByRole('button',{name:'Apply filters'}).click();await expect(page).toHaveURL(/condition=Used/);await expect(page.getByRole('button',{name:'More filters, 1 active'})).toBeVisible();
 });

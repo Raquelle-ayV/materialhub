@@ -6,7 +6,7 @@
 export const hubConfig = {
   name: 'Material Hub',
   /** e.g. 'Building 17, Level 1, next to the model workshop' */
-  location: 'Building 17 · L1',
+  location: 'Building 17, Level 1',
   /** e.g. 'Mon–Fri 9:00–18:00' */
   hours: '',
   /** Route map image, e.g. '/hub/route-map.jpg' */

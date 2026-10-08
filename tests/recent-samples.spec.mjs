@@ -13,7 +13,7 @@ test('history includes own material, stays scoped to each account and samples ca
  await page.goto('/');await expect(page.locator('.recent-materials')).toHaveCount(0);
  for(const id of [1,2,d.material_id,1,d.material_id]){await page.goto(`/materials/${id}`);await expect(page.locator('.detail-title')).toBeVisible();}
  await page.goto('/');await expect(page.locator('.recent-card')).toHaveCount(3);await expect(page.locator('.recent-card').first()).toHaveAttribute('href',`/materials/${d.material_id}`);
- await page.reload();await expect(page.locator('.recent-card')).toHaveCount(3);await expect(page.locator('.recent-card').first()).toContainText('Not yet available');
+ await page.reload();await expect(page.locator('.recent-card')).toHaveCount(3);await expect(page.locator('.recent-card').first()).toContainText('Ready for drop-off');
  await page.goto('/materials/1');await expect(page.getByText('Sample material',{exact:true})).toBeVisible();await expect(page.getByRole('link',{name:'Reserve',exact:true})).toHaveCount(0);
  const before=(await(await page.request.get('/api/auth/me')).json()).user;
  await page.goto('/materials/1/reserve');await expect(page.getByText('Sample material',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Confirm reservation'})).toHaveCount(0);
@@ -23,5 +23,5 @@ test('history includes own material, stays scoped to each account and samples ca
  await page.goto('/materials/3');await expect(page.locator('.detail-title')).toBeVisible();await page.goto('/');await expect(page.locator('.recent-card')).toHaveCount(1);
  await page.request.post('/api/auth/logout',{data:{}});await login('history_owner');await page.goto('/');await expect(page.locator('.recent-card')).toHaveCount(3);await expect(page.locator('.recent-card').first()).toHaveAttribute('href','/materials/1');
  // Current state is fetched again; pending owner's record is still labelled correctly.
- await expect(page.locator(`.recent-card[href="/materials/${d.material_id}"]`)).toContainText('Not yet available');
+ await expect(page.locator(`.recent-card[href="/materials/${d.material_id}"]`)).toContainText('Ready for drop-off');
 });

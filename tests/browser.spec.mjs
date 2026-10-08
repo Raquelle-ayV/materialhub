@@ -21,7 +21,7 @@ test('mobile registration, persisted login, credits, logout, and preview navigat
   await expect(page.getByText('Welcome credits',{exact:true})).toHaveCount(1);
   await expect(page.getByText('+2',{exact:true})).toBeVisible();
   await page.screenshot({path:'test-results/credits-mobile.png',fullPage:true});
-  await page.getByRole('link',{name:'Profile',exact:true}).click();
+  await page.getByRole('link',{name:'Back',exact:true}).click();
   await page.screenshot({path:'test-results/profile-mobile.png',fullPage:true});
   await page.getByRole('button',{name:'Log out',exact:true}).click();
   await expect(page.getByRole('heading',{name:'Welcome back'})).toBeVisible();
@@ -33,7 +33,7 @@ test('mobile registration, persisted login, credits, logout, and preview navigat
   await page.getByRole('button',{name:'Log in',exact:true}).click();
   await expect(page.getByRole('heading',{name:username,exact:true})).toBeVisible();
   await page.getByRole('navigation').getByRole('link',{name:'Share',exact:true}).click();
-  await expect(page.getByRole('heading',{name:'Share Material',exact:true})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Share material',exact:true})).toBeVisible();
   await page.getByRole('navigation').getByRole('link',{name:'Explore',exact:true}).click();
   await page.getByRole('textbox',{name:'Search materials'}).fill('canvas');
   await page.getByRole('button',{name:'Submit search'}).click();

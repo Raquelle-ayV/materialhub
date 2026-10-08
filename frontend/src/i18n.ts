@@ -9,7 +9,7 @@ export const isLanguage=(v:unknown):v is Language=>v==='en'||v==='zh-CN';
 // English-only release; stored preferences remain available for a future rollout.
 void i18next.use(initReactI18next).init({resources:{en:{translation:en}},lng:'en',fallbackLng:'en',supportedLngs:['en'],returnEmptyString:false,keySeparator:false,nsSeparator:false,interpolation:{escapeValue:false},initImmediate:false});
 document.documentElement.lang='en';
-document.title='Re:Material — Campus material sharing';
+document.title='Rematerial';
 export default i18next;
 export class ApiError extends Error {
   uiMessage:Message;

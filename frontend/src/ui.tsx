@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
-import { Check, ChevronDown, ChevronRight, Heart, ImageOff, Pencil, X } from 'lucide-react';
+import { ArrowLeft, Check, ChevronDown, ChevronRight, Heart, ImageOff, Pencil, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Auth, api } from './lib';
@@ -21,9 +21,31 @@ export function ZoomablePhoto({src,alt}:{src?:string;alt:string}) {
 /** Shared finish screen for drop-off and pickup: no back arrow, Done returns to Explore. */
 export function SuccessPage({title,subtitle,material,credit,secondary,children}:{title:string;subtitle?:string;material:{id:number;name:string;code:string;image?:string;detail?:string};credit:{title:string;note:string};secondary:{to:string;label:string};children?:ReactNode}) {
   return <section className="success-page"><span className="success-icon"><Check size={30}/></span><div className="page-heading"><h1>{title}</h1>{subtitle&&<p>{subtitle}</p>}</div>
-    <Link className="success-material" to={`/materials/${material.id}`}><MaterialPhoto src={material.image} alt={material.name}/><div><b>{material.name}</b><small>{material.code}</small>{material.detail&&<small>{material.detail}</small>}</div><ChevronRight size={18}/></Link>
+    <Link className="success-material" to={`/materials/${material.id}`}><MaterialPhoto src={material.image} alt={material.name}/><div><b>{capitalize(material.name)}</b><small><MaterialCode code={material.code}/></small>{material.detail&&<small>{material.detail}</small>}</div><ChevronRight size={18}/></Link>
     <p className="success-credit"><b>{credit.title}</b><span>{credit.note}</span></p>{children}
     <div className="flow-action"><Link className="button dark full" to="/">Done</Link><Link className="button outline full" to={secondary.to}>{secondary.label}</Link></div></section>;
+}
+
+/** "pvc board" -> "Pvc board": names and colours are shown with a capital first letter. */
+export const capitalize=(text?:string|null)=>text?text.charAt(0).toUpperCase()+text.slice(1):'';
+
+/** Every material code on the site, in three sizes: lg (find the label), md (headings), sm (lists and cards). */
+export function MaterialCode({code,size='sm'}:{code:string;size?:'lg'|'md'|'sm'}) {
+  return <span className={`mcode mcode-${size}`}>{code}</span>;
+}
+
+type Tone='green'|'amber'|'grey';
+const materialStatus:Record<string,[string,Tone]>={available:['Available','green'],reserved:['Reserved','amber'],ready_for_drop_off:['Ready for drop-off','amber'],unavailable:['Unavailable','grey'],collected:['Collected','grey'],closed:['Removed','grey']};
+const reservationStatus:Record<string,[string,Tone]>={reserved:['Active','green'],collected:['Collected','grey'],returned:['Returned','grey'],cancelled:['Cancelled','grey'],expired:['Expired','grey'],issue_reported:['Issue reported','amber']};
+/** Available / Active = green; Ready for drop-off / Reserved = amber; Unavailable / Collected / Expired = grey. */
+export function StatusBadge({status,kind='material',label}:{status:string;kind?:'material'|'reservation';label?:string}) {
+  const [text,tone]=(kind==='reservation'?reservationStatus:materialStatus)[status]||[status.replaceAll('_',' '),'grey' as Tone];
+  return <span className={`status-badge tone-${tone}`}>{label||text}</span>;
+}
+
+/** Top navigation for every inner page: back arrow only on the left, page title in the middle, optional note on the right. */
+export function TopBar({to,title,end}:{to:string;title:string;end?:ReactNode}) {
+  return <header className="top-bar"><Link className="top-back" to={to} aria-label="Back"><ArrowLeft size={22}/></Link><h1>{title}</h1><span className="top-end">{end}</span></header>;
 }
 
 export type FlowStep = {label:string;to?:string;onClick?:()=>void;disabled?:boolean};
@@ -36,7 +58,7 @@ export function StepBar({steps,current}:{steps:FlowStep[];current:number}) {
 /** Compact "which material is this?" card shown at the top of each Hub step. */
 export function MaterialStrip({image,name,code,editTo,children,defaultOpen=false}:{image?:string;name:string;code:string;editTo?:string;children?:ReactNode;defaultOpen?:boolean}) {
   const [open,setOpen]=useState(defaultOpen);
-  return <section className={`material-strip ${open?'open':''}`}><div className="material-strip-row"><MaterialPhoto src={image} alt={name}/><div className="material-strip-text"><b>{name}</b><small>{code}</small></div>{editTo&&<Link className="icon-button" to={editTo} aria-label="Edit material information"><Pencil size={17}/></Link>}{children&&<button type="button" className="icon-button strip-toggle" aria-expanded={open} aria-label={open?'Hide details':'View details'} onClick={()=>setOpen(!open)}><ChevronDown size={20}/></button>}</div>{open&&children&&<div className="material-strip-details">{children}</div>}</section>;
+  return <section className={`material-strip ${open?'open':''}`}><div className="material-strip-row"><MaterialPhoto src={image} alt={name}/><div className="material-strip-text"><b>{capitalize(name)}</b><MaterialCode code={code}/></div>{editTo&&<Link className="icon-button" to={editTo} aria-label="Edit material information"><Pencil size={17}/></Link>}{children&&<button type="button" className="icon-button strip-toggle" aria-expanded={open} aria-label={open?'Hide details':'View details'} onClick={()=>setOpen(!open)}><ChevronDown size={20}/></button>}</div>{open&&children&&<div className="material-strip-details">{children}</div>}</section>;
 }
 
 /** Heart toggle: fills instantly, rolls back with a message if saving fails, and sends logged-out visitors to log in. */

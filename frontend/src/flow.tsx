@@ -1,17 +1,15 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Camera, Clock3, MapPin } from 'lucide-react';
+import { Camera, Clock3, MapPin } from 'lucide-react';
 import type { IScannerControls } from '@zxing/browser';
 import { hubConfig } from './hub-config';
-import { StepBar, type FlowStep } from './ui';
+import { StepBar, TopBar, type FlowStep } from './ui';
 import { useI18n, messageOf, type Message } from './i18n';
 
 function ErrorMessage({error}:{error:Message}) { const {msg}=useI18n(); return error?<div className="notice" role="alert">{msg(error)}</div>:null; }
 
 /** One template for every drop-off and pickup step: back, steps, material, title (= current step), content, fixed action. */
-export function FlowPage({back,steps,current,strip,children,action,hint}:{back:{to:string;label:string};steps:FlowStep[];current:number;strip?:ReactNode;children?:ReactNode;action?:ReactNode;hint?:ReactNode}) {
-  return <div className="flow-page"><Link className="back-link" to={back.to}><ArrowLeft size={16}/>{back.label}</Link><StepBar steps={steps} current={current}/>{strip}
-    <div className="page-heading"><h1>{steps[current-1].label}</h1></div>{children}
+export function FlowPage({back,steps,current,strip,children,action,hint}:{back:{to:string};steps:FlowStep[];current:number;strip?:ReactNode;children?:ReactNode;action?:ReactNode;hint?:ReactNode}) {
+  return <div className="flow-page"><TopBar to={back.to} title={steps[current-1].label}/><StepBar steps={steps} current={current}/>{strip}{children}
     {action&&<div className="flow-action">{hint&&<p className="flow-hint" role="status">{hint}</p>}{action}</div>}</div>;
 }
 
@@ -35,7 +33,7 @@ export function HubGuide({zone}:{zone?:string}) {
 
 /** Zone check by camera; a wrong zone names both the zone you are at and the one you need. */
 export function FindArea({zone,onVerify}:{zone:string;onVerify:(body:{qr:string})=>Promise<void>}) {
-  return <><div className="zone-confirm"><MapPin size={21}/><div><small>YOUR MATERIAL ZONE</small><b>{zone}</b></div></div>
+  return <><div className="zone-confirm"><MapPin size={21}/><div><small>Your material zone</small><b>{zone}</b></div></div>
     <CameraScanner autoStart onScan={qr=>onVerify({qr})}/></>;
 }
 

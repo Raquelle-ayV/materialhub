@@ -6,7 +6,7 @@ async function material(request,quantity=2){
   const png=await sharp({create:{width:120,height:90,channels:3,background:'#b0c68a'}}).png().toBuffer();
   const upload=async()=>{const r=await request.post('/api/uploads',{headers:{'Content-Type':'image/png','X-File-Name':'photo.png'},data:png});return(await r.json()).photo.id;};
   const ids=[await upload(),await upload()],placement=await upload();
-  const r=await request.post('/api/deposits',{data:{request_key:crypto.randomUUID(),name:`Reservation paper ${Date.now()}`,quantity,category_id:2,unit:'sheets',condition:'Good',color:'Green',dimensions_spec:'A4',notes:'Real material for B browser testing.',reference_url:'https://example.com/paper',photo_ids:ids}});expect(r.status()).toBe(201);const d=(await r.json()).deposit;
+  const r=await request.post('/api/deposits',{data:{request_key:crypto.randomUUID(),name:`Reservation paper ${Date.now()}`,quantity,category_id:2,unit:'sheets',condition:'Used',color:'Green',dimensions_spec:'A4',notes:'Real material for B browser testing.',reference_url:'https://example.com/paper',photo_ids:ids}});expect(r.status()).toBe(201);const d=(await r.json()).deposit;
   await request.post(`/api/deposits/${d.id}/arrive`,{data:{}});await request.post(`/api/deposits/${d.id}/verify-zone`,{data:{qr:'REMATERIAL|ZONE|PAPER_SHEET'}});await request.post(`/api/deposits/${d.id}/placement`,{data:{photo_ids:[placement]},});expect((await request.post(`/api/deposits/${d.id}/confirm`,{data:{}})).status()).toBe(200);return d;
 }
 test('B browse, reserve from the bottom sheet, duplicate click, persistence and cancellation with confirmation',async({page})=>{
@@ -29,7 +29,7 @@ test('B browse, reserve from the bottom sheet, duplicate click, persistence and 
   const m=(await(await page.request.get(`/api/materials/${d.material_id}`)).json()).material;expect(m.status).toBe('reserved');expect(m.stock_quantity).toBe(2);expect(m.available_quantity).toBe(0);
   await page.goto('/me');await expect(page.locator('.task-strip')).toContainText('Reserved for pickup');
   await page.getByRole('button',{name:'Log out',exact:true}).click();await page.getByLabel('Username',{exact:true}).fill(username);await page.getByLabel('Password',{exact:true}).fill('reservation-test');await page.getByRole('button',{name:'Log in',exact:true}).click();await expect(page.getByRole('heading',{name:username,exact:true})).toBeVisible();
-  await page.getByRole('link',{name:'My Reservations',exact:true}).click();await expect(page.locator('time')).toHaveAttribute('datetime',time);await page.screenshot({path:'test-results/my-reservations-402.png',fullPage:true});
+  await page.getByRole('link',{name:'My reservations',exact:true}).click();await expect(page.locator('time')).toHaveAttribute('datetime',time);await page.screenshot({path:'test-results/my-reservations-402.png',fullPage:true});
   await page.locator('.reservation-card .active-task').click();await page.getByRole('button',{name:'Cancel reservation',exact:true}).click();
   const confirm=page.getByRole('dialog',{name:'Cancel this reservation?'});await confirm.getByRole('button',{name:'Keep it'}).click();await expect(confirm).toBeHidden();await expect(page.locator('.status-badge')).toHaveText('Active');
   await page.getByRole('button',{name:'Cancel reservation',exact:true}).click();await confirm.getByRole('button',{name:'Cancel reservation',exact:true}).click();
@@ -58,7 +58,7 @@ test('B partial reservations, stale sheet, own material, filters, empty results 
   await page.goto(`/materials?q=${d.display_code}`);await expect(page.getByText('No materials found',{exact:true})).toBeVisible();await expect(page.locator('.filter-count')).toHaveCount(0);
   await page.getByRole('button',{name:'More filters'}).click();const filters=page.getByRole('dialog',{name:'Filters'});await expect(filters.getByLabel('Category')).toHaveCount(0);
   await expect(filters.getByRole('switch',{name:/Show unavailable/})).not.toBeChecked();await filters.getByRole('switch',{name:/Show unavailable/}).check();await filters.getByRole('button',{name:'Apply filters'}).click();await expect(page.locator('.material-card')).toHaveCount(1);await expect(page.locator('.filter-count')).toHaveText('1');
-  await page.getByRole('button',{name:/More filters/}).click();await filters.getByLabel('Condition',{exact:true}).selectOption('Good');await filters.getByRole('button',{name:'Apply filters'}).click();await expect(page.locator('.material-card')).toHaveCount(1);await expect(page.locator('.filter-count')).toHaveText('2');
+  await page.getByRole('button',{name:/More filters/}).click();await filters.getByLabel('Condition',{exact:true}).selectOption('Used');await filters.getByRole('button',{name:'Apply filters'}).click();await expect(page.locator('.material-card')).toHaveCount(1);await expect(page.locator('.filter-count')).toHaveText('2');
   await page.route('**/api/materials?**',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'Materials could not be loaded. Please try again.'})}));await page.goto('/materials');await expect(page.getByRole('alert')).toContainText('could not be loaded');await page.unroute('**/api/materials?**');await page.getByRole('button',{name:'Retry',exact:true}).click();await expect(page.locator('.material-card').first()).toBeVisible();
   await other.close();await third.close();
 });

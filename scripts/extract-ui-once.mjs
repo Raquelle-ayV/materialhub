@@ -10,7 +10,7 @@ for(const path of ['frontend/src/main.tsx','frontend/src/deposits.tsx']){
     if(ts.isFunctionDeclaration(node)&&node.name&&/^[A-Z]/.test(node.name.text)&&node.body){edits.push({start:node.body.getStart(file)+1,end:node.body.getStart(file)+1,text:' const {t,msg,language}=useI18n(); '});}
     if(ts.isJsxText(node)){
       const raw=node.getText(file),text=raw.replace(/\s+/g,' ').trim();
-      if(/[A-Za-z]/.test(text)&&text!=='Re:Material'){
+      if(/[A-Za-z]/.test(text)&&text!=='Rematerial'){
         const lead=/^\s/.test(raw)&&!raw.includes('\n')?'{" "}':'';const trail=/\s$/.test(raw)&&!raw.includes('\n')?'{" "}':'';
         edits.push({start:node.getStart(file),end:node.end,text:`${lead}{${call(text)}}${trail}`});
       }

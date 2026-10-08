@@ -1,0 +1,99 @@
+/* Rematerial theme tokens. Loaded last so these definitions win; the other stylesheets refer to these variables. */
+:root{
+  /* Type: one font stack, five sizes */
+  --font-sans:Inter,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --font-code:Consolas,"SF Mono",Menlo,"Roboto Mono","Courier New",monospace;
+  --fs-title:28px;    /* page titles, bold */
+  --fs-section:18px;  /* section titles, semibold */
+  --fs-body:16px;     /* body text, inputs, buttons */
+  --fs-help:14px;     /* supporting text */
+  --fs-label:12px;    /* labels, badges, tab names */
+  --fw-bold:700;--fw-semibold:600;--fw-regular:400;
+  /* Material codes (MaterialCode component) */
+  --code-lg:48px;--code-md:22px;--code-sm:13px;--code-tracking:.08em;
+
+  /* Colour */
+  --green:#244c3b;
+  --text:#23372b;
+  --text-secondary:#5e6c63;
+  --text-placeholder:#9ba59e;
+  --line:#e7e9e4;
+  --border:#d5ddd5;
+  --surface:#f3f5f0;
+  --tone-green-bg:#e3ede0;--tone-green-fg:#244c3b;
+  --tone-amber-bg:#fbefd2;--tone-amber-fg:#875a00;
+  --tone-grey-bg:#eceeea;--tone-grey-fg:#636d66;
+
+  /* Older names still used by earlier stylesheets */
+  --type-title:var(--fs-title);--type-section:var(--fs-section);--type-body:var(--fs-body);--type-help:var(--fs-help);
+}
+
+html,body,button,input,select,textarea{font-family:var(--font-sans)}
+body{font-size:var(--fs-body);color:var(--text)}
+h1,.page-heading h1,.flow-page h1,.detail-title{font-size:var(--fs-title);font-weight:var(--fw-bold);letter-spacing:-.3px}
+h2,.section-title h2,.spec-heading{font-size:var(--fs-section);font-weight:var(--fw-semibold)}
+
+/* Form fields: a chosen value looks like typed text; placeholders are clearly lighter */
+input,select,textarea{font-size:var(--fs-body);font-weight:var(--fw-regular);color:var(--text)}
+input::placeholder,textarea::placeholder{color:var(--text-placeholder);opacity:1;font-weight:var(--fw-regular)}
+select:has(>option[value=""]:checked){color:var(--text-placeholder)}
+select option{color:var(--text)}
+.material-form label>small,.optional-tag{font-size:var(--fs-label);font-weight:var(--fw-regular);color:var(--text-secondary);margin-left:6px}
+
+/* ---- Shared components ---- */
+
+/* Top bar: back arrow on the left, title centred */
+.top-bar{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;min-height:52px;margin:8px 0 12px}
+.top-back{width:44px;height:44px;display:grid;place-items:center;margin-left:-10px;border-radius:50%;color:var(--text)}
+.top-back:hover{background:var(--surface)}
+.top-bar h1{margin:0;text-align:center;font-size:var(--fs-section);font-weight:var(--fw-semibold);letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-end{justify-self:end;text-align:right;white-space:nowrap}
+.page-intro{margin:0 0 16px;font-size:var(--fs-help);color:var(--text-secondary)}
+.autosave{font-size:var(--fs-label);color:var(--text-secondary)}
+.autosave.failed{color:var(--danger)}
+
+/* Material codes: one face, weight and spacing; three sizes */
+.mcode{font-family:var(--font-code);font-weight:var(--fw-bold);letter-spacing:var(--code-tracking);color:inherit;font-style:normal}
+.mcode-lg{font-size:var(--code-lg);line-height:1.1}
+.mcode-md{font-size:var(--code-md)}
+.mcode-sm{font-size:var(--code-sm);font-weight:var(--fw-semibold);color:var(--text-secondary)}
+.label-code,.reservation-code{display:block;text-align:center;font:inherit;letter-spacing:0}
+.label-code .mcode,.reservation-code .mcode{color:var(--text)}
+.material-strip-text .mcode,.active-task .mcode{display:block}
+
+/* Status badges */
+.status-badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;font-size:var(--fs-label);font-weight:var(--fw-semibold);line-height:1.4;margin:0}
+.status-badge.tone-green{background:var(--tone-green-bg);color:var(--tone-green-fg)}
+.status-badge.tone-amber{background:var(--tone-amber-bg);color:var(--tone-amber-fg)}
+.status-badge.tone-grey{background:var(--tone-grey-bg);color:var(--tone-grey-fg)}
+.reservation-card .status-badge{margin-top:10px}
+
+/* Cards on Explore */
+.card-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.condition-tag{display:inline-block;padding:3px 8px;border-radius:6px;background:var(--surface);color:var(--text-secondary);font-size:var(--fs-label)}
+
+/* Search row with the filter icon; chips fade out on the right */
+.search-row{display:flex;align-items:center;gap:10px;margin:14px 0 12px}
+.search-row .search-bar{flex:1;margin:0;min-width:0}
+.filter-icon{position:relative;flex:0 0 48px;width:48px;height:48px;display:grid;place-items:center;border:1px solid var(--border);border-radius:50%;background:#fff;color:var(--text);cursor:pointer}
+.filter-icon .filter-count{position:absolute;top:-4px;right:-4px;margin:0}
+.discovery-filters{display:block;margin:0 0 14px}
+.category-strip{-webkit-mask-image:linear-gradient(to right,#000 82%,transparent);mask-image:linear-gradient(to right,#000 82%,transparent);padding-right:40px}
+
+/* Condition: segmented buttons */
+.segmented-field{border:0;margin:0;padding:0;min-width:0}
+.segmented-field legend{font-weight:var(--fw-semibold);font-size:var(--fs-help);margin-bottom:8px;padding:0}
+.segmented{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:0;border:1px solid var(--border);border-radius:var(--radius-field,10px);overflow:hidden}
+.segmented label{position:relative;display:grid;place-items:center;min-height:46px;padding:0 6px;font-size:var(--fs-help);font-weight:var(--fw-regular);color:var(--text);cursor:pointer;border-left:1px solid var(--border);text-align:center;margin:0}
+.segmented label:first-child{border-left:0}
+.segmented label.selected{background:var(--green);color:#fff;font-weight:var(--fw-semibold)}
+.segmented input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.segmented label:has(input:focus-visible){outline:2px solid var(--green);outline-offset:-3px}
+
+/* Content never hides under a fixed bottom bar: padding equals the measured bar height */
+.deep-page main{padding-bottom:calc(var(--fixed-bar-h,0px) + 24px)}
+.flow-page:has(.flow-action),.flow-page:has(.flow-primary),.reservation-detail:has(a[href$="/guide"]){padding-bottom:0}
+.material-form .segmented-field{margin:20px 0 4px}
+.material-form .segmented label{display:flex;align-items:center;justify-content:center;min-height:46px;margin:0;padding:0 6px;font-size:var(--fs-help);line-height:1.2}
+.optional-details summary{display:flex;align-items:center;gap:6px}
+.optional-details summary .optional-tag{margin-left:0;margin-right:auto}
