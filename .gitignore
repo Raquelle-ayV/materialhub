@@ -48,3 +48,7 @@ blob-report/
 tmp/
 .tmp/
 *.log
+
+# Local installers and temporary scripts
+*.msi
+scripts/.tmp-*
