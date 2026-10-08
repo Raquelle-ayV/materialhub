@@ -33,6 +33,8 @@ function readCredentials(req) {
 export function createApp(db, options = {}) {
   const app = express();
   app.disable('x-powered-by');
+  // A tunnel (cpolar) or proxy on this machine forwards requests; use the visitor's address it reports.
+  app.set('trust proxy', 'loopback');
   // Stable message keys accompany English API errors for render-time localization.
   app.use((req,res,next) => {
     const json=res.json.bind(res);
@@ -44,8 +46,11 @@ export function createApp(db, options = {}) {
     res.set('Referrer-Policy','same-origin');
     if (req.path.startsWith('/api')) res.set('Cache-Control','no-store');
     if (['POST','PATCH','PUT','DELETE'].includes(req.method)) {
-      const allowed = new Set([process.env.FRONTEND_ORIGIN || 'http://localhost:5173', 'http://localhost:3001']);
-      if (req.headers.origin && !allowed.has(req.headers.origin)) return res.status(403).json({error:'This request origin is not allowed.'});
+      const allowed = new Set([process.env.FRONTEND_ORIGIN || 'http://localhost:5173', 'http://localhost:3001', ...(process.env.ALLOWED_ORIGINS || '').split(',').map(o => o.trim()).filter(Boolean)]);
+      // Pages served by this server (including through an https tunnel) post back to their own address.
+      const host = req.headers['x-forwarded-host'] || req.headers.host;
+      let sameHost = false; try { sameHost = !!req.headers.origin && new URL(req.headers.origin).host === host; } catch {}
+      if (req.headers.origin && !allowed.has(req.headers.origin) && !sameHost) return res.status(403).json({error:'This request origin is not allowed.'});
       if (req.path !== '/api/uploads' && !req.is('application/json')) return res.status(415).json({error:'Please send a JSON request.'});
     }
     next();
