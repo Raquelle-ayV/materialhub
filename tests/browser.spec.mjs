@@ -32,7 +32,7 @@ test('mobile registration, persisted login, credits, logout, and preview navigat
   await page.getByLabel('Password',{exact:true}).fill('Local-demo-2026!');
   await page.getByRole('button',{name:'Log in',exact:true}).click();
   await expect(page.getByRole('heading',{name:username,exact:true})).toBeVisible();
-  await page.getByRole('navigation').getByRole('link',{name:'Share Material'}).click();
+  await page.getByRole('navigation').getByRole('link',{name:'Share',exact:true}).click();
   await expect(page.getByRole('heading',{name:'Share Material',exact:true})).toBeVisible();
   await page.getByRole('navigation').getByRole('link',{name:'Explore',exact:true}).click();
   await page.getByRole('textbox',{name:'Search materials'}).fill('canvas');

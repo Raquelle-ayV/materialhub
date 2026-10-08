@@ -6,7 +6,7 @@ import './styles.css';
 import './mobile.css';
 import './app-ui.css';
 import './ui.css';
-import { MaterialPhoto } from './ui';
+import { MaterialPhoto, FavoriteButton } from './ui';
 import { useI18n, messageOf, validateForm, type Message } from './i18n';
 
 import { Auth, api, type User } from './lib';
@@ -16,7 +16,7 @@ import { FulfillmentPage } from './fulfillment';
 import { ProfileReviewNotice, ReviewPage } from './reviews';
 import { AddInformation, DepositPage, DepositTasks, MyPosts, ShareMaterial, HubGuide, DropOffEntry } from './deposits';
 
-type Material = { id:number; display_code:string; name:string; category:string; zone:string; stock_quantity:number; unit:string; dimensions_spec:string; color:string; condition:string; notes:string; image:string; is_demo:number; status:string };
+type Material = { id:number; display_code:string; name:string; category:string; zone:string; stock_quantity:number; unit:string; dimensions_spec:string; color:string; condition:string; notes:string; image:string; is_demo:number; status:string; is_favorite?:boolean };
 type Entry = { id:number; type:string; balance_delta:number; held_delta:number; created_at:string };
 function Notice({children}:{children:ReactNode}) { const {t,msg,language}=useI18n();  return <div className="notice" role="alert"><AlertCircle size={17}/><span>{children}</span></div>; }
 function App() { const {t,msg,language}=useI18n(); 
@@ -24,7 +24,7 @@ function App() { const {t,msg,language}=useI18n();
   const [loading,setLoading] = useState(true);
   const [error,setError] = useState<Message>('');
   const location = useLocation();
-  const mainPage = ["/", "/materials", "/deposit", "/me"].includes(location.pathname.replace(/\/+$/, "")||"/");
+  const mainPage = ["/", "/materials", "/deposit", "/saved", "/me"].includes(location.pathname.replace(/\/+$/, "")||"/");
   useEffect(() => { api<{user:User|null}>('/auth/me').then(r=>setUser(r.user)).catch(e=>setError(messageOf(e))).finally(()=>setLoading(false)); },[]);
   useEffect(()=>{ window.scrollTo(0,0); let active=true;const refresh=()=>api<{user:User|null}>('/auth/me').then(r=>{if(active)setUser(r.user);}).catch(()=>{});void refresh();const timer=setInterval(refresh,15000);window.addEventListener('focus',refresh);return()=>{active=false;clearInterval(timer);window.removeEventListener('focus',refresh);}; },[location.pathname]);
   return <Auth.Provider value={{user,loading,setUser}}><div className={`app-shell ${mainPage?"main-page":"deep-page"}`}>
@@ -35,11 +35,11 @@ function App() { const {t,msg,language}=useI18n();
       <Route path="/me/settings" element={<Navigate to="/me" replace/>}/><Route path="/me" element={<Profile/>}/><Route path="/me/credits" element={<Credits/>}/>
       <Route path="/me/posts" element={<MyPosts/>}/><Route path="/me/issues/:id" element={<ReviewPage/>}/>
       <Route path="/me/reservations" element={<MyReservations/>}/>
-      <Route path="/me/favorites" element={<Coming title={t("Favorites")} text={t("Saving materials to your account will be available with the discovery flow.")}/>}/>
+      <Route path="/saved" element={<Saved/>}/><Route path="/me/favorites" element={<Navigate to="/saved" replace/>}/>
       <Route path="/me/activity" element={<Activity/>}/>
       <Route path="*" element={<Coming title={t("Page not found")} text={t("This page isn’t here. Let’s find something useful.")}/>}/>
     </Routes></main>
-    {mainPage && <nav className="bottom-nav" aria-label={t("Main navigation")}><NavLink to="/" end className={location.pathname==='/materials'?'active':undefined}><Compass size={22}/><span>{t("Explore")}</span></NavLink><NavLink to="/deposit"><span className="nav-plus"><Plus size={21}/></span><span>{t("Share Material")}</span></NavLink><NavLink to="/me"><UserRound size={22}/><span>{t("Profile")}</span></NavLink></nav>}
+    {mainPage && <nav className="bottom-nav" aria-label={t("Main navigation")}><NavLink to="/" end className={location.pathname==='/materials'?'active':undefined}><Compass size={22}/><span>{t("Explore")}</span></NavLink><NavLink to="/deposit"><span className="nav-plus"><Plus size={21}/></span><span>{t("Share")}</span></NavLink><NavLink to="/saved"><Heart size={22}/><span>{t("Saved")}</span></NavLink><NavLink to="/me"><UserRound size={22}/><span>{t("Profile")}</span></NavLink></nav>}
   </div></Auth.Provider>;
 }
 function Explore({results=false,history=false}:{results?:boolean;history?:boolean}) { const {t,msg,language}=useI18n(); 
@@ -84,7 +84,7 @@ function Explore({results=false,history=false}:{results?:boolean;history?:boolea
   </>;
 }
 function materialStatus(status:string){return ({available:'Available',reserved:'Reserved',unavailable:'Needs review',closed:'Removed',collected:'Collected',ready_for_drop_off:'Not yet available'} as Record<string,string>)[status]||'Unavailable';}
-function MaterialCard({material:m,compact=false}:{material:Material;compact?:boolean}) { return <Link to={`/materials/${m.id}`} className={`material-card ${compact?'recent-card':''}`}><div className="material-image"><MaterialPhoto src={m.image} alt={m.is_demo?m.name+' (sample material)':m.name}/></div><h3>{m.name}</h3><p className="material-status">{m.stock_quantity} {m.unit}</p>{m.status!=='available'&&<span className="card-state">{materialStatus(m.status)}</span>}</Link>; }
+function MaterialCard({material:m,compact=false,onFavorite}:{material:Material;compact?:boolean;onFavorite?:(saved:boolean)=>void}) { return <Link to={`/materials/${m.id}`} className={`material-card ${compact?'recent-card':''}`}><div className="material-image"><MaterialPhoto src={m.image} alt={m.is_demo?m.name+' (sample material)':m.name}/><FavoriteButton materialId={m.id} initial={!!m.is_favorite} onChange={onFavorite}/></div><h3>{m.name}</h3><p className="material-status">{m.stock_quantity} {m.unit}</p>{m.status!=='available'&&<span className="card-state">{materialStatus(m.status)}</span>}</Link>; }
 function AuthPage({register=false}:{register?:boolean}) { const {t,msg,language}=useI18n(); 
   const {user,setUser,loading} = useContext(Auth); const navigate=useNavigate(); const [params]=useSearchParams();
   const [username,setUsername]=useState(''); const [password,setPassword]=useState(''); const [visible,setVisible]=useState(false); const [error,setError]=useState<Message>(''); const [busy,setBusy]=useState(false);
@@ -99,7 +99,14 @@ function Profile() { const {t,msg,language}=useI18n();
   if(loading)return <div className="loading">{t("Loading your profile…")}</div>;
   if(!user)return <Guest/>;
   async function logout(){setBusy(true);try{await api('/auth/logout',{});setUser(null);navigate('/login');}catch(e){setError(messageOf(e));}finally{setBusy(false);}}
-  return <div className="narrow-page"><div className="page-heading"><h1>{t("Profile")}</h1></div><div className="profile-person"><div className="avatar">{user.username[0].toUpperCase()}</div><div><h2>{user.username}</h2></div></div><div className="balance-card"><div><span>{t("Available credits")}</span><strong>{user.available} {user.available===1?"credit":"credits"}</strong></div><Coins size={26} strokeWidth={1.7}/><div className="balance-bottom"><span>{user.held} {t("held ·")}{" "}{user.balance} {t("total")}</span><Link to="/me/credits">{t("Credit history")}{" "}<ChevronRight size={18}/></Link></div></div><ProfileReviewNotice/><DepositTasks/><div className="profile-links">{[{to:'posts',label:t("My Posts"),icon:<Package/>},{to:'reservations',label:t("My Reservations"),icon:<Clock3/>},{to:'favorites',label:t("Favorites"),icon:<Heart/>},{to:'activity',label:t("Activity"),icon:<Bell/>}].map(item=><Link key={item.to} to={`/me/${item.to}`}><span>{item.icon}{item.label}</span><ChevronRight size={18}/></Link>)}</div>{error&&<Notice>{msg(error)}</Notice>}<button disabled={busy} className="logout-button" onClick={logout}><LogOut size={18}/>{busy?t("Logging out…"):t("Log out")}</button></div>;
+  return <div className="narrow-page"><div className="page-heading"><h1>{t("Profile")}</h1></div><div className="profile-person"><div className="avatar">{user.username[0].toUpperCase()}</div><div><h2>{user.username}</h2></div></div><div className="balance-card"><div><span>{t("Available credits")}</span><strong>{user.available} {user.available===1?"credit":"credits"}</strong></div><Coins size={26} strokeWidth={1.7}/><div className="balance-bottom"><span>{user.held} {t("held ·")}{" "}{user.balance} {t("total")}</span><Link to="/me/credits">{t("Credit history")}{" "}<ChevronRight size={18}/></Link></div></div><ProfileReviewNotice/><DepositTasks/><div className="profile-links">{[{to:'posts',label:t("My Posts"),icon:<Package/>},{to:'reservations',label:t("My Reservations"),icon:<Clock3/>},{to:'activity',label:t("Activity"),icon:<Bell/>}].map(item=><Link key={item.to} to={`/me/${item.to}`}><span>{item.icon}{item.label}</span><ChevronRight size={18}/></Link>)}</div>{error&&<Notice>{msg(error)}</Notice>}<button disabled={busy} className="logout-button" onClick={logout}><LogOut size={18}/>{busy?t("Logging out…"):t("Log out")}</button></div>;
+}
+function Saved() { const {t,msg}=useI18n();
+  const {user,loading}=useContext(Auth); const [rows,setRows]=useState<Material[]|null>(null); const [error,setError]=useState<Message>('');
+  useEffect(()=>{if(!user){setRows(null);return;}let active=true;api<{materials:Material[]}>('/me/favorites').then(r=>{if(active)setRows(r.materials);}).catch(e=>{if(active)setError(messageOf(e));});return()=>{active=false;};},[user?.id]);
+  if(loading)return <div className="loading">{t("Loading…")}</div>;
+  if(!user)return <div className="empty-state guest"><span className="soft-icon"><Heart size={28}/></span><h1>{t("Saved")}</h1><p>{t("Log in to save materials you like and find them here later.")}</p><Link className="button dark" to="/login?next=/saved">{t("Log in")}</Link><Link className="text-link" to="/register">{t("Create account")}</Link></div>;
+  return <div className="narrow-page saved-page"><div className="page-heading"><h1>{t("Saved")}</h1>{rows&&rows.length>0&&<p>{rows.length} {rows.length===1?t("material"):t("materials")}</p>}</div>{error&&<Notice>{msg(error)}</Notice>}{!rows?!error&&<div className="loading">{t("Loading…")}</div>:rows.length?<div className="material-grid">{rows.map(m=><MaterialCard key={m.id} material={m} onFavorite={saved=>{if(!saved)setRows(r=>r?.filter(x=>x.id!==m.id)??r);}}/>)}</div>:<div className="empty-state"><span className="soft-icon"><Heart size={26}/></span><h3>{t("Nothing saved yet")}</h3><p>{t("Tap the heart on any material to save it here.")}</p><Link className="button outline" to="/">{t("Explore materials")}<ChevronRight size={18}/></Link></div>}</div>;
 }
 function Guest(){ const {t,msg,language}=useI18n(); return <div className="empty-state guest"><span className="soft-icon"><UserRound size={28}/></span><h1>Profile</h1><p>{t("Keep track of your materials, pickups and credits.")}<br/>{t("Start with 2 credits when you create an account.")}</p><Link className="button dark" to="/register">{t("Create account")}{" "}</Link><Link className="text-link" to="/login">{t("Already have an account? Log in")}</Link></div>;}
 function Credits() { const {t,msg,language}=useI18n(); 

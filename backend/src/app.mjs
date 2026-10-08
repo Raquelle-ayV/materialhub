@@ -130,18 +130,31 @@ export function createApp(db, options = {}) {
   app.get('/api/me/activities',requireUser,(req,res) => res.json({activities:db.prepare('SELECT id,type,created_at,read_at FROM activities WHERE recipient_id=? ORDER BY id DESC').all(req.user.id)}));
   app.get('/api/categories',(req,res) => res.json({categories:db.prepare('SELECT id,name FROM categories ORDER BY sort_order').all()}));
   const materialSelect = `SELECT m.*,c.name AS category,z.name AS zone, (SELECT CASE WHEN x.storage_key LIKE '/placeholders/%' THEN x.storage_key ELSE '/api/media/' || x.id END FROM material_photos p JOIN media x ON x.id=p.media_id WHERE p.material_id=m.id AND p.kind='material' ORDER BY p.sort_order LIMIT 1) AS image FROM materials m JOIN categories c ON c.id=m.category_id JOIN zones z ON z.id=m.zone_id`;
+  const favoriteIds = user => new Set(user ? db.prepare('SELECT material_id FROM favorites WHERE user_id=?').all(user.id).map(r=>r.material_id) : []);
+  app.get('/api/me/favorites',requireUser,(req,res) => {
+    const materials = db.prepare(`${materialSelect} JOIN favorites f ON f.material_id=m.id AND f.user_id=? WHERE m.status<>'ready_for_drop_off' AND NOT EXISTS (SELECT 1 FROM material_management mm WHERE mm.material_id=m.id AND mm.disposition='deleted') ORDER BY f.created_at DESC`).all(req.user.id);
+    res.json({materials:materials.map(m=>({...m,is_favorite:true}))});
+  });
+  app.post('/api/materials/:id/favorite',requireUser,(req,res) => {
+    const id = Number(req.params.id) || -1;
+    if (!db.prepare("SELECT 1 FROM materials WHERE id=? AND status<>'ready_for_drop_off'").get(id)) return res.status(404).json({error:'Material not found.'});
+    if (req.body?.favorite === false) db.prepare('DELETE FROM favorites WHERE user_id=? AND material_id=?').run(req.user.id,id);
+    else db.prepare('INSERT OR IGNORE INTO favorites (user_id,material_id,created_at) VALUES (?,?,?)').run(req.user.id,id,new Date().toISOString());
+    res.json({is_favorite:req.body?.favorite !== false});
+  });
   app.get('/api/materials',(req,res) => {
+    const favorites = favoriteIds(req.user);
     const q = String(req.query.q || '').slice(0,100);
     const category = Number(req.query.category) || 0;
     const zone=Number(req.query.zone)||0, condition=String(req.query.condition||'').slice(0,80), color=String(req.query.color||'').slice(0,80), minimum=Math.max(0,Number(req.query.min_quantity)||0);
     const availability=['available','reserved','all'].includes(req.query.availability)?req.query.availability:'available';
-    res.json({materials:db.prepare(`${materialSelect} WHERE m.status IN ('available','reserved') AND (?='all' OR m.status=?) AND (?=0 OR m.category_id=?) AND (m.name LIKE ? OR m.notes LIKE ? OR c.name LIKE ? OR m.custom_category_name LIKE ? OR m.display_code LIKE ?) AND (?=0 OR m.zone_id=?) AND (?='' OR m.condition=?) AND (?='' OR m.color LIKE ?) AND m.stock_quantity>=? ORDER BY m.deposited_at DESC,m.id DESC`).all(availability,availability,category,category,...Array(5).fill(`%${q}%`),zone,zone,condition,condition,color,`%${color}%`,minimum).map(m=>({...m,available_quantity:!m.is_demo&&m.status==='available'?m.stock_quantity:0}))});
+    res.json({materials:db.prepare(`${materialSelect} WHERE m.status IN ('available','reserved') AND (?='all' OR m.status=?) AND (?=0 OR m.category_id=?) AND (m.name LIKE ? OR m.notes LIKE ? OR c.name LIKE ? OR m.custom_category_name LIKE ? OR m.display_code LIKE ?) AND (?=0 OR m.zone_id=?) AND (?='' OR m.condition=?) AND (?='' OR m.color LIKE ?) AND m.stock_quantity>=? ORDER BY m.deposited_at DESC,m.id DESC`).all(availability,availability,category,category,...Array(5).fill(`%${q}%`),zone,zone,condition,condition,color,`%${color}%`,minimum).map(m=>({...m,available_quantity:!m.is_demo&&m.status==='available'?m.stock_quantity:0,is_favorite:favorites.has(m.id)}))});
   });
   app.get('/api/materials/:id',(req,res) => {
     const material = db.prepare(`${materialSelect} WHERE m.id=? AND NOT EXISTS (SELECT 1 FROM material_management mm WHERE mm.material_id=m.id AND mm.disposition='deleted')`).get(Number(req.params.id) || -1);
     if (!material || (material.status === 'ready_for_drop_off' && material.owner_id !== req.user?.id)) return res.status(404).json({error:'Material not found.'});
     const photos=db.prepare("SELECT x.id,CASE WHEN x.storage_key LIKE '/placeholders/%' THEN x.storage_key ELSE '/api/media/'||x.id END AS url FROM material_photos p JOIN media x ON x.id=p.media_id WHERE p.material_id=? AND p.kind='material' ORDER BY p.sort_order,p.id").all(material.id);
-    res.json({material:{...material,photos,available_quantity:!material.is_demo&&material.status==='available'?material.stock_quantity:0}});
+    res.json({material:{...material,photos,available_quantity:!material.is_demo&&material.status==='available'?material.stock_quantity:0,is_favorite:favoriteIds(req.user).has(material.id)}});
   });
   app.use('/api',(req,res) => res.status(404).json({error:'This feature is not available yet.'}));
   const dist = resolve(projectRoot,'dist');

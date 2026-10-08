@@ -9,3 +9,45 @@
 .reservation-confirm .material-gallery>.photo-open{height:160px}.reservation-confirm .detail-title{font-size:24px;margin:12px 0 18px}.reservation-decision{padding:18px;border-radius:var(--radius-card);background:var(--surface);margin:20px 0}.reservation-decision .material-form label{margin-top:0}.reservation-facts{display:flex;gap:14px;flex-wrap:wrap;margin:16px 0;font-size:16px}.reservation-policy{padding:0;background:none;margin:12px 0}.reservation-policy p{font-size:14px;margin:8px 0;color:var(--text-secondary)}.reservation-policy ul{padding-left:18px;margin:12px 0}.reservation-policy li{font-size:14px;line-height:1.6;margin-bottom:8px}.compact-material{padding:14px;background:var(--surface);border-radius:var(--radius-card);margin-bottom:18px}.compact-material h2{font-size:18px;margin:0 0 6px}.compact-material p{font-size:14px;margin:3px 0}.compact-material .material-code{font-size:17px}.placement-reference{margin-top:24px}.placement-reference h2{font-size:18px}.placement-reference .material-gallery>.photo-open{height:180px}.code-check .material-form label{margin-top:0}.code-check .action-stack h2{font-size:20px}.code-check .specs{margin-top:20px}
 .completion-summary{padding:16px 0 100px;gap:20px;text-align:left;align-items:stretch}.completion-summary .completion-icon{width:52px;height:52px;background:#edf3e8;color:var(--green);align-self:flex-start}.completion-summary .page-heading{padding:0}.completion-summary .completion-material{display:flex;align-items:center;gap:14px;padding:16px;border-radius:var(--radius-card);background:var(--surface)}.completion-material>.material-photo,.completion-material>.photo-fallback{width:88px;height:88px;border-radius:12px;flex-shrink:0}.completion-material>div{min-width:0}.completion-material h2{font-size:18px;margin:0 0 6px;overflow-wrap:anywhere}.completion-material p{font-size:14px;line-height:1.5;margin:3px 0}.completion-summary .completion-credit{font-size:16px;font-weight:600;color:var(--green)}.completion-summary .issue-summary{margin:0}.post-management-dialog{border-radius:var(--radius-card);padding:24px}.post-management-dialog .button{min-height:48px}.card-state,.status-pill{font-size:13px}.record-cover{aspect-ratio:1;object-fit:cover;border-radius:var(--radius-card)}
 @media(max-width:350px){:root{--space-page:16px;--space-card:12px;--type-title:26px}.completion-material>.material-photo,.completion-material>.photo-fallback{width:72px;height:72px}.share-entry-cards .share-step{padding:16px}.material-gallery>.photo-open{height:260px}.flow-progress small{font-size:12px}}
+
+/* Clickable step bar (share: 4 steps, pickup: 3 steps) */
+.flow-progress li{display:block}
+.flow-progress .step-target{display:block;width:100%;padding:0;margin:0;border:0;background:none;font:inherit;color:inherit;text-align:left;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.flow-progress .step-target>span{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;margin-bottom:8px;background:#f0f3ed}
+.flow-progress li[aria-current=step] .step-target>span{background:var(--green);color:#fff}
+.flow-progress li.locked{opacity:.45}
+.flow-progress li.locked .step-target{cursor:not-allowed}
+.flow-progress a.step-target:hover small,.flow-progress button.step-target:hover small{text-decoration:underline}
+.flow-progress .step-target:focus-visible{outline:2px solid var(--green);outline-offset:3px;border-radius:4px}
+.flow-progress small{font-size:11px;line-height:1.35}
+
+/* "Which material" strip */
+.material-strip{border:1px solid var(--border);border-radius:var(--radius-card);padding:12px;margin:18px 0 6px;background:#fff}
+.material-strip-row{display:flex;align-items:center;gap:12px}
+.material-strip-row>.material-photo,.material-strip-row>.photo-fallback{width:52px;height:52px;border-radius:10px;object-fit:cover;flex-shrink:0}
+.material-strip-row>.photo-fallback span{display:none}
+.material-strip-text{flex:1;min-width:0;display:grid;gap:3px}
+.material-strip-text b{font-size:15px;overflow-wrap:anywhere}
+.material-strip-text small{font-size:13px;color:var(--text-secondary);font-family:ui-monospace,monospace}
+.material-strip .icon-button{width:36px;height:36px;background:none}
+.material-strip .strip-toggle svg{transition:transform .2s}
+.material-strip.open .strip-toggle svg{transform:rotate(180deg)}
+.material-strip-details{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.material-strip-details .record-thumbnails{display:flex;gap:8px;overflow-x:auto}
+.material-strip-details .record-thumbnails>*{width:72px;height:72px;border-radius:10px;object-fit:cover;flex-shrink:0}
+.material-strip-details .specs{margin:8px 0 4px}
+
+/* Favorites */
+.favorite-button{position:absolute;top:8px;right:8px;width:34px;height:34px;display:grid;place-items:center;border:0;border-radius:50%;background:#ffffffd9;color:#23372b;cursor:pointer;z-index:1;box-shadow:0 1px 4px #0000001f}
+.favorite-button.saved{color:#d6455d}
+.favorite-button.saved svg{fill:currentColor}
+.favorite-button:active{transform:scale(.92)}
+.detail-status{position:relative}
+.detail-favorite{position:static;margin-left:auto;box-shadow:none;background:var(--surface)}
+.recent-card .favorite-button{width:28px;height:28px;top:6px;right:6px}
+.recent-card .favorite-button svg{width:16px;height:16px}
+
+/* Share tab */
+.share-page>.button.dark{margin-top:4px}
+.share-active{margin-top:22px}
+.share-active .field-help{margin:4px 0 12px}

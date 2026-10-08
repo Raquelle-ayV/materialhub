@@ -12,7 +12,7 @@ async function setup(page){
   for(const [path,data] of [['arrive',{}],['verify-zone',{qr:'REMATERIAL|ZONE|BOARD_FOAM'}],['placement',{photo_ids:[placement]}],['confirm',{}]])expect((await page.request.post(`/api/deposits/${d.id}/${path}`,{data})).status()).toBe(200);
   await page.request.post('/api/auth/logout',{data:{}});const collector=await register(page.request,'f_taker');const reserved=await page.request.post(`/api/materials/${d.material_id}/reserve`,{data:{quantity:1,request_key:crypto.randomUUID()}});const r=(await reserved.json()).reservation;return{d,r,owner,collector};
 }
-async function scan(page){await page.getByRole('button',{name:'I’m at the Hub',exact:true}).click();await expect(page.getByRole('heading',{name:'Scan Zone QR'})).toBeVisible();await expect(page.locator('input')).toHaveCount(0);await expect(page.getByRole('alert')).toContainText('Wrong zone',{timeout:15000});}
+async function scan(page){await page.getByRole('button',{name:'I’m at the Hub',exact:true}).click();await expect(page.getByRole('heading',{name:/^(Scan Zone QR|Find Area)$/})).toBeVisible();await expect(page.locator('input')).toHaveCount(0);await expect(page.getByRole('alert')).toContainText('Wrong zone',{timeout:15000});}
 async function login(page,username){await page.request.post('/api/auth/logout',{data:{}});await page.goto('/login');await page.getByLabel('Username',{exact:true}).fill(username);await page.getByLabel('Password',{exact:true}).fill('fulfillment-test');await page.getByRole('button',{name:'Log in',exact:true}).click();await expect(page.getByRole('heading',{name:username,exact:true})).toBeVisible();}
 
 test('B camera pickup, material label, persistence and camera return with fresh photos',async({page})=>{
