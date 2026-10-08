@@ -1,5 +1,6 @@
 import { useContext, useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { Check, ChevronDown, Heart, ImageOff, Pencil, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Auth, api } from './lib';
 
@@ -34,16 +35,19 @@ export function MaterialStrip({image,name,code,editTo,children,defaultOpen=false
   return <section className={`material-strip ${open?'open':''}`}><div className="material-strip-row"><MaterialPhoto src={image} alt={name}/><div className="material-strip-text"><b>{name}</b><small>{code}</small></div>{editTo&&<Link className="icon-button" to={editTo} aria-label="Edit material information"><Pencil size={17}/></Link>}{children&&<button type="button" className="icon-button strip-toggle" aria-expanded={open} aria-label={open?'Hide details':'View details'} onClick={()=>setOpen(!open)}><ChevronDown size={20}/></button>}</div>{open&&children&&<div className="material-strip-details">{children}</div>}</section>;
 }
 
-/** Heart toggle; optimistic, sends logged-out visitors to log in first. */
+/** Heart toggle: fills instantly, rolls back with a message if saving fails, and sends logged-out visitors to log in. */
 export function FavoriteButton({materialId,initial,className='',onChange}:{materialId:number;initial:boolean;className?:string;onChange?:(saved:boolean)=>void}) {
-  const {user}=useContext(Auth);const navigate=useNavigate();const location=useLocation();
-  const [saved,setSaved]=useState(initial);const busy=useRef(false);
-  useEffect(()=>setSaved(initial),[initial]);
+  const {user,loading}=useContext(Auth);const navigate=useNavigate();const location=useLocation();
+  const [saved,setSaved]=useState(initial);const [failed,setFailed]=useState(false);const busy=useRef(false);
+  // Background refreshes must not overwrite a click that is still being saved.
+  useEffect(()=>{if(!busy.current)setSaved(initial);},[initial]);
+  useEffect(()=>{if(!failed)return;const timer=setTimeout(()=>setFailed(false),3000);return()=>clearTimeout(timer);},[failed]);
   async function toggle(e:MouseEvent){e.preventDefault();e.stopPropagation();
+    if(loading||busy.current)return;
     if(!user){navigate(`/login?next=${encodeURIComponent(location.pathname+location.search)}`);return;}
-    if(busy.current)return;busy.current=true;const next=!saved;setSaved(next);
-    try{await api(`/materials/${materialId}/favorite`,{favorite:next});onChange?.(next);}catch{setSaved(!next);}finally{busy.current=false;}}
-  return <button type="button" className={`favorite-button ${saved?'saved':''} ${className}`} aria-pressed={saved} aria-label={saved?'Remove from saved':'Save material'} onClick={toggle}><Heart size={20} strokeWidth={2}/></button>;
+    busy.current=true;const next=!saved;setSaved(next);setFailed(false);
+    try{await api(`/materials/${materialId}/favorite`,{favorite:next});onChange?.(next);}catch{setSaved(!next);setFailed(true);}finally{busy.current=false;}}
+  return <><button type="button" className={`favorite-button ${saved?'saved':''} ${className}`} aria-pressed={saved} aria-label={saved?'Remove from saved':'Save material'} onClick={toggle}><Heart size={20} strokeWidth={2}/></button>{failed&&createPortal(<div className="toast" role="alert">Couldn’t save. Try again.</div>,document.body)}</>;
 }
 
 export const formatMoment=(date:string)=>new Date(date).toLocaleString('en',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});

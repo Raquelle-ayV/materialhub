@@ -67,5 +67,5 @@ test('camera denial explains recovery and provides no manual zone entry',async({
   const saved=await page.request.post('/api/deposits',{data:{request_key:crypto.randomUUID(),name:'Camera permission test',category_id:1,quantity:1,unit:'sheet',dimensions_spec:'A4',color:'White',condition:'Good',photo_ids:[photo.id]}});const d=(await saved.json()).deposit;
   await page.request.post(`/api/deposits/${d.id}/arrive`,{data:{}});
   await page.addInitScript(()=>{navigator.mediaDevices.getUserMedia=()=>Promise.reject(new DOMException('Denied','NotAllowedError'));});
-  await page.goto(`/deposits/${d.id}/scan`);await page.getByRole('button',{name:'Start camera',exact:true}).click();await expect(page.getByRole('alert')).toContainText('Camera permission was denied.');await expect(page.getByRole('button',{name:'Retry camera'})).toBeVisible();await expect(page.locator('input')).toHaveCount(0);
+  await page.goto(`/deposits/${d.id}/scan`);await expect(page.getByRole('alert')).toContainText('Camera permission was denied.');await expect(page.getByRole('button',{name:'Retry camera'})).toBeVisible();await expect(page.locator('input')).toHaveCount(0);
 });
