@@ -153,3 +153,11 @@
 .sheet-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .sheet-actions .button{margin:0}
 .button.danger{background:#b3261e;border:1px solid #b3261e;color:#fff}
+
+/* Scan with AI demo footage and its switch */
+.camera-screen>.camera-demo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.demo-toggle{position:absolute;z-index:3;top:calc(76px + env(safe-area-inset-top,0px));right:14px;padding:5px 12px;border:1px solid #ffffff99;border-radius:999px;background:#00000059;color:#fff;font:inherit;font-size:var(--fs-label);font-weight:600;cursor:pointer}
+.demo-toggle.on{background:#fff;color:#3b2a8f;border-color:#fff}
+/* Hub photo on the Go to the Hub card */
+.hub-photo{margin:0 0 10px;border-radius:12px;overflow:hidden}
+.hub-photo img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}

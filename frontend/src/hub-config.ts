@@ -6,9 +6,11 @@
 export const hubConfig = {
   name: 'Material Hub',
   /** e.g. 'Building 17, Level 1, next to the model workshop' */
-  location: 'Building 17, Level 1',
+  location: 'Building 16, Level 1',
   /** e.g. 'Mon–Fri 9:00–18:00' */
-  hours: '',
+  hours: '9:00 AM – 8:00 PM',
+  /** Photo of the Hub entrance, shown on the Go to the Hub card */
+  photo: '/hub/hub-exterior.jpg',
   /** Route map image, e.g. '/hub/route-map.jpg' */
   routeMap: '',
   /** Photo of each zone, keyed by zone name, e.g. { 'Board & Foam': '/hub/zones/board-foam.jpg' } */

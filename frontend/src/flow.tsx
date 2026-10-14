@@ -25,7 +25,7 @@ export function ZoneSign({name}:{name:string}) {
 export function HubGuide({zone}:{zone?:string}) {
   const photo=zone?hubConfig.zonePhotos[zone]:'';
   return <div className="hub-guide">
-    {(hubConfig.location||hubConfig.hours)&&<section className="hub-card"><b>{hubConfig.name}</b>{hubConfig.location&&<p><MapPin size={16}/>{hubConfig.location}</p>}{hubConfig.hours&&<p><Clock3 size={16}/>{hubConfig.hours}</p>}</section>}
+    {(hubConfig.location||hubConfig.hours)&&<section className="hub-card">{hubConfig.photo&&<figure className="hub-photo"><img src={hubConfig.photo} alt={`${hubConfig.name} entrance`}/></figure>}<b>{hubConfig.name}</b>{hubConfig.location&&<p><MapPin size={16}/>{hubConfig.location}</p>}{hubConfig.hours&&<p><Clock3 size={16}/>{hubConfig.hours}</p>}</section>}
     {hubConfig.routeMap&&<figure className="hub-figure"><img src={hubConfig.routeMap} alt={`Route to the ${hubConfig.name}`}/></figure>}
     {zone&&<section className="guide-block"><h2>Find the {zone} zone</h2><p>Look for this sign.</p><ZoneSign name={zone}/>{photo&&<figure className="hub-figure"><img src={photo} alt={`${zone} zone`}/></figure>}</section>}
   </div>;

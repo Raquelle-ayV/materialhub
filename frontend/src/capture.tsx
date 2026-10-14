@@ -43,7 +43,8 @@ function toJpeg(source:CanvasImageSource,width:number,height:number){
   canvas.getContext('2d')!.drawImage(source,0,0,canvas.width,canvas.height);
   return new Promise<Blob>((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Could not capture the photo.')),'image/jpeg',.88));
 }
-async function uploadSample(url:string){const img=await loadImage(url);return uploadPhoto(await toJpeg(img,img.naturalWidth||1000,img.naturalHeight||1000),'library.jpg');}
+async function imageJpeg(url:string){const img=await loadImage(url);return toJpeg(img,img.naturalWidth||1000,img.naturalHeight||1000);}
+async function uploadSample(url:string){return uploadPhoto(await imageJpeg(url),'library.jpg');}
 const wait=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 
 /* ---------- Camera ---------- */
@@ -65,14 +66,14 @@ function useCamera(fallback:string){
 }
 type CameraHandle=ReturnType<typeof useCamera>;
 
-function CameraScreen({camera,fallback,label,onClose,top,children}:{camera:CameraHandle;fallback:string;label:string;onClose:()=>void;top?:ReactNode;children:ReactNode}){ const {t}=useI18n();
+function CameraScreen({camera,fallback,label,onClose,top,corner,backdrop,children}:{camera:CameraHandle;fallback:string;label:string;onClose:()=>void;top?:ReactNode;corner?:ReactNode;backdrop?:ReactNode;children:ReactNode}){ const {t}=useI18n();
   return createPortal(<div className="camera-screen" role="dialog" aria-modal="true" aria-label={label}>
     <video ref={camera.video} className={camera.state==='live'?'':'hidden'} muted playsInline autoPlay aria-label={t("Camera preview")}/>
-    {camera.state==='fallback'&&<img className="camera-fallback" src={fallback} alt=""/>}
+    {backdrop||(camera.state==='fallback'&&<img className="camera-fallback" src={fallback} alt=""/>)}
     <button type="button" className="camera-close" aria-label={t("Close camera")} onClick={onClose}><X size={28}/></button>
     {top}
     <div className="camera-frame" aria-hidden="true"><span/><i/><i/><i/><i/></div>
-    {camera.state==='fallback'&&<p className="camera-note">{t("Camera unavailable: showing a sample picture")}</p>}
+    {!backdrop&&camera.state==='fallback'&&<p className="camera-note">{t("Camera unavailable: showing a sample picture")}</p>}{corner}
     <div className="camera-bottom">{children}</div>
   </div>,document.body);
 }
@@ -187,11 +188,23 @@ export function AddMaterialButton({className,children}:{className:string;childre
 
 /* ---------- Scan with AI (prototype: recognition is a fixed script) ---------- */
 
+/** Real footage for presentations: close-up first; after the "too close" hint the clip pulls back, then the normal-distance clip loops. */
+type DemoClips={close:string;normal:string;closeUntil:number;shots:string[]};
+function DemoFootage({demo,pulledBack}:{demo:DemoClips;pulledBack:boolean}){
+  const [clip,setClip]=useState<'close'|'normal'>('close');
+  useEffect(()=>{if(!pulledBack)setClip('close');},[pulledBack]);
+  return <video key={clip} className="camera-demo" src={clip==='close'?demo.close:demo.normal} muted playsInline autoPlay loop={clip==='normal'} aria-hidden="true"
+    onTimeUpdate={e=>{const v=e.currentTarget;if(clip==='close'&&!pulledBack&&v.currentTime>demo.closeUntil)v.currentTime=0;}}
+    onEnded={()=>{if(clip==='close')setClip('normal');}}/>;
+}
+const DEMO_KEY='rematerial.scanDemo';
+
 type Hint={tone:'info'|'warn'|'ok';text:string};
-type ScriptItem={name:string;category:string;unit:string;quantity:string;dimensions:string;color:string;condition:string;notes:string;sample:string;feedback:Hint[]};
+type ScriptItem={name:string;category:string;unit:string;quantity:string;dimensions:string;color:string;condition:string;notes:string;sample:string;feedback:Hint[];demo?:DemoClips};
 const AI_SCRIPT:ScriptItem[]=[
-  {name:'White foam board (KT board)',category:'Board & Foam',unit:'boards',quantity:'3',dimensions:'About 60 × 90 cm, 5 mm thick',color:'White',condition:'Like new',notes:'Clean surface. A few pin holes in one corner.',sample:'/placeholders/foam.svg',
-    feedback:[{tone:'warn',text:'Too close. Step back so the whole board fits inside the frame.'},{tone:'ok',text:'Got it: white foam board. Add a side photo to show the thickness, or tap Done.'}]},
+  {name:'White foam board (KT board)',category:'Board & Foam',unit:'boards',quantity:'3',dimensions:'About 60 × 90 cm, 5 mm thick',color:'White',condition:'Like new',notes:'Clean surface. A few pin holes in one corner.',sample:'/demo/foam-normal.jpg',
+    feedback:[{tone:'warn',text:'Too close. Step back so the whole board fits inside the frame.'},{tone:'ok',text:'Got it: white foam board. Add a side photo to show the thickness, or tap Done.'}],
+    demo:{close:'/demo/foam-close.mp4',normal:'/demo/foam-normal.mp4',closeUntil:2.8,shots:['/demo/foam-close.jpg','/demo/foam-normal.jpg']}},
   {name:'Pine wood plank',category:'Wood',unit:'boards',quantity:'2',dimensions:'About 120 × 20 cm, 18 mm thick',color:'Natural wood',condition:'Used',notes:'Light marks on one side. No nails or screws.',sample:'/placeholders/wood.svg',
     feedback:[{tone:'warn',text:'Part of the plank is cut off. Turn your phone sideways to fit its full length.'},{tone:'ok',text:'Got it: pine wood plank. Tap Done to add it.'}]},
 ];
@@ -205,12 +218,16 @@ export function ScanPage(){ const {t,msg}=useI18n();const {user}=useAccount();co
   const [phase,setPhase]=useState<'capture'|'list'>(()=>batch.mode==='ai'&&batch.items.length?'list':'capture');
   const [shots,setShots]=useState<Photo[]>([]);const [flagged,setFlagged]=useState<number[]>([]);const [analyzing,setAnalyzing]=useState(false);const [hint,setHint]=useState<Hint>(START_HINT);const [detected,setDetected]=useState(false);
   const [now,setNow]=useState(Date.now());
+  const [demoOn,setDemoOn]=useState(()=>{try{return sessionStorage.getItem(DEMO_KEY)==='1';}catch{return false;}});
+  const demo=script.demo&&(demoOn||camera.state==='fallback')?script.demo:null;
+  function toggleDemo(){const next=!demoOn;setDemoOn(next);try{sessionStorage.setItem(DEMO_KEY,next?'1':'0');}catch{}}
   const items=b.mode==='ai'?b.items:[];
   const nextReady=Math.min(...items.map(i=>i.readyAt).filter(at=>at>now));
   useEffect(()=>{if(!Number.isFinite(nextReady))return;const timer=setTimeout(()=>setNow(Date.now()),nextReady-Date.now()+50);return()=>clearTimeout(timer);},[nextReady]);
   useEffect(()=>{if(phase==='list'&&!items.length)setPhase('capture');},[phase,items.length]);
   async function shoot(){if(analyzing)return;setAnalyzing(true);setHint({tone:'info',text:'Analyzing photo…'});
-    try{const [photo]=await Promise.all([camera.capture().then(blob=>uploadPhoto(blob,'scan.jpg')),wait(AI_DELAY)]);
+    try{const take=demo?imageJpeg(demo.shots[Math.min(shots.length,demo.shots.length-1)]):camera.capture();
+      const [photo]=await Promise.all([take.then(blob=>uploadPhoto(blob,'scan.jpg')),wait(AI_DELAY)]);
       const feedback=script.feedback[shots.length]||{tone:'ok',text:'Photo added. Tap Done when you have enough photos.'};
       setShots(s=>[...s,photo]);if(feedback.tone==='warn')setFlagged(f=>[...f,photo.id]);if(feedback.tone==='ok')setDetected(true);setHint(feedback);
     }catch(e){setHint({tone:'warn',text:msg(messageOf(e))});}finally{setAnalyzing(false);}
@@ -226,6 +243,8 @@ export function ScanPage(){ const {t,msg}=useI18n();const {user}=useAccount();co
   const generating=items.some(i=>i.readyAt>now);
   const icon=analyzing?<Sparkles size={18} className="spin sparkle"/>:hint.tone==='warn'?<AlertTriangle size={18}/>:hint.tone==='ok'?<CheckCircle2 size={18}/>:<ScanLine size={18}/>;
   return <CameraScreen camera={camera} fallback={script.sample} label={t("Scan with AI")} onClose={()=>navigate('/deposit')}
+    backdrop={demo&&phase==='capture'?<DemoFootage demo={demo} pulledBack={flagged.length>0||detected}/>:demo?<img className="camera-fallback" src={script.sample} alt=""/>:undefined}
+    corner={script.demo&&camera.state==='live'&&phase==='capture'&&<button type="button" className={`demo-toggle ${demoOn?'on':''}`} aria-pressed={demoOn} onClick={toggleDemo}>{t("Demo")}</button>}
     top={phase==='capture'&&<div className={`camera-guide tone-${analyzing?'info':hint.tone}`} role="status">{icon}<span>{analyzing?t("Analyzing photo…"):t(hint.text)}</span></div>}>
     {phase==='capture'?<>
       {detected&&<div className="ai-chip"><Sparkles size={15}/>{t(script.name)}</div>}

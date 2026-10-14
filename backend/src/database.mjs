@@ -66,7 +66,7 @@ export function transaction(db, action) {
 }
 function seed(db) {
   transaction(db, () => {
-    db.prepare('INSERT OR IGNORE INTO hubs VALUES (1, ?, ?, ?, 1)').run('Material Hub', 'Location to be confirmed', 'Opening hours to be confirmed');
+    db.prepare('INSERT OR IGNORE INTO hubs VALUES (1, ?, ?, ?, 1)').run('Material Hub', 'Building 16, Level 1', '9:00 AM – 8:00 PM');
     const names = ['Board & Foam','Paper & Sheet','Fabric & Textile','Wood','Plastic & Acrylic','Cables, Buttons & Small Items','Other'];
     const keys = ['BOARD_FOAM','PAPER_SHEET','FABRIC_TEXTILE','WOOD','PLASTIC_ACRYLIC','CABLES_BUTTONS_SMALL_ITEMS','OTHER'];
     names.forEach((name,i) => { db.prepare('INSERT OR IGNORE INTO zones(id,hub_id,name,qr_key) VALUES (?,1,?,?)').run(i+1,name,keys[i]); db.prepare('UPDATE zones SET code=? WHERE qr_key=? AND code IS NULL').run(zoneCodes[keys[i]],keys[i]); db.prepare('INSERT OR IGNORE INTO categories VALUES (?,?,?,?)').run(i+1,name,i+1,i); });
