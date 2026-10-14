@@ -1,0 +1,135 @@
+/* App-wide components in the Rematerial brand style. Only design tokens from tokens.css are used.
+   Rules start with :root so they win over the older stylesheets, including portalled screens (camera, camera roll). */
+
+body{background:var(--color-bg);color:var(--color-ink);font:var(--text-body)}
+.app-shell{background:var(--color-bg);color:var(--color-ink);font:var(--text-body);padding-left:var(--page-padding);padding-right:var(--page-padding);box-shadow:none}
+:root :is(button,input,select,textarea){font-family:var(--font-family)}
+:root svg{stroke-width:2}
+
+/* Heading: page title + credits */
+:root .explore-heading{gap:var(--space-3);padding:var(--space-4) 0 var(--space-4)}
+:root .explore-heading h1{font:var(--text-display);letter-spacing:0;color:var(--color-ink);margin:0}
+:root .account-pill{display:inline-flex;align-items:center;gap:var(--space-2);min-height:var(--tap-min);padding:0 var(--space-4);border:1px solid var(--color-taupe);border-radius:var(--radius-pill);background:transparent;color:var(--color-ink);font:500 14px/1 var(--font-family)}
+:root .account-pill svg{display:none}
+
+/* Search + filter button */
+:root .search-row{gap:var(--space-3);margin:0 0 var(--space-4)}
+:root .search-row .search-bar{height:var(--button-height);min-height:var(--button-height);margin:0;padding:0 var(--space-5) 0 var(--space-3);gap:var(--space-1);border:0;border-radius:var(--radius-pill);background:var(--color-linen)}
+:root .search-bar button{width:var(--tap-min);height:var(--tap-min);min-height:var(--tap-min);color:var(--color-ink-soft);background:none}
+:root .search-bar button svg{width:20px;height:20px}
+:root .search-bar input{height:var(--tap-min);min-height:var(--tap-min);font:var(--text-body);color:var(--color-ink);background:none}
+:root .search-bar input::placeholder{color:var(--color-ink-soft)}
+:root .filter-icon{flex:0 0 var(--button-height);width:var(--button-height);height:var(--button-height);border:0;border-radius:var(--radius-pill);background:var(--color-linen);color:var(--color-ink)}
+:root .filter-icon svg{width:24px;height:24px}
+:root .filter-count{min-width:20px;height:20px;padding:0 var(--space-1);border-radius:var(--radius-pill);background:var(--color-walnut);color:var(--color-on-walnut);font:var(--text-caption);font-weight:600}
+
+/* Category chips */
+:root .discovery-filters{margin:0 0 var(--space-8)}
+:root .category-strip{gap:var(--space-2);-webkit-mask-image:none;mask-image:none;margin-right:calc(-1 * var(--page-padding));padding-right:var(--page-padding)}
+:root .category-strip button{height:var(--chip-height);min-height:var(--chip-height);padding:0 var(--space-5);border:0;border-radius:var(--radius-pill);background:var(--color-linen);color:var(--color-ink);font:var(--text-button);white-space:nowrap}
+:root .category-strip button.selected{background:var(--color-walnut);color:var(--color-on-walnut)}
+
+/* Section titles */
+:root .recent-materials{margin:0 0 var(--space-8);padding:0;border:0}
+:root .materials-section{margin:0 0 var(--space-8)}
+:root :is(.recent-materials,.materials-section) .section-title{min-height:var(--tap-min);margin:0 0 var(--space-3)}
+:root .section-title h2{font:var(--text-title);letter-spacing:0;color:var(--color-ink);margin:0}
+:root .section-next{width:var(--tap-min);height:var(--tap-min);border-radius:var(--radius-pill);color:var(--color-ink)}
+:root .section-next:hover{background:var(--color-linen)}
+:root .section-next svg{width:24px;height:24px;stroke-width:2}
+
+/* Material cards: white card, 1px line, radius 16, padding 8; photo radius 12 */
+:root .material-grid{gap:var(--space-3)}
+:root .recent-rail{gap:var(--space-3)}
+:root .material-card,
+:root .recent-rail .recent-card{display:block;padding:var(--space-2);border:var(--border);border-radius:var(--radius-card);background:var(--color-surface);color:var(--color-ink)}
+:root .material-image,
+:root .recent-rail .material-image{border-radius:var(--radius-image);background:var(--color-linen)}
+:root .material-photo[data-state=loading]{background:var(--color-linen)}
+:root .material-image .photo-fallback{background:var(--color-linen);color:var(--color-ink-soft);font:var(--text-caption)}
+:root .material-card h3{font:var(--text-card-title);letter-spacing:0;color:var(--color-ink);margin:var(--space-2) 0 0}
+:root .material-card .material-status{font:var(--text-caption);color:var(--color-ink-soft);margin:var(--space-1) 0 0}
+:root .material-card.unavailable h3,
+:root .material-card.unavailable .material-status{color:var(--color-ink-soft)}
+:root .card-tags{gap:var(--space-1);margin-top:var(--space-2)}
+:root .material-card :is(.condition-tag,.status-badge){display:inline-block;padding:var(--space-1) var(--space-2);border:1px solid transparent;border-radius:var(--radius-tag);background:var(--color-linen);color:var(--color-ink);font:var(--text-caption)}
+:root .material-card .status-badge.tone-amber{border-color:var(--color-taupe)}
+
+/* Favourite heart: 44px white circle, 1px line; outline in soft ink, saved = filled walnut */
+:root .favorite-button,
+:root .recent-card .favorite-button{top:var(--space-2);right:var(--space-2);width:var(--tap-min);height:var(--tap-min);border:var(--border);border-radius:var(--radius-pill);background:var(--color-surface);color:var(--color-ink-soft);box-shadow:none}
+:root .favorite-button svg,
+:root .recent-card .favorite-button svg{width:24px;height:24px;stroke-width:2}
+:root .favorite-button.saved{color:var(--color-walnut)}
+:root .favorite-button.saved svg{fill:currentColor}
+
+/* Loading, error and empty states */
+:root .loading{color:var(--color-ink-soft);font:var(--text-body)}
+:root .notice{border:1px solid var(--color-taupe);border-radius:var(--radius-card);background:var(--color-linen);color:var(--color-ink);font:var(--text-body)}
+:root .empty-state{border:var(--border);border-radius:var(--radius-card);background:var(--color-surface);color:var(--color-ink);gap:var(--space-3)}
+:root .empty-state svg{color:var(--color-ink-soft);width:24px;height:24px}
+:root .empty-state h3{font:var(--text-subtitle);margin:0}
+:root .empty-state p{font:var(--text-body);color:var(--color-ink-soft);margin:0}
+
+/* Buttons on this page: primary = walnut, secondary = 1.5px ink outline, both pill and 52px */
+:root .button{min-height:var(--button-height);padding:0 var(--space-6);border-radius:var(--radius-pill);font:var(--text-button);box-shadow:none}
+:root .button.dark{border:0;background:var(--color-walnut);color:var(--color-on-walnut)}
+:root .button.outline{border:1.5px solid var(--color-ink);background:transparent;color:var(--color-ink)}
+
+/* Filters sheet */
+:root .bottom-sheet{background:var(--color-surface);color:var(--color-ink);border-radius:var(--radius-card) var(--radius-card) 0 0}
+:root .bottom-sheet .panel-heading h2{font:var(--text-subtitle)}
+:root .bottom-sheet .panel-heading button{width:var(--tap-min);height:var(--tap-min);border:0;border-radius:var(--radius-pill);background:var(--color-linen);color:var(--color-ink)}
+:root .sheet-grip{background:var(--color-taupe)}
+:root .filter-form label{font:var(--text-body);color:var(--color-ink)}
+:root .filter-form small{font:var(--text-caption);color:var(--color-ink-soft)}
+:root .filter-form select{min-height:var(--tap-min);border:var(--border);border-radius:var(--radius-pill);background:var(--color-surface);color:var(--color-ink);font:var(--text-body)}
+:root .switch-row input{background:var(--color-taupe)}
+:root .switch-row input::after{background:var(--color-surface);box-shadow:none}
+:root .switch-row input:checked{background:var(--color-walnut)}
+:root .bottom-sheet::backdrop{background:color-mix(in srgb,var(--color-ink) 45%,transparent)}
+
+/* Bottom navigation: white, 1px top line; active = walnut and 600; inactive = soft ink */
+:root .bottom-nav{background:var(--color-surface);border-top:var(--border);backdrop-filter:none;box-shadow:none}
+:root .bottom-nav>a{min-height:var(--tap-min);color:var(--color-ink-soft);font:var(--text-caption)}
+:root .bottom-nav>a.active{color:var(--color-walnut);font-weight:600}
+:root .bottom-nav>a>svg,
+:root .nav-plus svg{width:24px;height:24px;stroke-width:2}
+:root .nav-plus{width:24px;height:24px;background:none;border-radius:0}
+
+/* ---- App-wide type ---- */
+:root :is(.page-heading,.flow-page .page-heading) h1,:root .empty-state h1{font:var(--text-display);letter-spacing:0;color:var(--color-ink)}
+:root .top-bar h1{font:var(--text-subtitle);letter-spacing:0;color:var(--color-ink)}
+:root .page-heading p,:root .page-intro{font:var(--text-body);color:var(--color-ink-soft)}
+:root .field-help,:root .notes-text{font:var(--text-body);color:var(--color-ink-soft)}
+:root .material-form label,:root .field-heading,:root .segmented-field legend{font:var(--text-body);font-weight:600;color:var(--color-ink)}
+:root .material-form label small,:root .field-heading small{font:var(--text-caption);color:var(--color-ink-soft)}
+:root .top-back{width:var(--tap-min);height:var(--tap-min);color:var(--color-ink)}
+:root .top-back:hover{background:var(--color-linen)}
+
+/* ---- Form fields: white, 1px line, radius 12, 52px; walnut outline when focused ---- */
+:root :is(input:not([type=checkbox],[type=radio],[type=file],[type=range],[type=hidden]),select,textarea){min-height:var(--button-height);border:var(--border);border-radius:var(--radius-image);background:var(--color-surface);color:var(--color-ink);font:var(--text-body)}
+:root textarea{min-height:calc(var(--button-height) * 2)}
+:root :is(input:not([type=checkbox],[type=radio],[type=file],[type=range],[type=hidden]),select,textarea):focus{outline:none;border-color:var(--color-walnut)}
+:root :is(input,textarea)::placeholder{color:var(--color-ink-soft)}
+/* The search box keeps its own look (linen, no border, pill) */
+:root .search-bar input,:root .search-bar input:focus{min-height:var(--tap-min);border:0;border-radius:0;background:none}
+
+/* ---- Segmented control and chips: selected = walnut with dove text ---- */
+:root .segmented label.selected,:root .material-form .chip-scroll label.selected{background:var(--color-walnut);border-color:var(--color-walnut);color:var(--color-on-walnut)}
+:root .material-form .chip-scroll label{min-height:var(--chip-height);padding:0 var(--space-5);border:0;border-radius:var(--radius-pill);background:var(--color-linen);color:var(--color-ink);font:var(--text-button)}
+
+/* ---- Status badges everywhere: one small-tag style ---- */
+:root .status-badge{padding:var(--space-1) var(--space-2);border:1px solid transparent;border-radius:var(--radius-tag);background:var(--color-linen);color:var(--color-ink);font:var(--text-caption)}
+:root .status-badge.tone-amber{border-color:var(--color-taupe)}
+
+/* ---- Active tasks: plywood texture behind the card ---- */
+:root .active-task{background:var(--color-wood) url(/textures/plywood.jpg) center / cover;border:var(--border);border-radius:var(--radius-card);color:var(--color-ink)}
+:root .active-task :is(b,small,span,.mcode){color:var(--color-ink)}
+:root .active-task img,:root .active-task .photo-fallback{border-radius:var(--radius-image)}
+:root .task-delete{width:var(--tap-min);height:var(--tap-min);color:var(--color-ink)}
+:root .task-delete:hover{background:color-mix(in srgb,var(--color-surface) 60%,transparent)}
+
+/* ---- Camera screens: warnings get a tiny persimmon dot instead of yellow ---- */
+:root .camera-guide{background:var(--color-bg);color:var(--color-ink)}
+:root .camera-guide.tone-warn svg{color:var(--color-accent)}

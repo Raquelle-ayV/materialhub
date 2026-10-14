@@ -8,7 +8,7 @@ import './app-ui.css';
 import './ui.css';
 import './theme.css';
 import './tokens.css';
-import './explore.css';
+import './brand.css';
 import { MaterialPhoto, FavoriteButton, BottomSheet, TopBar, StatusBadge, capitalize, formatQuantity } from './ui';
 import { useI18n, messageOf, validateForm, type Message } from './i18n';
 
