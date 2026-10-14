@@ -133,3 +133,9 @@ body{background:var(--color-bg);color:var(--color-ink);font:var(--text-body)}
 /* ---- Camera screens: warnings get a tiny persimmon dot instead of yellow ---- */
 :root .camera-guide{background:var(--color-bg);color:var(--color-ink)}
 :root .camera-guide.tone-warn svg{color:var(--color-accent)}
+
+/* ---- Wide screens (preview on a computer): the area around the phone-width app is taupe so the app stands out ---- */
+@media (min-width:440px){
+  body{background:var(--color-taupe)}
+  .app-shell{border-left:var(--border);border-right:var(--border)}
+}
