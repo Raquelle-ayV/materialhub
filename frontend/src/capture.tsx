@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore, type ChangeEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, type ChangeEvent, type ReactNode, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AlertTriangle, Camera, CheckCircle2, ImagePlus, Layers3, Package, Plus, ScanLine, Sparkles, Video, X } from 'lucide-react';
@@ -188,23 +188,20 @@ export function AddMaterialButton({className,children}:{className:string;childre
 
 /* ---------- Scan with AI (prototype: recognition is a fixed script) ---------- */
 
-/** Real footage for presentations: close-up first; after the "too close" hint the clip pulls back, then the normal-distance clip loops. */
-type DemoClips={close:string;normal:string;closeUntil:number;shots:string[]};
-function DemoFootage({demo,pulledBack}:{demo:DemoClips;pulledBack:boolean}){
-  const [clip,setClip]=useState<'close'|'normal'>('close');
-  useEffect(()=>{if(!pulledBack)setClip('close');},[pulledBack]);
-  return <video key={clip} className="camera-demo" src={clip==='close'?demo.close:demo.normal} muted playsInline autoPlay loop={clip==='normal'} aria-hidden="true"
-    onTimeUpdate={e=>{const v=e.currentTarget;if(clip==='close'&&!pulledBack&&v.currentTime>demo.closeUntil)v.currentTime=0;}}
-    onEnded={()=>{if(clip==='close')setClip('normal');}}/>;
+/** One real clip for presentations: its close-up start loops until the "too close" hint, then it plays on as the phone pulls back and stays on the last frame. */
+type DemoClip={src:string;closeUntil:number};
+function DemoFootage({demo,pulledBack,videoRef}:{demo:DemoClip;pulledBack:boolean;videoRef:RefObject<HTMLVideoElement|null>}){
+  return <video ref={videoRef} className="camera-demo" src={demo.src} muted playsInline autoPlay aria-hidden="true"
+    onTimeUpdate={e=>{const v=e.currentTarget;if(!pulledBack&&v.currentTime>demo.closeUntil)v.currentTime=0;}}/>;
 }
 const DEMO_KEY='rematerial.scanDemo';
 
 type Hint={tone:'info'|'warn'|'ok';text:string};
-type ScriptItem={name:string;category:string;unit:string;quantity:string;dimensions:string;color:string;condition:string;notes:string;sample:string;feedback:Hint[];demo?:DemoClips};
+type ScriptItem={name:string;category:string;unit:string;quantity:string;dimensions:string;color:string;condition:string;notes:string;sample:string;feedback:Hint[];demo?:DemoClip};
 const AI_SCRIPT:ScriptItem[]=[
-  {name:'White foam board (KT board)',category:'Board & Foam',unit:'boards',quantity:'3',dimensions:'About 60 × 90 cm, 5 mm thick',color:'White',condition:'Like new',notes:'Clean surface. A few pin holes in one corner.',sample:'/demo/foam-normal.jpg',
+  {name:'White foam board (KT board)',category:'Board & Foam',unit:'boards',quantity:'3',dimensions:'About 60 × 90 cm, 5 mm thick',color:'White',condition:'Like new',notes:'Clean surface. A few pin holes in one corner.',sample:'/placeholders/foam.svg',
     feedback:[{tone:'warn',text:'Too close. Step back so the whole board fits inside the frame.'},{tone:'ok',text:'Got it: white foam board. Add a side photo to show the thickness, or tap Done.'}],
-    demo:{close:'/demo/foam-close.mp4',normal:'/demo/foam-normal.mp4',closeUntil:2.8,shots:['/demo/foam-close.jpg','/demo/foam-normal.jpg']}},
+    demo:{src:'/demo/foam-close.mp4',closeUntil:2.8}},
   {name:'Pine wood plank',category:'Wood',unit:'boards',quantity:'2',dimensions:'About 120 × 20 cm, 18 mm thick',color:'Natural wood',condition:'Used',notes:'Light marks on one side. No nails or screws.',sample:'/placeholders/wood.svg',
     feedback:[{tone:'warn',text:'Part of the plank is cut off. Turn your phone sideways to fit its full length.'},{tone:'ok',text:'Got it: pine wood plank. Tap Done to add it.'}]},
 ];
@@ -219,14 +216,14 @@ export function ScanPage(){ const {t,msg}=useI18n();const {user}=useAccount();co
   const [shots,setShots]=useState<Photo[]>([]);const [flagged,setFlagged]=useState<number[]>([]);const [analyzing,setAnalyzing]=useState(false);const [hint,setHint]=useState<Hint>(START_HINT);const [detected,setDetected]=useState(false);
   const [now,setNow]=useState(Date.now());
   const [demoOn,setDemoOn]=useState(()=>{try{return sessionStorage.getItem(DEMO_KEY)==='1';}catch{return false;}});
-  const demo=script.demo&&(demoOn||camera.state==='fallback')?script.demo:null;
+  const demo=script.demo&&(demoOn||camera.state==='fallback')?script.demo:null;const demoVideo=useRef<HTMLVideoElement>(null);
   function toggleDemo(){const next=!demoOn;setDemoOn(next);try{sessionStorage.setItem(DEMO_KEY,next?'1':'0');}catch{}}
   const items=b.mode==='ai'?b.items:[];
   const nextReady=Math.min(...items.map(i=>i.readyAt).filter(at=>at>now));
   useEffect(()=>{if(!Number.isFinite(nextReady))return;const timer=setTimeout(()=>setNow(Date.now()),nextReady-Date.now()+50);return()=>clearTimeout(timer);},[nextReady]);
   useEffect(()=>{if(phase==='list'&&!items.length)setPhase('capture');},[phase,items.length]);
   async function shoot(){if(analyzing)return;setAnalyzing(true);setHint({tone:'info',text:'Analyzing photo…'});
-    try{const take=demo?imageJpeg(demo.shots[Math.min(shots.length,demo.shots.length-1)]):camera.capture();
+    try{const clip=demoVideo.current;const take=demo&&clip&&clip.videoWidth?toJpeg(clip,clip.videoWidth,clip.videoHeight):camera.capture();
       const [photo]=await Promise.all([take.then(blob=>uploadPhoto(blob,'scan.jpg')),wait(AI_DELAY)]);
       const feedback=script.feedback[shots.length]||{tone:'ok',text:'Photo added. Tap Done when you have enough photos.'};
       setShots(s=>[...s,photo]);if(feedback.tone==='warn')setFlagged(f=>[...f,photo.id]);if(feedback.tone==='ok')setDetected(true);setHint(feedback);
@@ -243,7 +240,7 @@ export function ScanPage(){ const {t,msg}=useI18n();const {user}=useAccount();co
   const generating=items.some(i=>i.readyAt>now);
   const icon=analyzing?<Sparkles size={18} className="spin sparkle"/>:hint.tone==='warn'?<AlertTriangle size={18}/>:hint.tone==='ok'?<CheckCircle2 size={18}/>:<ScanLine size={18}/>;
   return <CameraScreen camera={camera} fallback={script.sample} label={t("Scan with AI")} onClose={()=>navigate('/deposit')}
-    backdrop={demo&&phase==='capture'?<DemoFootage demo={demo} pulledBack={flagged.length>0||detected}/>:demo?<img className="camera-fallback" src={script.sample} alt=""/>:undefined}
+    backdrop={demo?<DemoFootage demo={demo} videoRef={demoVideo} pulledBack={phase==='list'||flagged.length>0||detected}/>:undefined}
     corner={script.demo&&camera.state==='live'&&phase==='capture'&&<button type="button" className={`demo-toggle ${demoOn?'on':''}`} aria-pressed={demoOn} onClick={toggleDemo}>{t("Demo")}</button>}
     top={phase==='capture'&&<div className={`camera-guide tone-${analyzing?'info':hint.tone}`} role="status">{icon}<span>{analyzing?t("Analyzing photo…"):t(hint.text)}</span></div>}>
     {phase==='capture'?<>

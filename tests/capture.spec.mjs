@@ -44,14 +44,14 @@ test('Scan with AI: guidance after each photo, two recognised items, review and 
   expect(errors).toEqual([]);
 });
 
-test('Scan with AI demo: real foam-board footage pulls back after the too-close hint',async({page})=>{
+test('Scan with AI demo: one real clip pulls back after the too-close hint and holds its last frame',async({page})=>{
   test.setTimeout(60_000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await register(page);await page.goto('/deposit');await page.getByRole('button',{name:'Add new material',exact:true}).click();await page.getByRole('button',{name:/^Scan with AI/}).click();
   await page.getByRole('button',{name:'Demo'}).click();const clip=page.locator('.camera-demo');await expect(clip).toHaveAttribute('src','/demo/foam-close.mp4');
   await expect.poll(()=>clip.evaluate(v=>v.currentTime)).toBeGreaterThan(0.5);
   await page.getByRole('button',{name:'Take photo'}).click();await expect(page.locator('.camera-guide')).toContainText('Too close',{timeout:10_000});
   await page.screenshot({path:'test-results/scan-demo-close.png'});
-  await expect(clip).toHaveAttribute('src','/demo/foam-normal.mp4',{timeout:15_000});
+  await expect.poll(()=>clip.evaluate(v=>v.ended),{timeout:15_000}).toBe(true);await expect(clip).toHaveAttribute('src','/demo/foam-close.mp4');await expect(page.locator('video.camera-demo')).toHaveCount(1);
   await page.getByRole('button',{name:'Take photo'}).click();await expect(page.locator('.camera-guide')).toContainText('Got it: white foam board',{timeout:10_000});
   await page.screenshot({path:'test-results/scan-demo-normal.png'});
   await page.getByRole('button',{name:'Done',exact:true}).click();await expect(page.locator('.ai-card')).toHaveCount(1);
