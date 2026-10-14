@@ -10,6 +10,7 @@
   --color-line: #DDD5C8;
   --color-wood: #D6B47F;
   --color-walnut: #7A6352;
+  --color-walnut-deep: #4E3B2F; /* added on request: active tab in the bottom navigation, so it stands out from the soft-ink tabs */
   --color-on-walnut: #F6F3EC;
   --color-ink: #45403A;
   --color-ink-soft: #8A7F72;

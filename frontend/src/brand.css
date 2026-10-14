@@ -92,7 +92,8 @@ body{background:var(--color-bg);color:var(--color-ink);font:var(--text-body)}
 /* Bottom navigation: white, 1px top line; active = walnut and 600; inactive = soft ink */
 :root .bottom-nav{background:var(--color-surface);border-top:var(--border);backdrop-filter:none;box-shadow:none}
 :root .bottom-nav>a{min-height:var(--tap-min);color:var(--color-ink-soft);font:var(--text-caption)}
-:root .bottom-nav>a.active{color:var(--color-walnut);font-weight:600}
+:root .bottom-nav>a.active{color:var(--color-walnut-deep);font-weight:600}
+:root .bottom-nav>a.active>svg,:root .bottom-nav>a.active .nav-plus svg{stroke-width:2.5}
 :root .bottom-nav>a>svg,
 :root .nav-plus svg{width:24px;height:24px;stroke-width:2}
 :root .nav-plus{width:24px;height:24px;background:none;border-radius:0}
@@ -155,9 +156,12 @@ body{background:var(--color-bg);color:var(--color-ink);font:var(--text-body)}
 :root .photo-card .card-line{margin:2px 0 0;font:var(--text-caption);color:var(--color-ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 :root .photo-card.unavailable :is(h3,.card-line){color:var(--color-ink-soft)}
 /* New on the shelf: two columns, 12px apart, rows 20px apart */
-:root .recommended-materials .material-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 12px}
+:root .material-grid:has(>.photo-card){grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 12px}
 /* Recently viewed: sideways scroll, each card about 42% of the screen so the third one peeks in */
 :root .recent-rail{display:grid;grid-auto-flow:column;grid-auto-columns:calc(min(100vw,402px) * .42);gap:12px;overflow-x:auto;margin-right:calc(-1 * var(--page-padding));padding:0 var(--page-padding) 0 0;scroll-snap-type:x mandatory;scrollbar-width:none}
 :root .recent-rail::-webkit-scrollbar{display:none}
 :root .recent-rail>.photo-card{scroll-snap-align:start}
 :root .recent-rail .photo-card .material-image{aspect-ratio:1;border-radius:16px}
+
+/* ---- Fixed bottom action bars (Reserve, Next, Publish…) use the page colour, not white ---- */
+:root :is(.detail-actions,.flow-action){background:var(--color-bg);border-top:var(--border);backdrop-filter:none}

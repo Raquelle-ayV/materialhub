@@ -51,13 +51,13 @@ test('B partial reservations, stale sheet, own material, filters, empty results 
   const other=await browser.newContext({baseURL:'http://127.0.0.1:15173'});await register(other.request,'stock_other');
   expect((await other.request.post(`/api/materials/${d.material_id}/reserve`,{data:{quantity:1,request_key:crypto.randomUUID()}})).status()).toBe(201);
   expect((await page.request.post(`/api/materials/${d.material_id}/favorite`,{data:{favorite:true}})).ok()).toBe(true);
-  await page.goto('/saved');await expect(page.locator('.saved-page .material-card')).not.toHaveClass(/unavailable/);await expect(page.locator('.saved-page .material-status')).toHaveText('2 sheets');
+  await page.goto('/saved');await expect(page.locator('.saved-page .material-card')).not.toHaveClass(/unavailable/);await expect(page.locator('.saved-page .photo-card')).toHaveCount(1);await expect(page.locator('.saved-page')).not.toContainText('No longer available');
   await page.goto(`/materials/${d.material_id}`);await expect(page.locator('.specs').first()).toContainText('Available2 sheets');
   await page.getByRole('button',{name:'Reserve',exact:true}).click();const sheet=page.getByRole('dialog',{name:'Reserve'});await sheet.getByRole('button',{name:'More'}).click();await expect(sheet.getByRole('button',{name:'More'})).toBeDisabled();
   const third=await browser.newContext({baseURL:'http://127.0.0.1:15173'});await register(third.request,'stock_third');
   expect((await third.request.post(`/api/materials/${d.material_id}/reserve`,{data:{quantity:2,request_key:crypto.randomUUID()}})).status()).toBe(201);
   await sheet.getByRole('button',{name:'Confirm reservation',exact:true}).click();await expect(page.getByRole('alert')).toContainText('no longer available');await expect(page.getByRole('button',{name:'Fully reserved'})).toBeDisabled();
-  await page.goto('/saved');await expect(page.locator('.saved-page .material-card')).toHaveClass(/unavailable/);await expect(page.locator('.saved-page .material-status')).toHaveText('No longer available');
+  await page.goto('/saved');await expect(page.locator('.saved-page .material-card')).toHaveClass(/unavailable/);await expect(page.locator('.saved-page .card-line')).toHaveText('No longer available');
   await page.goto(`/materials?q=${d.display_code}`);await expect(page.getByText('No materials found',{exact:true})).toBeVisible();await expect(page.locator('.filter-count')).toHaveCount(0);
   await page.getByRole('button',{name:'More filters'}).click();const filters=page.getByRole('dialog',{name:'Filters'});await expect(filters.getByLabel('Category')).toHaveCount(0);
   await expect(filters.getByRole('switch',{name:/Show unavailable/})).not.toBeChecked();await filters.getByRole('switch',{name:/Show unavailable/}).check();await filters.getByRole('button',{name:'Apply filters'}).click();await expect(page.locator('.material-card')).toHaveCount(1);await expect(page.locator('.filter-count')).toHaveText('1');
