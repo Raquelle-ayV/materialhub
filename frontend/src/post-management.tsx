@@ -5,6 +5,7 @@ import { Archive, ArrowLeft, ChevronRight, FileText, Plus, Trash2 } from 'lucide
 import { Auth, api } from './lib';
 import { ActionRequired, IssueDetails, type Issue } from './reviews';
 import { messageOf, useI18n, type Message } from './i18n';
+import { AddMaterialButton } from './capture';
 
 type Post = { id:number; material_id:number; display_code:string; name:string; unit:string; status:string; deposit_status:string; stock_quantity:number; initial_quantity:number; collected_quantity:number; photos:{id:number;url:string}[]; issues:Issue[] };
 type Management = { material_id:number; version:number; has_history:boolean; disposition:'deleted'|'archived'|null; can_delete:boolean; can_archive:boolean; blocked_reason:string };
@@ -63,7 +64,7 @@ export function ManagedPosts() {
       })}
       {!draft&&!posts.length&&<p>No materials yet.</p>}
     </div>}
-    <Link className="button dark full spaced" to="/deposit/new?fresh=1">Add material<Plus size={18}/></Link>
+    <AddMaterialButton className="button dark full spaced">Add material<Plus size={18}/></AddMaterialButton>
     <dialog ref={dialog} className="post-management-dialog" onCancel={event=>{event.preventDefault();if(!busy)setSelection(null);}} aria-labelledby="post-management-title">
       <h2 id="post-management-title">{actionLabel}?</h2><p className="post-management-name">{selection?.name}</p>
       <p>{selection?.action==='archive'?'This material will no longer be available to reserve. Existing transaction records and any eligible return remain available.':selection?.action==='draft'?'This removes the saved draft. You can start a new material at any time.':'This removes the material from your posts and Explore. This cannot be undone. Existing credit and inventory audit records are kept.'}</p>

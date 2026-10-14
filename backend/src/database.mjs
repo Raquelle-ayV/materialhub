@@ -53,6 +53,9 @@ export function openDatabase(filename = process.env.DATABASE_PATH || resolve(pro
       db.exec('PRAGMA user_version=7');
     });
   }
+  // v8: one optional video per material.
+  if (!db.prepare('PRAGMA table_info(materials)').all().some(c => c.name === 'video_media_id')) db.exec('ALTER TABLE materials ADD COLUMN video_media_id INTEGER REFERENCES media(id)');
+  db.exec('PRAGMA user_version=8');
   seed(db);
   return db;
 }

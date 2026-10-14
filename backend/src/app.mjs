@@ -52,7 +52,7 @@ export function createApp(db, options = {}) {
       const host = req.headers['x-forwarded-host'] || req.headers.host;
       let sameHost = false; try { sameHost = !!req.headers.origin && new URL(req.headers.origin).host === host; } catch {}
       if (req.headers.origin && !allowed.has(req.headers.origin) && !sameHost) return res.status(403).json({error:'This request origin is not allowed.'});
-      if (req.path !== '/api/uploads' && !req.is('application/json')) return res.status(415).json({error:'Please send a JSON request.'});
+      if (!['/api/uploads','/api/uploads/video'].includes(req.path) && !req.is('application/json')) return res.status(415).json({error:'Please send a JSON request.'});
     }
     next();
   });
@@ -164,7 +164,7 @@ export function createApp(db, options = {}) {
     const material = db.prepare(`${materialSelect} WHERE m.id=? AND NOT EXISTS (SELECT 1 FROM material_management mm WHERE mm.material_id=m.id AND mm.disposition='deleted')`).get(Number(req.params.id) || -1);
     if (!material || (material.status === 'ready_for_drop_off' && material.owner_id !== req.user?.id)) return res.status(404).json({error:'Material not found.'});
     const photos=db.prepare("SELECT x.id,CASE WHEN x.storage_key LIKE '/placeholders/%' THEN x.storage_key ELSE '/api/media/'||x.id END AS url FROM material_photos p JOIN media x ON x.id=p.media_id WHERE p.material_id=? AND p.kind='material' ORDER BY p.sort_order,p.id").all(material.id);
-    res.json({material:{...material,photos,available_quantity:available(material),is_favorite:favoriteIds(req.user).has(material.id)}});
+    res.json({material:{...material,photos,video:material.video_media_id?{id:material.video_media_id,url:`/api/media/${material.video_media_id}`}:null,available_quantity:available(material),is_favorite:favoriteIds(req.user).has(material.id)}});
   });
   app.use('/api',(req,res) => res.status(404).json({error:'This feature is not available yet.'}));
   const dist = resolve(projectRoot,'dist');
@@ -185,7 +185,7 @@ export function createApp(db, options = {}) {
   }
   app.use((error,req,res,next) => {
     if (error.type === 'entity.parse.failed') return res.status(400).json({error:'Invalid JSON request.'});
-    if (error.type === 'entity.too.large') return res.status(413).json({error:req.path==='/api/uploads'?'Each photo must be 10MB or smaller.':'This request is too large.'});
+    if (error.type === 'entity.too.large') return res.status(413).json({error:req.path==='/api/uploads'?'Each photo must be 10MB or smaller.':req.path==='/api/uploads/video'?'The video must be 50MB or smaller.':'This request is too large.'});
     if (error.status && error.status < 500) return res.status(error.status).json({error:error.message,error_key:error.messageKey || error.message,error_params:error.params});
     console.error(error);
     res.status(500).json({error:'Something went wrong. Please try again.'});

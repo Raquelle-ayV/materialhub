@@ -10,6 +10,8 @@ import { requireZone } from './zones.mjs';
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const MIME = {jpeg:'image/jpeg',png:'image/png',webp:'image/webp'};
+const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+const VIDEO_MIME = {mp4:'video/mp4',mov:'video/quicktime',webm:'video/webm'};
 const fail = (message,status=400,messageKey=message,params={}) => { throw Object.assign(new Error(message),{status,messageKey,params}); };
 const now = () => new Date().toISOString();
 const text = (value,max=200) => typeof value === 'string' ? value.trim().slice(0,max) : '';
@@ -24,7 +26,7 @@ export function installDepositRoutes(app,db,requireUser,{uploadDir=process.env.U
     const issues=db.prepare("SELECT id,reason,reason_label,notes,status,created_at,resolution,resolved_at FROM issue_reports WHERE material_id=? ORDER BY id DESC").all(d.material_id);
     for(const issue of issues)issue.photos=db.prepare("SELECT media_id AS id,'/api/media/'||media_id AS url FROM issue_photos WHERE issue_id=? ORDER BY sort_order").all(issue.id);
     const collected=db.prepare("SELECT coalesce(sum(collected_quantity),0) AS quantity FROM reservations WHERE material_id=? AND status='collected'").get(d.material_id).quantity;
-    return {...d,id:d.deposit_id,issues,collected_quantity:collected,photos:photos.filter(p=>p.kind==='material').map(p=>({id:p.id,url:`/api/media/${p.id}`})),placement_photos:placementPhotos(db,d.material_id)};
+    return {...d,id:d.deposit_id,issues,collected_quantity:collected,photos:photos.filter(p=>p.kind==='material').map(p=>({id:p.id,url:`/api/media/${p.id}`})),video:d.video_media_id?{id:d.video_media_id,url:`/api/media/${d.video_media_id}`}:null,placement_photos:placementPhotos(db,d.material_id)};
   }
   function editable(d) {if(d.deposit_status==='confirmed')fail('This material has already been dropped off. Core information is locked.',409);}
   function imageIds(ids,userId,limit,materialId=0,required=true) {
@@ -37,20 +39,44 @@ export function installDepositRoutes(app,db,requireUser,{uploadDir=process.env.U
     }
     return ids;
   }
+  /** Optional single video: must be the user's own upload and not attached to another material. */
+  function videoId(value,userId,materialId=0) {
+    if(value===null||value===undefined||value==='')return null;
+    const id=Number(value);if(!Number.isSafeInteger(id))fail('Invalid video. Please upload it again.');
+    const m=db.prepare('SELECT * FROM media WHERE id=? AND uploader_id=?').get(id,userId);
+    if(!m||!Object.values(VIDEO_MIME).includes(m.mime_type))fail('This video does not belong to your account.');
+    if(db.prepare('SELECT id FROM materials WHERE video_media_id=? AND id!=?').get(id,materialId))fail('A video cannot be reused from another material record.');
+    return id;
+  }
   function validate(body,userId,materialId=0) {
     const fields={name:text(body.name),category_id:Number(body.category_id),custom_category_name:text(body.custom_category_name),quantity:Number(body.quantity),unit:text(body.unit,50),dimensions_spec:text(body.dimensions_spec,500),dimensions_not_applicable:body.dimensions_not_applicable===true,color:text(body.color,80),condition:text(body.condition,80),reference_url:text(body.reference_url,2000),notes:text(body.notes,4000)};
-    for(const k of ['name','unit','color','condition'])if(!fields[k])fail('Material name, unit, color and condition are required.');
+    for(const k of ['name','unit','condition'])if(!fields[k])fail('Material name, unit and condition are required.');
     const category=db.prepare('SELECT * FROM categories WHERE id=?').get(fields.category_id||-1);if(!category)fail('Please select a valid category.');
     if(fields.category_id===7&&!fields.custom_category_name)fail('Please enter a custom category name for Other.');
     if(!Number.isSafeInteger(fields.quantity)||fields.quantity<1||fields.quantity>1_000_000)fail('Quantity must be a whole number between 1 and 1,000,000.');
     if(!fields.dimensions_not_applicable&&!fields.dimensions_spec)fail('Enter dimensions / specifications or choose Not applicable.');
     if(fields.reference_url){try{if(!['http:','https:'].includes(new URL(fields.reference_url).protocol))throw new Error();}catch{fail('Use an http or https purchase / reference link.');}}
-    return {...fields,zone_id:category.zone_id,photo_ids:imageIds(body.photo_ids,userId,9,materialId)};
+    return {...fields,zone_id:category.zone_id,photo_ids:imageIds(body.photo_ids,userId,9,materialId),video_id:videoId(body.video_id,userId,materialId)};
   }
   function attach(materialId,depositId,ids,kind) {
     db.prepare('DELETE FROM material_photos WHERE material_id=? AND kind=?').run(materialId,kind);
     ids.forEach((id,i)=>db.prepare('INSERT INTO material_photos(material_id,media_id,kind,deposit_id,sort_order,created_at) VALUES (?,?,?,?,?,?)').run(materialId,id,kind,depositId,i,now()));
   }
+  app.post('/api/uploads/video',requireUser,express.raw({type:()=>true,limit:MAX_VIDEO_BYTES}),async(req,res)=>{
+    const mime=req.headers['content-type']?.split(';')[0];
+    let filename='';try{filename=decodeURIComponent(req.headers['x-file-name']||'');}catch{fail('Invalid video filename.');}
+    const ext=Object.entries(VIDEO_MIME).find(([,m])=>m===mime)?.[0];
+    if(!ext||! /\.(mp4|mov|m4v|webm)$/i.test(filename))fail('Use an MP4, MOV or WebM video.');
+    const body=req.body;if(!Buffer.isBuffer(body)||body.length<12)fail('Please choose a video.');
+    const isoBox=body.subarray(4,8).toString('latin1')==='ftyp',webm=body.readUInt32BE(0)===0x1a45dfa3;
+    if(ext==='webm'?!webm:!isoBox)fail('This file is not a valid video.');
+    await mkdir(uploadDir,{recursive:true});
+    const key=`${randomUUID()}.${ext}`;await writeFile(resolve(uploadDir,key),body,{flag:'wx'});
+    try {
+      const id=Number(db.prepare('INSERT INTO media(uploader_id,storage_key,mime_type,size_bytes,created_at) VALUES (?,?,?,?,?)').run(req.user.id,key,mime,body.length,now()).lastInsertRowid);
+      res.status(201).json({video:{id,url:`/api/media/${id}`}});
+    } catch(error) { await unlink(resolve(uploadDir,key)).catch(()=>{}); throw error; }
+  });
   app.post('/api/uploads',requireUser,express.raw({type:()=>true,limit:MAX_BYTES}),async(req,res)=>{
     const mime=req.headers['content-type']?.split(';')[0];
     let filename='';try{filename=decodeURIComponent(req.headers['x-file-name']||'');}catch{fail('Invalid photo filename.');}
@@ -75,7 +101,7 @@ export function installDepositRoutes(app,db,requireUser,{uploadDir=process.env.U
   app.get('/api/media/:id',(req,res)=>{
     const media=db.prepare('SELECT * FROM media WHERE id=?').get(Number(req.params.id)||-1);
     if(!media || media.storage_key.includes('/') || media.storage_key.includes('\\'))return res.status(404).json({error:'Photo not found.'});
-    const published=db.prepare("SELECT p.id FROM material_photos p JOIN materials m ON m.id=p.material_id WHERE p.media_id=? AND m.status!='ready_for_drop_off'").get(media.id);
+    const published=db.prepare("SELECT p.id FROM material_photos p JOIN materials m ON m.id=p.material_id WHERE p.media_id=? AND m.status!='ready_for_drop_off'").get(media.id)||db.prepare("SELECT id FROM materials WHERE video_media_id=? AND status!='ready_for_drop_off'").get(media.id);
     const issueOwner=req.user&&db.prepare('SELECT i.id FROM issue_photos p JOIN issue_reports i ON i.id=p.issue_id JOIN materials m ON m.id=i.material_id WHERE p.media_id=? AND m.owner_id=?').get(media.id,req.user.id);
     if(media.uploader_id!==req.user?.id&&!published&&!issueOwner)return res.status(404).json({error:'Photo not found.'});
     res.type(media.mime_type).sendFile(resolve(uploadDir,media.storage_key));
@@ -84,7 +110,7 @@ export function installDepositRoutes(app,db,requireUser,{uploadDir=process.env.U
   app.post('/api/deposit-draft',requireUser,(req,res)=>{
     const key=text(req.body.request_key,100);if(!key)fail('Missing draft identifier.');
     if(db.prepare('SELECT deposit_id FROM deposit_requests WHERE user_id=? AND request_key=?').get(req.user.id,key))return res.json({saved:true});
-    imageIds(req.body.photo_ids||[],req.user.id,9,0,false);
+    imageIds(req.body.photo_ids||[],req.user.id,9,0,false);videoId(req.body.video_id,req.user.id);
     db.prepare('INSERT INTO deposit_drafts VALUES (?,?,?) ON CONFLICT(user_id) DO UPDATE SET payload=excluded.payload,updated_at=excluded.updated_at').run(req.user.id,JSON.stringify(req.body),now());
     res.json({saved:true});
   });
@@ -103,9 +129,10 @@ export function installDepositRoutes(app,db,requireUser,{uploadDir=process.env.U
       const code=`M${String(sequence).padStart(3,'0')}`;
       const materialId=Number(db.prepare(`INSERT INTO materials(display_code,owner_id,name,category_id,custom_category_name,initial_quantity,stock_quantity,unit,dimensions_spec,dimensions_not_applicable,color,condition,notes,reference_url,zone_id,status,recorded_at) VALUES (?,?,?,?,?,?,0,?,?,?,?,?,?,?,?,'ready_for_drop_off',?)`).run(code,req.user.id,f.name,f.category_id,f.custom_category_name||null,f.quantity,f.unit,f.dimensions_spec,Number(f.dimensions_not_applicable),f.color,f.condition,f.notes,f.reference_url||null,f.zone_id,date).lastInsertRowid);
       const id=Number(db.prepare("INSERT INTO deposits(material_id,user_id,status) VALUES (?,?,'pending')").run(materialId,req.user.id).lastInsertRowid);
-      attach(materialId,id,f.photo_ids,'material');
+      attach(materialId,id,f.photo_ids,'material');db.prepare('UPDATE materials SET video_media_id=? WHERE id=?').run(f.video_id,materialId);
       db.prepare('INSERT INTO deposit_requests VALUES (?,?,?)').run(req.user.id,key,id);
-      db.prepare('DELETE FROM deposit_drafts WHERE user_id=?').run(req.user.id);
+      // Batch submissions (Scan with AI / Multiple items) leave the single-item draft alone.
+      if(req.body.keep_draft!==true)db.prepare('DELETE FROM deposit_drafts WHERE user_id=?').run(req.user.id);
       return {deposit:owned(id,req.user.id),replayed:false};
     });res.status(result.replayed?200:201).json(result);
   });
@@ -114,7 +141,7 @@ export function installDepositRoutes(app,db,requireUser,{uploadDir=process.env.U
       const d=owned(req.params.id,req.user.id);editable(d);const f=validate(req.body,req.user.id,d.material_id);
       if(!Number.isInteger(req.body.version)||req.body.version!==d.version)fail('This material changed in another tab. Reload before saving.',409);
       db.prepare('UPDATE materials SET name=?,category_id=?,custom_category_name=?,initial_quantity=?,unit=?,dimensions_spec=?,dimensions_not_applicable=?,color=?,condition=?,notes=?,reference_url=?,zone_id=?,version=version+1 WHERE id=?').run(f.name,f.category_id,f.custom_category_name||null,f.quantity,f.unit,f.dimensions_spec,Number(f.dimensions_not_applicable),f.color,f.condition,f.notes,f.reference_url||null,f.zone_id,d.material_id);
-      attach(d.material_id,d.id,f.photo_ids,'material');
+      attach(d.material_id,d.id,f.photo_ids,'material');db.prepare('UPDATE materials SET video_media_id=? WHERE id=?').run(f.video_id,d.material_id);
       if(f.category_id!==d.category_id){db.prepare('UPDATE deposits SET verified_zone_id=NULL,zone_verified_at=NULL WHERE id=?').run(d.id);db.prepare("DELETE FROM material_photos WHERE material_id=? AND kind='placement'").run(d.material_id);}
       return owned(d.id,req.user.id);
     });res.json({deposit});

@@ -11,7 +11,7 @@ test('A flow through actual camera decoding, wrong zone, refresh, placement and 
   const username=`provider_${Date.now().toString(36)}`;
   await page.goto('/register');await page.getByLabel('Username',{exact:true}).fill(username);await page.getByLabel('Password',{exact:true}).fill('provider-test-2026');await page.getByRole('button',{name:'Create account',exact:true}).click();
   await expect(page.getByRole('heading',{name:username,exact:true})).toBeVisible();
-  await page.getByRole('navigation').getByRole('link',{name:'Share',exact:true}).click();await page.getByRole('link',{name:'Add new material',exact:true}).click();
+  await page.getByRole('navigation').getByRole('link',{name:'Share',exact:true}).click();await page.getByRole('button',{name:'Add new material',exact:true}).click();await page.getByRole('button',{name:/^One item/}).click();
   await expect(page.getByRole('heading',{name:'Add information'})).toBeVisible();
   await page.getByLabel('Material name',{exact:false}).fill(`Test foam ${username}`);
   await page.getByRole('combobox',{name:/^Category/}).selectOption('1');await expect(page.getByRole('combobox',{name:/^Unit/}).locator('option')).toHaveText(['boards','pieces']);
@@ -20,7 +20,7 @@ test('A flow through actual camera decoding, wrong zone, refresh, placement and 
   await page.getByLabel('Color',{exact:false}).fill('White');await page.getByRole('radio',{name:'Used'}).check();await expect(page.getByRole('radio',{name:'Used'})).toBeChecked();
   await page.locator('summary',{hasText:'Additional details'}).click();
   await page.getByLabel('Notes',{exact:false}).fill('Camera-tested end-to-end sample.');
-  await page.getByLabel('Material photos from gallery').setInputFiles({name:'foam.png',mimeType:'image/png',buffer:image});
+  await page.getByRole('button',{name:'Add photos / video'}).click();await page.getByLabel('Material photos from gallery').setInputFiles({name:'foam.png',mimeType:'image/png',buffer:image});await page.getByRole('button',{name:'Done',exact:true}).click();
   await expect(page.getByAltText('Material photos 1')).toBeVisible();
   await expect(page.locator('.autosave')).toHaveText('Saved');
   await page.reload();await expect(page.getByLabel('Material name',{exact:false})).toHaveValue(`Test foam ${username}`);
