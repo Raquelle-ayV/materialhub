@@ -142,3 +142,14 @@
 .material-form .chip-scroll label.selected{background:var(--green);border-color:var(--green);color:#fff}
 .material-form .chip-scroll label input[type=radio]{position:absolute;inset:0;width:100%;height:100%;min-height:0;margin:0;padding:0;border:0;opacity:0;cursor:pointer}
 .chip-scroll label:has(input:focus-visible){outline:2px solid var(--green);outline-offset:2px}
+
+/* Task cards: tap the card to continue; the bin deletes a material not yet dropped off */
+.task-card{position:relative;min-width:0}
+.task-card>.active-task{width:100%;padding-right:52px;box-sizing:border-box}
+.task-delete{position:absolute;top:50%;right:8px;transform:translateY(-50%);width:40px;height:40px;border:0;border-radius:50%;background:none;color:var(--text-secondary);display:grid;place-items:center;cursor:pointer}
+.task-delete:hover{background:#0000000d;color:#b3261e}
+.section-link{display:flex;align-items:center;justify-content:space-between;color:inherit;text-decoration:none}
+.section-link span{display:flex;align-items:center;gap:2px;font-size:var(--fs-help);color:var(--text-secondary)}
+.sheet-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sheet-actions .button{margin:0}
+.button.danger{background:#b3261e;border:1px solid #b3261e;color:#fff}

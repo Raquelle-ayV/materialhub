@@ -15,7 +15,7 @@ import { recentMaterialIds } from './recent-materials';
 import { MaterialDetail, MyReservations } from './reservations';
 import { FulfillmentPage } from './fulfillment';
 import { ProfileReviewNotice, ReviewPage } from './reviews';
-import { AddInformation, DepositPage, DepositTasks, MyPosts, ShareMaterial, HubGuidePage, DropOffEntry } from './deposits';
+import { ActiveTasksPage, AddInformation, DepositPage, DepositTasks, MyPosts, ShareMaterial, HubGuidePage, DropOffEntry } from './deposits';
 import { BatchItemPage, BatchReviewPage, MultiplePage, ScanPage } from './capture';
 
 type Material = { id:number; owner_id:number; available_quantity:number; display_code:string; name:string; category:string; zone:string; stock_quantity:number; unit:string; dimensions_spec:string; color:string; condition:string; notes:string; image:string; is_demo:number; status:string; is_favorite?:boolean };
@@ -38,7 +38,7 @@ function App() { const {t,msg,language}=useI18n();
       <Route path="/materials/:id/reserve" element={<ReserveRedirect/>}/><Route path="/reservations/:id" element={<MyReservations detail/>}/><Route path="/reservations/:id/:stage" element={<FulfillmentPage/>}/><Route path="/login" element={<AuthPage/>}/><Route path="/register" element={<AuthPage register/>}/>
       <Route path="/deposit" element={<ShareMaterial/>}/><Route path="/hub" element={<HubGuidePage/>}/><Route path="/deposit/drop-off" element={<DropOffEntry/>}/><Route path="/recently-viewed" element={<Explore history/>}/><Route path="/deposit/new" element={<AddInformation/>}/><Route path="/deposit/scan" element={<ScanPage/>}/><Route path="/deposit/multiple" element={<MultiplePage/>}/><Route path="/deposit/review" element={<BatchReviewPage/>}/><Route path="/deposit/review/:key" element={<BatchItemPage/>}/><Route path="/deposits/:id/edit" element={<AddInformation/>}/><Route path="/deposits/:id/:stage?" element={<DepositPage/>}/>
       <Route path="/me/settings" element={<Navigate to="/me" replace/>}/><Route path="/me" element={<Profile/>}/><Route path="/me/credits" element={<Credits/>}/>
-      <Route path="/me/posts" element={<MyPosts/>}/><Route path="/me/issues/:id" element={<ReviewPage/>}/>
+      <Route path="/me/posts" element={<MyPosts/>}/><Route path="/me/tasks" element={<ActiveTasksPage/>}/><Route path="/me/issues/:id" element={<ReviewPage/>}/>
       <Route path="/me/reservations" element={<MyReservations/>}/>
       <Route path="/saved" element={<Saved/>}/><Route path="/me/favorites" element={<Navigate to="/saved" replace/>}/>
       <Route path="/me/activity" element={<Activity/>}/>

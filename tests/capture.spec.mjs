@@ -63,6 +63,11 @@ test('Multiple items: camera roll covers, details per material, color optional',
   await expect(page.getByRole('heading',{name:'Review materials'})).toBeVisible();await expect(page.locator('.review-item')).toHaveCount(2);
   await page.getByRole('button',{name:'Submit 2 materials'}).click();
   await expect(page.getByRole('status').filter({hasText:'2 materials recorded'})).toBeVisible();await expect(page.locator('.share-active')).toContainText('Birch offcuts');
+  await page.goto('/me');await expect(page.locator('.tasks .task-card')).toHaveCount(1);await page.locator('.tasks').screenshot({path:'test-results/profile-tasks.png'});await expect(page.locator('.tasks .active-task svg.lucide-chevron-right')).toHaveCount(0);
+  await page.getByRole('link',{name:/Your active tasks/}).click();await expect(page.getByRole('heading',{name:'Active tasks'})).toBeVisible();await expect(page.locator('.task-card')).toHaveCount(2);await page.screenshot({path:'test-results/active-tasks.png'});await page.getByRole('button',{name:'Delete Birch offcuts'}).click();await page.screenshot({path:'test-results/delete-confirm.png'});await page.getByRole('button',{name:'Cancel',exact:true}).click();
+  await page.getByRole('button',{name:'Delete Birch offcuts'}).click();await page.getByRole('button',{name:'Delete',exact:true}).click();
+  await expect(page.locator('.task-card')).toHaveCount(1);await expect(page.locator('.task-card')).toContainText('Grey felt');
+  await page.goto('/deposit');await expect(page.locator('.share-active')).not.toContainText('Birch offcuts');await expect(page.locator('.share-active')).toContainText('Grey felt');
   expect(errors).toEqual([]);
 });
 

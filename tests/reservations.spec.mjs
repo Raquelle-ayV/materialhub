@@ -30,7 +30,7 @@ test('B browse, reserve from the bottom sheet, duplicate click, persistence and 
   await expect(page.getByRole('link',{name:'Start pickup'})).toBeVisible();await expect.poll(async()=>(await(await page.request.get('/api/auth/me')).json()).user.available).toBe(1);
   const url=page.url(),time=await page.locator('time').getAttribute('datetime');await page.reload();await expect(page.locator('time')).toHaveAttribute('datetime',time);await expect(page.locator('.active-task')).toContainText('2 sheets');
   const m=(await(await page.request.get(`/api/materials/${d.material_id}`)).json()).material;expect(m.status).toBe('reserved');expect(m.stock_quantity).toBe(2);expect(m.available_quantity).toBe(0);
-  await page.goto('/me');await expect(page.locator('.task-strip')).toContainText('Reserved for pickup');
+  await page.goto('/me');await expect(page.locator('.tasks')).toContainText('Reserved for pickup');
   await page.getByRole('button',{name:'Log out',exact:true}).click();await page.getByLabel('Username',{exact:true}).fill(username);await page.getByLabel('Password',{exact:true}).fill('reservation-test');await page.getByRole('button',{name:'Log in',exact:true}).click();await expect(page.getByRole('heading',{name:username,exact:true})).toBeVisible();
   await page.getByRole('link',{name:'My reservations',exact:true}).click();await expect(page.locator('time')).toHaveAttribute('datetime',time);await page.screenshot({path:'test-results/my-reservations-402.png',fullPage:true});
   await page.locator('.reservation-card .active-task').click();await page.getByRole('button',{name:'Cancel reservation',exact:true}).click();
