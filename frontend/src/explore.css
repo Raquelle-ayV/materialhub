@@ -1,0 +1,99 @@
+/* Explore (home and search results) in the Rematerial brand style. Only design tokens from tokens.css are used.
+   Scoped to the page that shows the Explore heading, so other pages are untouched until they are restyled. */
+
+body:has(.explore-heading){background:var(--color-bg);color:var(--color-ink);font:var(--text-body)}
+.app-shell:has(.explore-heading){background:var(--color-bg);color:var(--color-ink);font:var(--text-body);padding-left:var(--page-padding);padding-right:var(--page-padding);box-shadow:none}
+.app-shell:has(.explore-heading) :is(button,input,select,textarea){font-family:var(--font-family)}
+.app-shell:has(.explore-heading) svg{stroke-width:2}
+
+/* Heading: page title + credits */
+.app-shell:has(.explore-heading) .explore-heading{gap:var(--space-3);padding:var(--space-4) 0 var(--space-4)}
+.app-shell:has(.explore-heading) .explore-heading h1{font:var(--text-display);letter-spacing:0;color:var(--color-ink);margin:0}
+.app-shell:has(.explore-heading) .account-pill{display:inline-flex;align-items:center;gap:var(--space-2);min-height:var(--tap-min);padding:0 var(--space-4);border:1px solid var(--color-taupe);border-radius:var(--radius-pill);background:transparent;color:var(--color-ink);font:500 14px/1 var(--font-family)}
+.app-shell:has(.explore-heading) .account-pill svg{display:none}
+.app-shell:has(.explore-heading) .account-pill::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--color-accent)}
+
+/* Search + filter button */
+.app-shell:has(.explore-heading) .search-row{gap:var(--space-3);margin:0 0 var(--space-4)}
+.app-shell:has(.explore-heading) .search-row .search-bar{height:var(--button-height);min-height:var(--button-height);margin:0;padding:0 var(--space-5) 0 var(--space-3);gap:var(--space-1);border:0;border-radius:var(--radius-pill);background:var(--color-linen)}
+.app-shell:has(.explore-heading) .search-bar button{width:var(--tap-min);height:var(--tap-min);min-height:var(--tap-min);color:var(--color-ink-soft);background:none}
+.app-shell:has(.explore-heading) .search-bar button svg{width:20px;height:20px}
+.app-shell:has(.explore-heading) .search-bar input{height:var(--tap-min);min-height:var(--tap-min);font:var(--text-body);color:var(--color-ink);background:none}
+.app-shell:has(.explore-heading) .search-bar input::placeholder{color:var(--color-ink-soft)}
+.app-shell:has(.explore-heading) .filter-icon{flex:0 0 var(--button-height);width:var(--button-height);height:var(--button-height);border:0;border-radius:var(--radius-pill);background:var(--color-linen);color:var(--color-ink)}
+.app-shell:has(.explore-heading) .filter-icon svg{width:24px;height:24px}
+.app-shell:has(.explore-heading) .filter-count{min-width:20px;height:20px;padding:0 var(--space-1);border-radius:var(--radius-pill);background:var(--color-walnut);color:var(--color-on-walnut);font:var(--text-caption);font-weight:600}
+
+/* Category chips */
+.app-shell:has(.explore-heading) .discovery-filters{margin:0 0 var(--space-8)}
+.app-shell:has(.explore-heading) .category-strip{gap:var(--space-2);-webkit-mask-image:none;mask-image:none;margin-right:calc(-1 * var(--page-padding));padding-right:var(--page-padding)}
+.app-shell:has(.explore-heading) .category-strip button{height:var(--chip-height);min-height:var(--chip-height);padding:0 var(--space-5);border:0;border-radius:var(--radius-pill);background:var(--color-linen);color:var(--color-ink);font:var(--text-button);white-space:nowrap}
+.app-shell:has(.explore-heading) .category-strip button.selected{background:var(--color-walnut);color:var(--color-on-walnut)}
+
+/* Section titles */
+.app-shell:has(.explore-heading) .recent-materials{margin:0 0 var(--space-8);padding:0;border:0}
+.app-shell:has(.explore-heading) .materials-section{margin:0 0 var(--space-8)}
+.app-shell:has(.explore-heading) :is(.recent-materials,.materials-section) .section-title{min-height:var(--tap-min);margin:0 0 var(--space-3)}
+.app-shell:has(.explore-heading) .section-title h2{font:var(--text-title);letter-spacing:0;color:var(--color-ink);margin:0}
+.app-shell:has(.explore-heading) .section-next{width:var(--tap-min);height:var(--tap-min);border-radius:var(--radius-pill);color:var(--color-ink)}
+.app-shell:has(.explore-heading) .section-next:hover{background:var(--color-linen)}
+.app-shell:has(.explore-heading) .section-next svg{width:24px;height:24px;stroke-width:2}
+
+/* Material cards: white card, 1px line, radius 16, padding 8; photo radius 12 */
+.app-shell:has(.explore-heading) .material-grid{gap:var(--space-3)}
+.app-shell:has(.explore-heading) .recent-rail{gap:var(--space-3)}
+.app-shell:has(.explore-heading) .material-card,
+.app-shell:has(.explore-heading) .recent-rail .recent-card{display:block;padding:var(--space-2);border:var(--border);border-radius:var(--radius-card);background:var(--color-surface);color:var(--color-ink)}
+.app-shell:has(.explore-heading) .material-image,
+.app-shell:has(.explore-heading) .recent-rail .material-image{border-radius:var(--radius-image);background:var(--color-linen)}
+.app-shell:has(.explore-heading) .material-photo[data-state=loading]{background:var(--color-linen)}
+.app-shell:has(.explore-heading) .material-image .photo-fallback{background:var(--color-linen);color:var(--color-ink-soft);font:var(--text-caption)}
+.app-shell:has(.explore-heading) .material-card h3{font:var(--text-card-title);letter-spacing:0;color:var(--color-ink);margin:var(--space-2) 0 0}
+.app-shell:has(.explore-heading) .material-card .material-status{font:var(--text-caption);color:var(--color-ink-soft);margin:var(--space-1) 0 0}
+.app-shell:has(.explore-heading) .material-card.unavailable h3,
+.app-shell:has(.explore-heading) .material-card.unavailable .material-status{color:var(--color-ink-soft)}
+.app-shell:has(.explore-heading) .card-tags{gap:var(--space-1);margin-top:var(--space-2)}
+.app-shell:has(.explore-heading) .material-card :is(.condition-tag,.status-badge){display:inline-block;padding:var(--space-1) var(--space-2);border:1px solid transparent;border-radius:var(--radius-tag);background:var(--color-linen);color:var(--color-ink);font:var(--text-caption)}
+.app-shell:has(.explore-heading) .material-card .status-badge.tone-amber{border-color:var(--color-taupe)}
+
+/* Favourite heart: 44px white circle, 1px line; outline in soft ink, saved = filled walnut */
+.app-shell:has(.explore-heading) .favorite-button,
+.app-shell:has(.explore-heading) .recent-card .favorite-button{top:var(--space-2);right:var(--space-2);width:var(--tap-min);height:var(--tap-min);border:var(--border);border-radius:var(--radius-pill);background:var(--color-surface);color:var(--color-ink-soft);box-shadow:none}
+.app-shell:has(.explore-heading) .favorite-button svg,
+.app-shell:has(.explore-heading) .recent-card .favorite-button svg{width:24px;height:24px;stroke-width:2}
+.app-shell:has(.explore-heading) .favorite-button.saved{color:var(--color-walnut)}
+.app-shell:has(.explore-heading) .favorite-button.saved svg{fill:currentColor}
+
+/* Loading, error and empty states */
+.app-shell:has(.explore-heading) .loading{color:var(--color-ink-soft);font:var(--text-body)}
+.app-shell:has(.explore-heading) .notice{border:1px solid var(--color-taupe);border-radius:var(--radius-card);background:var(--color-linen);color:var(--color-ink);font:var(--text-body)}
+.app-shell:has(.explore-heading) .empty-state{border:var(--border);border-radius:var(--radius-card);background:var(--color-surface);color:var(--color-ink);gap:var(--space-3)}
+.app-shell:has(.explore-heading) .empty-state svg{color:var(--color-ink-soft);width:24px;height:24px}
+.app-shell:has(.explore-heading) .empty-state h3{font:var(--text-subtitle);margin:0}
+.app-shell:has(.explore-heading) .empty-state p{font:var(--text-body);color:var(--color-ink-soft);margin:0}
+
+/* Buttons on this page: primary = walnut, secondary = 1.5px ink outline, both pill and 52px */
+.app-shell:has(.explore-heading) .button{min-height:var(--button-height);padding:0 var(--space-6);border-radius:var(--radius-pill);font:var(--text-button);box-shadow:none}
+.app-shell:has(.explore-heading) .button.dark{border:0;background:var(--color-walnut);color:var(--color-on-walnut)}
+.app-shell:has(.explore-heading) .button.outline{border:1.5px solid var(--color-ink);background:transparent;color:var(--color-ink)}
+
+/* Filters sheet */
+.app-shell:has(.explore-heading) .bottom-sheet{background:var(--color-surface);color:var(--color-ink);border-radius:var(--radius-card) var(--radius-card) 0 0}
+.app-shell:has(.explore-heading) .bottom-sheet .panel-heading h2{font:var(--text-subtitle)}
+.app-shell:has(.explore-heading) .bottom-sheet .panel-heading button{width:var(--tap-min);height:var(--tap-min);border:0;border-radius:var(--radius-pill);background:var(--color-linen);color:var(--color-ink)}
+.app-shell:has(.explore-heading) .sheet-grip{background:var(--color-taupe)}
+.app-shell:has(.explore-heading) .filter-form label{font:var(--text-body);color:var(--color-ink)}
+.app-shell:has(.explore-heading) .filter-form small{font:var(--text-caption);color:var(--color-ink-soft)}
+.app-shell:has(.explore-heading) .filter-form select{min-height:var(--tap-min);border:var(--border);border-radius:var(--radius-pill);background:var(--color-surface);color:var(--color-ink);font:var(--text-body)}
+.app-shell:has(.explore-heading) .switch-row input{background:var(--color-taupe)}
+.app-shell:has(.explore-heading) .switch-row input::after{background:var(--color-surface);box-shadow:none}
+.app-shell:has(.explore-heading) .switch-row input:checked{background:var(--color-walnut)}
+.app-shell:has(.explore-heading) .bottom-sheet::backdrop{background:color-mix(in srgb,var(--color-ink) 45%,transparent)}
+
+/* Bottom navigation: white, 1px top line; active = walnut and 600; inactive = soft ink */
+.app-shell:has(.explore-heading) .bottom-nav{background:var(--color-surface);border-top:var(--border);backdrop-filter:none;box-shadow:none}
+.app-shell:has(.explore-heading) .bottom-nav>a{min-height:var(--tap-min);color:var(--color-ink-soft);font:var(--text-caption)}
+.app-shell:has(.explore-heading) .bottom-nav>a.active{color:var(--color-walnut);font-weight:600}
+.app-shell:has(.explore-heading) .bottom-nav>a>svg,
+.app-shell:has(.explore-heading) .nav-plus svg{width:24px;height:24px;stroke-width:2}
+.app-shell:has(.explore-heading) .nav-plus{width:24px;height:24px;background:none;border-radius:0}
