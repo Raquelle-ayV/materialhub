@@ -140,21 +140,19 @@ body{background:var(--color-bg);color:var(--color-ink);font:var(--text-body)}
   .app-shell{border-left:var(--border);border-right:var(--border)}
 }
 
-/* ---- Explore photo cards (Airbnb-style): no card box, square photo, tags and heart on the photo, three lines below ---- */
+/* ---- Explore photo cards (Airbnb-style): no card box, square photo, heart on the photo, name and size below ---- */
 :root .material-card.photo-card{display:block;min-width:0;padding:0;border:0;border-radius:0;background:none}
 :root .photo-card .material-image{position:relative;aspect-ratio:1;border-radius:16px;overflow:hidden;background:var(--color-linen)}
 :root .photo-card .material-image :is(img,.photo-fallback){width:100%;height:100%;object-fit:cover;border-radius:0}
-/* Light shade at the top so the white heart and tags read on pale photos */
+/* Light shade at the top so the white heart reads on pale photos */
 :root .photo-card .material-image::after{content:"";position:absolute;inset:0 0 auto;height:40%;background:linear-gradient(to bottom,color-mix(in srgb,var(--color-ink) 15%,transparent),transparent);pointer-events:none}
-:root .photo-card .photo-tags{position:absolute;z-index:1;top:10px;left:10px;right:54px;display:flex;flex-wrap:wrap;gap:var(--space-1)}
-:root .photo-card :is(.photo-tag,.photo-tags .status-badge){border:0;display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;background:var(--color-surface);color:var(--color-ink);font:600 12px/1 var(--font-family);white-space:nowrap;box-shadow:0 1px 3px color-mix(in srgb,var(--color-ink) 25%,transparent)}
 /* Heart: no circle, 22px white outline with a soft shadow; the 44px tap area keeps the icon 10px from the edges */
 :root .photo-card .favorite-button{top:-1px;right:-1px;width:var(--tap-min);height:var(--tap-min);border:0;border-radius:var(--radius-pill);background:none;color:var(--color-surface);box-shadow:none}
 :root .photo-card .favorite-button svg{width:22px;height:22px;stroke-width:2;filter:drop-shadow(0 1px 2px color-mix(in srgb,var(--color-ink) 60%,transparent))}
 :root .photo-card .favorite-button.saved{color:var(--color-surface)}
 :root .photo-card .favorite-button.saved svg{fill:var(--color-walnut)}
-:root .photo-card h3{margin:8px 0 0;font:600 15px/1.3 var(--font-family);letter-spacing:0;color:var(--color-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-:root .photo-card .card-line{margin:2px 0 0;font:400 13px/1.35 var(--font-family);color:var(--color-ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:root .photo-card h3{margin:var(--space-2) 0 0;font:var(--text-card-title);letter-spacing:0;color:var(--color-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:root .photo-card .card-line{margin:2px 0 0;font:var(--text-caption);color:var(--color-ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 :root .photo-card.unavailable :is(h3,.card-line){color:var(--color-ink-soft)}
 /* New on the shelf: two columns, 12px apart, rows 20px apart */
 :root .recommended-materials .material-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 12px}

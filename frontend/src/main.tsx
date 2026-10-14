@@ -98,9 +98,9 @@ function MaterialCard({material:m,compact=false,onFavorite,saved=false,photo=fal
   const {user}=useContext(Auth);const own=!!user&&m.owner_id===user.id;
   const gone=saved&&(m.status!=='available'||!m.is_demo&&m.available_quantity<1);
   const shown=m.status==='available'&&!m.is_demo?m.available_quantity:m.stock_quantity;
-  // Explore: photo-first card. Tags sit on the photo; three lines underneath (name, amount and size, zone and cost).
-  if(photo)return <Link to={`/materials/${m.id}`} className={`material-card photo-card ${compact?'recent-card':''} ${gone?'unavailable':''}`}><div className="material-image"><MaterialPhoto src={m.image} alt={m.is_demo?m.name+' (sample material)':m.name}/>{!gone&&<div className="photo-tags">{m.condition&&<span className="photo-tag">{m.condition}</span>}{m.status!=='available'&&<StatusBadge status={m.status}/>}</div>}{!own&&<FavoriteButton materialId={m.id} initial={!!m.is_favorite} onChange={onFavorite}/>}</div>
-    <h3>{capitalize(m.name)}</h3><p className="card-line">{gone?'No longer available':[formatQuantity(shown,m.unit),m.dimensions_spec].filter(Boolean).join(', ')}</p><p className="card-line">{m.zone} zone, {m.is_demo?'sample only':'1 credit'}</p></Link>;
+  // Explore: photo-first card with just the name and the size underneath.
+  if(photo)return <Link to={`/materials/${m.id}`} className={`material-card photo-card ${compact?'recent-card':''} ${gone?'unavailable':''}`}><div className="material-image"><MaterialPhoto src={m.image} alt={m.is_demo?m.name+' (sample material)':m.name}/>{!own&&<FavoriteButton materialId={m.id} initial={!!m.is_favorite} onChange={onFavorite}/>}</div>
+    <h3>{capitalize(m.name)}</h3>{m.dimensions_spec&&<p className="card-line">{m.dimensions_spec}</p>}</Link>;
   return <Link to={`/materials/${m.id}`} className={`material-card ${compact?'recent-card':''} ${gone?'unavailable':''}`}><div className="material-image"><MaterialPhoto src={m.image} alt={m.is_demo?m.name+' (sample material)':m.name}/>{!own&&<FavoriteButton materialId={m.id} initial={!!m.is_favorite} onChange={onFavorite}/>}</div><h3>{capitalize(m.name)}</h3><p className="material-status">{gone?'No longer available':formatQuantity(shown,m.unit)}</p>{!gone&&<div className="card-tags"><span className="condition-tag">{m.condition}</span>{m.status!=='available'&&<StatusBadge status={m.status}/>}</div>}</Link>;
 }
 function AuthPage({register=false}:{register?:boolean}) { const {t,msg,language}=useI18n(); 
