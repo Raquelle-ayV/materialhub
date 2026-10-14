@@ -123,12 +123,12 @@ body{background:var(--color-bg);color:var(--color-ink);font:var(--text-body)}
 :root .status-badge{padding:var(--space-1) var(--space-2);border:1px solid transparent;border-radius:var(--radius-tag);background:var(--color-linen);color:var(--color-ink);font:var(--text-caption)}
 :root .status-badge.tone-amber{border-color:var(--color-taupe)}
 
-/* ---- Active tasks: plywood texture behind the card ---- */
-:root .active-task{background:var(--color-wood) url(/textures/plywood.jpg) center / cover;border:var(--border);border-radius:var(--radius-card);color:var(--color-ink)}
+/* ---- Active tasks: white card with the 1px card outline ---- */
+:root .active-task{background:var(--color-surface);border:var(--border);border-radius:var(--radius-card);color:var(--color-ink)}
 :root .active-task :is(b,small,span,.mcode){color:var(--color-ink)}
 :root .active-task img,:root .active-task .photo-fallback{border-radius:var(--radius-image)}
 :root .task-delete{width:var(--tap-min);height:var(--tap-min);color:var(--color-ink)}
-:root .task-delete:hover{background:color-mix(in srgb,var(--color-surface) 60%,transparent)}
+:root .task-delete:hover{background:var(--color-linen)}
 
 /* ---- Camera screens: warnings get a tiny persimmon dot instead of yellow ---- */
 :root .camera-guide{background:var(--color-bg);color:var(--color-ink)}
