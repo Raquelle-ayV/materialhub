@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type ChangeEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AlertTriangle, Camera, CheckCircle2, ImagePlus, Layers3, Package, Plus, ScanLine, Sparkles, Video, X } from 'lucide-react';
 import { api } from './lib';
 import { ApiError, messageOf, useI18n, type Message } from './i18n';
-import { BottomSheet, MaterialPhoto, PhotoCarousel, TopBar, capitalize, formatQuantity } from './ui';
+import { BottomSheet, MaterialPhoto, PhotoCarousel, Toast, TopBar, capitalize, formatQuantity } from './ui';
 import { MaterialFields, PhotoUpload, blank, useAccount, type FormData, type Photo } from './deposits';
 import './capture.css';
 
@@ -13,8 +13,9 @@ import './capture.css';
 const MB=1024*1024;
 const IMAGE_TYPES=['image/jpeg','image/png','image/webp'];
 const VIDEO_TYPES=['video/mp4','video/quicktime','video/webm'];
-/** Sample pictures shown in the camera roll so the prototype works on a computer too. */
-const SAMPLES=['/placeholders/foam.svg','/placeholders/wood.svg','/placeholders/fabric.svg','/placeholders/paper.svg'];
+/** Photos from a real phone library, shown in the camera roll so the prototype feels like the phone's own picker. */
+const LIBRARY=Array.from({length:12},(_,i)=>`/roll/photo-${String(i+1).padStart(2,'0')}.jpg`);
+const SAMPLE_PHOTO='/placeholders/foam.svg';
 
 export function photoProblem(f:File):Message{
   if(!IMAGE_TYPES.includes(f.type)||! /\.(jpe?g|png|webp)$/i.test(f.name))return 'Use JPG, JPEG, PNG or WebP only.';
@@ -42,7 +43,7 @@ function toJpeg(source:CanvasImageSource,width:number,height:number){
   canvas.getContext('2d')!.drawImage(source,0,0,canvas.width,canvas.height);
   return new Promise<Blob>((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Could not capture the photo.')),'image/jpeg',.88));
 }
-async function uploadSample(url:string){const img=await loadImage(url);return uploadPhoto(await toJpeg(img,1000,1000),'sample.jpg');}
+async function uploadSample(url:string){const img=await loadImage(url);return uploadPhoto(await toJpeg(img,img.naturalWidth||1000,img.naturalHeight||1000),'library.jpg');}
 const wait=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 
 /* ---------- Camera ---------- */
@@ -82,9 +83,9 @@ function ShotStrip({shots,slots,flagged=[],onRemove}:{shots:Photo[];slots:number
 
 /** Plain camera opened from the grey card in the camera roll. */
 function CameraCapture({max,onCancel,onDone}:{max:number;onCancel:()=>void;onDone:(photos:Photo[])=>void}){ const {t,msg}=useI18n();
-  const camera=useCamera(SAMPLES[0]);const [shots,setShots]=useState<Photo[]>([]);const [busy,setBusy]=useState(false);const [error,setError]=useState<Message>('');
+  const camera=useCamera(SAMPLE_PHOTO);const [shots,setShots]=useState<Photo[]>([]);const [busy,setBusy]=useState(false);const [error,setError]=useState<Message>('');
   async function shoot(){if(busy||shots.length>=max)return;setBusy(true);setError('');try{const photo=await uploadPhoto(await camera.capture(),'camera.jpg');setShots(s=>[...s,photo]);}catch(e){setError(messageOf(e));}finally{setBusy(false);}}
-  return <CameraScreen camera={camera} fallback={SAMPLES[0]} label={t("Take photos")} onClose={onCancel}
+  return <CameraScreen camera={camera} fallback={SAMPLE_PHOTO} label={t("Take photos")} onClose={onCancel}
     top={<div className={`camera-guide ${error?'tone-warn':''}`} role="status">{error?msg(error):busy?t("Saving photo…"):t("Fit the whole material inside the frame")}</div>}>
     <ShotStrip shots={shots} slots={Math.min(max,Math.max(4,shots.length+1))} onRemove={p=>setShots(s=>s.filter(x=>x.id!==p.id))}/>
     <div className="shutter-row"><span/><button type="button" className="shutter" aria-label={t("Take photo")} disabled={busy||shots.length>=max} onClick={()=>void shoot()}/><button type="button" className="camera-text-button" disabled={!shots.length||busy} onClick={()=>onDone(shots)}>{t("Done")}</button></div>
@@ -122,7 +123,7 @@ export function CameraRoll({label,max,allowVideo=false,covers=false,onCancel,onD
   }
   async function done(){if(busy||!selected.length)return;setBusy(true);setError('');
     try{const photos:Photo[]=[];let video:Photo|null=null;
-      for(const key of selected){if(key.startsWith('s')){photos.push(await uploadSample(SAMPLES[Number(key.slice(1))]));continue;}const item=roll.find(r=>`m${r.id}`===key);if(!item)continue;if(item.video)video={id:item.id,url:item.url};else photos.push({id:item.id,url:item.url});}
+      for(const key of selected){if(key.startsWith('s')){photos.push(await uploadSample(LIBRARY[Number(key.slice(1))]));continue;}const item=roll.find(r=>`m${r.id}`===key);if(!item)continue;if(item.video)video={id:item.id,url:item.url};else photos.push({id:item.id,url:item.url});}
       setRoll(roll.filter(r=>!selected.includes(`m${r.id}`)));onDone(photos,video);
     }catch(err){setError(messageOf(err));setBusy(false);}
   }
@@ -131,12 +132,12 @@ export function CameraRoll({label,max,allowVideo=false,covers=false,onCancel,onD
     return <button type="button" key={key} className={`roll-cell ${on?'selected':''}`} aria-pressed={on} aria-label={name} onClick={()=>toggle(key,video)}>{video?<video src={src} muted preload="metadata"/>:<img src={src} alt=""/>}{(video||tag)&&<span className="roll-tag">{video&&<Video size={12}/>}{tag}</span>}{on&&badge(key)}</button>;};
   return createPortal(<div className="camera-roll" role="dialog" aria-modal="true" aria-label={t("Camera roll")}><div className="roll-inner">
     <header className="roll-header"><button type="button" className="roll-link" onClick={onCancel}>{t("Cancel")}</button><h2>{t("Camera roll")}</h2><button type="button" className="roll-link strong" disabled={!selected.length||busy} onClick={()=>void done()}>{busy?t("Adding…"):t("Done")}</button></header>
-    <div className="roll-hint"><b>{covers?t("Choose one cover photo per material"):t("Choose photos or a video")}</b><small>{covers?t("Add more photos and details in the next step."):`${t("Photos")}: ${photoCount}/${max}${allowVideo?` · ${t("Videos")}: ${selected.some(isVideo)?1:0}/1`:''}`}</small></div>
+    <div className="roll-hint"><b>{covers?t("Choose one cover photo per material"):t("Choose photos or a video")}</b><small>{covers?t("Add more photos and details in the next step."):<span className="counts"><span>{t("Photos")}: {photoCount}/{max}</span>{allowVideo&&<span>{t("Videos")}: {selected.some(isVideo)?1:0}/1</span>}</span>}</small></div>
     {error&&<div className="notice roll-error" role="alert">{msg(error)}</div>}
     <div className="roll-grid">
       <button type="button" className="roll-camera" aria-label={t("Open camera")} onClick={()=>setCamera(true)} disabled={busy}><Camera size={34}/></button>
       {roll.map((r,i)=>cell(`m${r.id}`,r.url,!!r.video,r.video?t("Video {{index}}",{index:i+1}):t("Photo {{index}}",{index:i+1})))}
-      {SAMPLES.map((url,i)=>cell(`s${i}`,url,false,t("Sample photo {{index}}",{index:i+1}),t("Sample")))}
+      {LIBRARY.map((url,i)=>cell(`s${i}`,url,false,t("Library photo {{index}}",{index:i+1})))}
     </div>
     <label className="roll-library"><ImagePlus size={18}/>{t("Choose from phone library…")}<input type="file" aria-label={t("{{label}} from gallery",{label})} accept={allowVideo?[...IMAGE_TYPES,...VIDEO_TYPES,'.jpg','.jpeg','.png','.webp','.mp4','.mov','.webm'].join(','):'image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp'} multiple disabled={busy} onChange={e=>void library(e)}/></label>
     {camera&&<CameraCapture max={covers?10:Math.max(1,max-photoCount)} onCancel={()=>setCamera(false)} onDone={photos=>{setCamera(false);addToRoll(photos.slice().reverse());}}/>}
@@ -163,12 +164,13 @@ type Category={id:number;name:string};
 let categoryCache:Category[]|null=null;
 function useCategories(){const [rows,setRows]=useState<Category[]>(categoryCache||[]);useEffect(()=>{if(categoryCache)return;api<{categories:Category[]}>('/categories').then(r=>{categoryCache=r.categories;setRows(r.categories);}).catch(()=>{});},[]);return rows;}
 
+function submitItem(item:BatchItem){return api('/deposits',{...item.form,dimensions_not_applicable:!item.form.dimensions_spec.trim(),photo_ids:item.photos.map(p=>p.id),video_id:item.video?.id??null,keep_draft:true});}
 /** What still has to be filled in before an item can be submitted. */
 function missingFields(i:BatchItem){const f=i.form;const missing:string[]=[];
   if(!i.photos.length)missing.push('photo');if(!f.name.trim())missing.push('name');if(!f.category_id)missing.push('category');else if(f.category_id==='7'&&!f.custom_category_name.trim())missing.push('custom category');
-  const q=Number(f.quantity);if(!Number.isInteger(q)||q<1||q>1_000_000)missing.push('quantity');if(!f.unit)missing.push('unit');if(!f.condition)missing.push('condition');return missing;}
+  const q=Number(f.quantity);if(!Number.isInteger(q)||q<1||q>1_000_000)missing.push('quantity');if(!f.unit)missing.push('unit');return missing;}
 function summary(i:BatchItem,categories:Category[]){const f=i.form;const category=categories.find(c=>String(c.id)===f.category_id)?.name;const q=Number(f.quantity);
-  return [category,q>0&&f.unit?formatQuantity(q,f.unit):'',f.condition].filter(Boolean).join(' · ');}
+  return [category,q>0&&f.unit?formatQuantity(q,f.unit):'',f.condition].filter(Boolean).join(', ');}
 
 /* ---------- Add material: three ways ---------- */
 
@@ -215,9 +217,9 @@ export function ScanPage(){ const {t,msg}=useI18n();const {user}=useAccount();co
   }
   function done(){const c=categories.find(x=>x.name===script.category);const units=c?script.unit:'';
     const form:FormData={...blank(),name:script.name,category_id:c?String(c.id):'',quantity:script.quantity,unit:units,dimensions_spec:script.dimensions,color:script.color,condition:script.condition,notes:script.notes};
-    // Keep the good photos first: a "too close" shot should not become the cover.
-    const ordered=[...shots.filter(p=>!flagged.includes(p.id)),...shots.filter(p=>flagged.includes(p.id))];
-    updateBatch(x=>({...x,items:[...x.items,newItem(ordered,form,true,Date.now()+AI_DELAY)]}));setNow(Date.now());
+    // Shots the AI asked to retake (e.g. "too close") are dropped; only the good ones are kept.
+    const good=shots.filter(p=>!flagged.includes(p.id));
+    updateBatch(x=>({...x,items:[...x.items,newItem(good.length?good:shots,form,true,Date.now()+AI_DELAY)]}));setNow(Date.now());
     setShots([]);setFlagged([]);setDetected(false);setHint(START_HINT);setPhase('list');}
   function another(){updateBatch(x=>({...x,scanStep:x.scanStep+1}));setPhase('capture');}
   if(!user)return <div className="loading">{t("Loading your account…")}</div>;
@@ -251,12 +253,14 @@ function BatchEditor({item}:{item:BatchItem}){ const {t}=useI18n();const categor
   </div>;
 }
 
-export function BatchItemPage(){ const {t}=useI18n();const {user}=useAccount();const {key}=useParams();const navigate=useNavigate();const b=useBatch();
-  const item=b.items.find(i=>i.key===key);
+export function BatchItemPage(){ const {t,msg}=useI18n();const {user}=useAccount();const {key}=useParams();const navigate=useNavigate();const b=useBatch();
+  const item=b.items.find(i=>i.key===key);const [busy,setBusy]=useState(false);const [error,setError]=useState<Message>('');
+  async function publish(){if(!item||busy)return;const missing=missingFields(item);if(missing.length){setError({key:'Please add: {{fields}}.',values:{fields:missing.join(', ')}});return;}
+    setBusy(true);setError('');try{await submitItem(item);const left=batch.items.length-1;navigate(left?'/deposit/review':'/deposit',{replace:true,state:{toast:`${capitalize(item.form.name)} recorded`}});removeItem(item.key);if(!left)setBatch(emptyBatch(batch.mode));}catch(e){setError(messageOf(e));setBusy(false);}}
   if(!user)return <div className="loading">{t("Loading your account…")}</div>;
   if(!item)return <div className="flow-page"><TopBar to="/deposit/review" title={t("Edit material")}/><p>{t("This material is no longer in your list.")}</p><Link className="button dark full" to="/deposit/review">{t("Back to review")}</Link></div>;
   return <div className="flow-page"><TopBar to="/deposit/review" title={t("Edit material")}/><BatchEditor item={item}/>
-    <div className="flow-action"><button type="button" className="button dark full" onClick={()=>{if((window.history.state?.idx??0)>0)navigate(-1);else navigate('/deposit/review');}}>{t("Done")}</button></div></div>;
+    <div className="flow-action">{error&&<div className="notice" role="alert">{msg(error)}</div>}<button type="button" className="button dark full" disabled={busy} onClick={()=>void publish()}>{busy?t("Publishing…"):t("Publish")}</button></div></div>;
 }
 
 /* ---------- Multiple items ---------- */
@@ -283,20 +287,21 @@ export function MultiplePage(){ const {t}=useI18n();const {user}=useAccount();co
 
 /* ---------- Review and submit the batch ---------- */
 
-export function BatchReviewPage(){ const {t,msg}=useI18n();const {user}=useAccount();const navigate=useNavigate();const b=useBatch();const categories=useCategories();
+export function BatchReviewPage(){ const {t,msg}=useI18n();const {user}=useAccount();const navigate=useNavigate();const location=useLocation();const b=useBatch();const categories=useCategories();
+  const [toast,setToast]=useState('');useEffect(()=>{const message=(location.state as {toast?:string}|null)?.toast;if(message){setToast(message);navigate(location.pathname,{replace:true,state:null});}},[location.key]);
   const [preview,setPreview]=useState<BatchItem|null>(null);const [rollFor,setRollFor]=useState<BatchItem|null>(null);const [busy,setBusy]=useState(false);const [error,setError]=useState<Message>('');
   const ai=b.mode==='ai';const back=ai?'/deposit/scan':'/deposit/multiple';
   async function submit(){if(busy)return;const incomplete=b.items.find(i=>missingFields(i).length);
     if(incomplete){setError({key:'Complete the details for “{{name}}” first.',values:{name:incomplete.form.name||t('Untitled material')}});return;}
     setBusy(true);setError('');const total=b.items.length;
     try{for(const item of b.items){
-      await api('/deposits',{...item.form,dimensions_not_applicable:!item.form.dimensions_spec.trim(),photo_ids:item.photos.map(p=>p.id),video_id:item.video?.id??null,keep_draft:true});
+      await submitItem(item);
       removeItem(item.key);
     }setBatch(emptyBatch(b.mode));navigate('/deposit',{state:{toast:total===1?'1 material recorded':`${total} materials recorded`}});}
     catch(e){setError(messageOf(e));}finally{setBusy(false);}
   }
   if(!user)return <div className="loading">{t("Loading your account…")}</div>;
-  return <div className="flow-page batch-review"><TopBar to={back} title={ai?t("Created with AI"):t("Review materials")}/>
+  return <div className="flow-page batch-review"><TopBar to={back} title={ai?t("Created with AI"):t("Review materials")}/>{toast&&<Toast tone="status" message={toast} onDone={()=>setToast('')}/>}
     {ai&&b.items.length>0&&<p className="ai-note"><Sparkles size={16}/><span>{t("AI filled in these details from your photos. Check them before you submit.")}</span></p>}
     {!b.items.length?<div className="empty-state"><Package size={30}/><h2>{t("No materials yet")}</h2><p>{t("Add materials first, then review them here.")}</p><Link className="button dark full" to={back}>{ai?t("Scan materials"):t("Choose cover photos")}</Link></div>:
     <div className="review-list">{b.items.map(i=>{const missing=missingFields(i);return <section className="review-item" key={i.key}>

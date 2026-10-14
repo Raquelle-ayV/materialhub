@@ -50,7 +50,7 @@ export function installDepositRoutes(app,db,requireUser,{uploadDir=process.env.U
   }
   function validate(body,userId,materialId=0) {
     const fields={name:text(body.name),category_id:Number(body.category_id),custom_category_name:text(body.custom_category_name),quantity:Number(body.quantity),unit:text(body.unit,50),dimensions_spec:text(body.dimensions_spec,500),dimensions_not_applicable:body.dimensions_not_applicable===true,color:text(body.color,80),condition:text(body.condition,80),reference_url:text(body.reference_url,2000),notes:text(body.notes,4000)};
-    for(const k of ['name','unit','condition'])if(!fields[k])fail('Material name, unit and condition are required.');
+    for(const k of ['name','unit'])if(!fields[k])fail('Material name and unit are required.');
     const category=db.prepare('SELECT * FROM categories WHERE id=?').get(fields.category_id||-1);if(!category)fail('Please select a valid category.');
     if(fields.category_id===7&&!fields.custom_category_name)fail('Please enter a custom category name for Other.');
     if(!Number.isSafeInteger(fields.quantity)||fields.quantity<1||fields.quantity>1_000_000)fail('Quantity must be a whole number between 1 and 1,000,000.');

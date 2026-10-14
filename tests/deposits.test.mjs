@@ -35,7 +35,7 @@ test('A flow: actual images, draft recovery, sequential codes, zone checks and o
     });
     await t.test('required fields, Other and photo counts are validated on the server',async()=>{
       valid.photo_ids=[photo.id];
-      for(const field of ['name','unit','condition','dimensions_spec']) assert.equal((await request('/deposits',{...valid,[field]:''},cookie)).status,400,field);
+      for(const field of ['name','unit','dimensions_spec']) assert.equal((await request('/deposits',{...valid,[field]:''},cookie)).status,400,field);
       for(const quantity of [0,-1,1.2,1000001])assert.equal((await request('/deposits',{...valid,quantity},cookie)).status,400);
       assert.equal((await request('/deposits',{...valid,category_id:7},cookie)).status,400);
       assert.equal((await request('/deposits',{...valid,category_id:999},cookie)).status,400);
@@ -108,7 +108,7 @@ test('A flow: actual images, draft recovery, sequential codes, zone checks and o
       const ids=[];for(let i=0;i<9;i++)ids.push((await upload(cookie)).data.photo.id);
       const one=await request('/deposits',{...valid,request_key:'second-material-002',photo_ids:ids},cookie);assert.equal(one.status,201);assert.equal(one.data.deposit.photos.length,9);assert.equal(one.data.deposit.display_code,'M006');
       const p=(await upload(cookie)).data.photo;
-      const two=await request('/deposits',{...valid,color:'',request_key:'third-material-003',photo_ids:[p.id]},cookie);assert.equal(two.status,201);assert.equal(two.data.deposit.display_code,'M007');
+      const two=await request('/deposits',{...valid,color:'',condition:'',request_key:'third-material-003',photo_ids:[p.id]},cookie);assert.equal(two.status,201);assert.equal(two.data.deposit.display_code,'M007');
       assert.equal((await request('/auth/me',undefined,cookie)).data.user.available,3);
     });
   }finally{if(server?.listening)await stop();db.close();const rel=relative(resolve(tmpdir()),resolve(folder));assert.ok(rel.startsWith('rematerial-deposits-')&&!rel.includes('..'));rmSync(folder,{recursive:true,force:true});}

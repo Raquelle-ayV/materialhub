@@ -31,14 +31,15 @@ test('Scan with AI: guidance after each photo, two recognised items, review and 
   await page.screenshot({path:'test-results/scan-ai-items.png'});
   await page.getByRole('button',{name:'Review 2 items'}).click({timeout:6_000});
   await expect(page.getByRole('heading',{name:'Created with AI'})).toBeVisible();
-  await expect(page.locator('.review-item')).toHaveCount(2);await expect(page.locator('.review-item').first()).toContainText('Board & Foam · 3 boards · Like new');
+  await expect(page.locator('.review-item')).toHaveCount(2);await expect(page.locator('.review-item').first()).toContainText('Board & Foam, 3 boards, Like new');
   await page.locator('.review-item').nth(1).getByRole('link',{name:'Edit'}).click();
   await expect(page.getByLabel('Material name',{exact:false})).toHaveValue('Pine wood plank');await page.getByLabel('Quantity',{exact:false}).fill('4');
-  await page.getByRole('button',{name:'Done',exact:true}).click();
-  await expect(page.locator('.review-item').nth(1)).toContainText('4 boards');
+  await page.getByRole('button',{name:'Publish',exact:true}).click();
+  await expect(page.getByRole('status').filter({hasText:'Pine wood plank recorded'})).toBeVisible();
+  await expect(page.locator('.review-item')).toHaveCount(1);await expect(page.locator('.review-item img')).toHaveCount(1);
   await page.screenshot({path:'test-results/scan-ai-review.png',fullPage:true});
-  await page.getByRole('button',{name:'Submit 2 materials'}).click();
-  await expect(page.getByRole('status').filter({hasText:'2 materials recorded'})).toBeVisible();
+  await page.getByRole('button',{name:'Submit 1 material'}).click();
+  await expect(page.getByRole('status').filter({hasText:'1 material recorded'})).toBeVisible();
   await expect(page.locator('.share-active')).toContainText('White foam board (KT board)');await expect(page.locator('.share-active')).toContainText('Pine wood plank');
   expect(errors).toEqual([]);
 });
@@ -48,7 +49,7 @@ test('Multiple items: camera roll covers, details per material, color optional',
   await register(page);
   await page.goto('/deposit');await page.getByRole('button',{name:'Add new material',exact:true}).click();await page.getByRole('button',{name:/^Multiple items/}).click();
   await expect(page.getByText('Choose one cover photo per material')).toBeVisible();await expect(page.getByRole('button',{name:'Open camera'})).toBeVisible();
-  await page.getByRole('button',{name:'Sample photo 1'}).click();await page.getByRole('button',{name:'Sample photo 2'}).click();
+  await page.getByRole('button',{name:'Library photo 1',exact:true}).click();await page.getByRole('button',{name:'Library photo 2',exact:true}).click();
   await expect(page.locator('.roll-badge')).toHaveText(['Material 1','Material 2']);
   await page.screenshot({path:'test-results/camera-roll-covers.png'});
   await page.getByRole('button',{name:'Done',exact:true}).click();
@@ -57,7 +58,7 @@ test('Multiple items: camera roll covers, details per material, color optional',
   await fill('Grey felt','3');
   await page.getByRole('button',{name:'Edit material 2'}).click();await expect(page.getByRole('heading',{name:'Material 2'})).toBeVisible();await expect(page.getByLabel('Material name',{exact:false})).toHaveValue('');
   await fill('Birch offcuts','4');
-  await page.screenshot({path:'test-results/multiple-items.png',fullPage:true});
+  await page.screenshot({path:'test-results/multiple-items.png',fullPage:true});await page.locator('.segmented-field').screenshot({path:'test-results/condition-chips.png'});
   await page.getByRole('link',{name:'Review materials'}).click();
   await expect(page.getByRole('heading',{name:'Review materials'})).toBeVisible();await expect(page.locator('.review-item')).toHaveCount(2);
   await page.getByRole('button',{name:'Submit 2 materials'}).click();
