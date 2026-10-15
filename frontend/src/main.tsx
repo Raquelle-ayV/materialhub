@@ -67,7 +67,9 @@ function Explore({results=false,history=false}:{results?:boolean;history?:boolea
   function applyFilters(e:FormEvent){e.preventDefault();const next=new URLSearchParams(params);if(draftFilters.condition)next.set('condition',draftFilters.condition);else next.delete('condition');if(draftFilters.showUnavailable)next.set('availability','all');else next.delete('availability');navigate(`/materials?${next}`);setFiltersOpen(false);}
   const navigate = useNavigate(); const category = params.get('category') || '';
   useEffect(()=>{ api<{categories:{id:number;name:string}[]}>('/categories').then(r=>setCategories(r.categories)).catch(e=>setError(messageOf(e))); },[]);
-  useEffect(()=>{ let active=true; setBusy(true); setError(''); api<{materials:Material[]}>(`/materials?${params.toString()}`).then(r=>{if(active)setMaterials(r.materials);}).catch(e=>{if(active)setError(messageOf(e));}).finally(()=>{if(active)setBusy(false);}); return ()=>{active=false;}; },[params,revision,results]);
+  // Background refreshes (timer, window focus) keep the current grid on screen; only a new search or filter shows the loading text.
+  const loadedQuery=useRef('');
+  useEffect(()=>{ let active=true; const query=`${results}?${params.toString()}`; if(loadedQuery.current!==query)setBusy(true); setError(''); api<{materials:Material[]}>(`/materials?${params.toString()}`).then(r=>{if(active){setMaterials(r.materials);loadedQuery.current=query;}}).catch(e=>{if(active)setError(messageOf(e));}).finally(()=>{if(active)setBusy(false);}); return ()=>{active=false;}; },[params,revision,results]);
   useEffect(()=>{const refresh=()=>setRevision(n=>n+1);const timer=setInterval(refresh,15000);window.addEventListener('focus',refresh);return()=>{clearInterval(timer);window.removeEventListener('focus',refresh);};},[]);
   useEffect(()=>setQuery(params.get('q') || ''),[params]);
   useEffect(()=>{
@@ -138,4 +140,7 @@ function Activity(){const{user,loading}=useContext(Auth);const[rows,setRows]=use
 function PageHeading({title}:{title:string}){ const {t,msg,language}=useI18n(); return <TopBar to="/me" title={title}/>;}
 function EmptyAccount({title,text,icon}:{title:string;text:string;icon:ReactNode}){ const {t,msg,language}=useI18n(); const{user,loading}=useContext(Auth);if(loading)return <div className="loading">{t("Loading…")}</div>;if(!user)return <Guest/>;return <div className="narrow-page"><PageHeading title={title}/><div className="empty-state"><span className="soft-icon">{icon}</span><h3>{t("Nothing here yet")}</h3><p>{text}</p><Link className="button outline" to="/">{t("Explore materials")}{" "}<ChevronRight size={18}/></Link></div></div>;}
 function Coming({title,text,link='/',label='Back to Explore'}:{title:string;text:string;link?:string;label?:string}){ const {t,msg,language}=useI18n(); return <div className="empty-state coming"><span className="soft-icon"><Layers3 size={28}/></span><h1>{title}</h1><p>{text}</p><Link className="button dark" to={link}>{t(label)}</Link></div>;}
-createRoot(document.getElementById('root')!).render(<React.StrictMode><BrowserRouter><App/></BrowserRouter></React.StrictMode>);
+const root=createRoot(document.getElementById('root')!);
+// /mockup: phone frame for screen recordings, only on the dev server opened at localhost (stripped from production builds).
+if(import.meta.env.DEV&&window.location.pathname==='/mockup'&&['localhost','127.0.0.1'].includes(window.location.hostname))void import('./mockup').then(({Mockup})=>root.render(<Mockup/>));
+else root.render(<React.StrictMode><BrowserRouter><App/></BrowserRouter></React.StrictMode>);
