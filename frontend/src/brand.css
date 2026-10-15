@@ -195,3 +195,81 @@ body{background:var(--color-bg);color:var(--color-ink);font:var(--text-body)}
 :root :is(.managed-posts,.reservations-page) .top-bar{min-height:52px;margin:var(--space-2) 0 var(--space-3)}
 :root :is(.managed-posts,.reservations-page) .top-bar h1{font:var(--text-title)}
 :root .managed-posts .page-intro{margin:0 0 var(--space-4);font:var(--text-body);color:var(--color-ink-soft)}
+
+/* ======== Design audit fixes (spec §4, §8, §9 and the 10-point checklist) ======== */
+
+/* Text buttons (spec §4): walnut text + underline. Secondary actions use this instead of big outline pills.
+   44px tap height comes from padding; the look stays a line of text. */
+:root :is(.text-link,.text-button,.button.outline){display:inline-flex;align-items:center;justify-content:center;gap:var(--space-1);width:auto;min-height:var(--tap-min);margin:0;padding:0 var(--space-2);border:0;border-radius:var(--radius-pill);background:none;color:var(--color-walnut);font:var(--text-button);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+:root :is(.text-link,.text-button,.button.outline):hover{background:var(--color-linen)}
+:root :is(.text-link,.text-button,.button.outline):disabled{opacity:.5;cursor:default}
+:root .button.outline.full{width:100%}
+:root .notice .text-button{min-height:var(--tap-min);margin:calc(-1 * var(--space-3)) 0;padding:0 var(--space-2)}
+
+/* Inputs (spec §8): 52px, radius 12, white, 1px taupe, 16px side padding; focus = 1.5px walnut */
+:root :is(input:not([type=checkbox],[type=radio],[type=file],[type=range],[type=hidden]),select,textarea){min-height:var(--button-height);padding:0 var(--space-4);border:1px solid var(--color-taupe);border-radius:var(--radius-image);background:var(--color-surface);color:var(--color-ink);font:var(--text-body)}
+:root textarea{padding:var(--space-3) var(--space-4)}
+:root :is(input:not([type=checkbox],[type=radio],[type=file],[type=range],[type=hidden]),select,textarea):focus{outline:none;border:1.5px solid var(--color-walnut);padding-left:calc(var(--space-4) - .5px);padding-right:calc(var(--space-4) - .5px)}
+/* Labels above inputs: 14/600 ink, 8px to the input, 16px between groups */
+:root .material-form label:not(.segmented label):not(.chip-scroll label):not(.media-tile):not(.upload-choice):not(.switch-row),:root .auth-card label,:root .filter-form>label:not(.switch-row){display:grid;gap:var(--space-2);margin:var(--space-4) 0 0;font:600 14px/1.3 var(--font-family);color:var(--color-ink)}
+:root :is(.material-form,.filter-form) label :is(input,select,textarea){margin:0}
+:root .segmented-field legend,:root .field-heading b{font:600 14px/1.3 var(--font-family);color:var(--color-ink)}
+/* The search box keeps its own look */
+:root .search-bar input,:root .search-bar input:focus{min-height:var(--tap-min);padding:0;border:0;border-radius:0;background:none}
+
+/* Form card (spec §9): white, 1px line, radius 16, padding 20; everything inside at 100% width */
+:root .form-card{display:grid;gap:0;width:100%;box-sizing:border-box;margin:0;padding:var(--space-5);border:var(--border);border-radius:var(--radius-card);background:var(--color-surface)}
+:root .form-card form{display:grid;gap:0}
+:root .form-card :is(input,select,.password-field,.button){width:100%;box-sizing:border-box}
+:root .form-card .button.dark{margin-top:var(--space-6);min-height:var(--button-height)}
+:root .form-card .password-field{position:relative;margin-top:var(--space-2)}
+:root .form-card .password-field input{padding-right:52px}
+:root .form-card .password-field button{position:absolute;top:50%;right:4px;transform:translateY(-50%);width:var(--tap-min);height:var(--tap-min);border:0;background:none;color:var(--color-ink-soft)}
+:root .form-card label+input{margin-top:var(--space-2)}
+:root .form-card form>small{margin-top:var(--space-2);font:var(--text-caption);color:var(--color-ink-soft)}
+:root .form-card .reward-note{display:flex;align-items:center;gap:var(--space-2);margin:0 0 var(--space-1);padding:var(--space-3);border-radius:var(--radius-image);background:var(--color-linen);color:var(--color-ink);font:var(--text-caption)}
+:root .form-card .auth-switch{margin:var(--space-4) 0 0;text-align:center;font:var(--text-body);color:var(--color-ink-soft)}
+:root .form-card .auth-fineprint{margin:var(--space-2) 0 0;text-align:center;font:var(--text-caption);color:var(--color-ink-soft)}
+:root .form-page .page-intro{margin:0 0 var(--space-4);font:var(--text-body);color:var(--color-ink-soft)}
+:root .form-page .notice{margin-top:var(--space-4)}
+
+/* Cards have an outline and no shadow (checklist 3) */
+:root :is(.hub-card,.success-material,.balance-card,.credit-summary,.zone-confirm,.reservation-hero,.material-strip,.camera-window,.empty-state){border:var(--border);background:var(--color-surface);box-shadow:none}
+:root :is(.hub-card,.success-material,.balance-card,.credit-summary,.reservation-hero){border-radius:var(--radius-card)}
+:root .camera-window{border-radius:var(--radius-card);overflow:hidden}
+
+/* Status written as plain text, not a tag (checklist 6) */
+:root .status-badge.status-text{display:inline;padding:0;border:0;border-radius:0;background:none;color:var(--color-ink-soft);font:var(--text-caption)}
+:root .review-missing{margin:0;padding:0;background:none;color:var(--color-ink-soft);font:var(--text-caption)}
+
+/* Batch review items are list cards */
+:root .review-list{gap:var(--space-3)}
+:root .review-item{padding:var(--space-3);border:var(--border);border-radius:var(--radius-card);background:var(--color-surface)}
+:root .review-item .review-actions{display:flex;justify-content:flex-end;gap:var(--space-2)}
+
+/* Pairs of actions in sheets and dialogs: primary on top, text action below */
+:root :is(.sheet-actions,.action-stack,.filter-actions){display:flex;flex-direction:column;align-items:stretch;gap:var(--space-2)}
+:root :is(.sheet-actions,.action-stack,.filter-actions) .button.dark{order:-1;width:100%}
+:root :is(.sheet-actions,.action-stack,.filter-actions) :is(.button.outline,.text-button){align-self:center}
+
+/* ---- Audit round 3 ---- */
+/* Labels: text and the required asterisk stay on one line; the field sits 8px below */
+:root .material-form label:not(.segmented label):not(.chip-scroll label):not(.media-tile):not(.upload-choice):not(.switch-row),:root .auth-card label,:root .filter-form>label:not(.switch-row){display:block}
+:root .material-form label:not(.switch-row) :is(input:not([type=checkbox],[type=radio],[type=file]),select,textarea),:root .filter-form>label:not(.switch-row) :is(input:not([type=checkbox],[type=radio],[type=file]),select,textarea){display:block;width:100%;box-sizing:border-box;margin-top:var(--space-2)}
+:root .material-form .form-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);align-items:end}
+:root .material-form .form-row>label{margin-top:var(--space-4)}
+/* Form card: no extra space above the first field */
+:root .form-card form>label:first-child,:root .form-card .reward-note+form>label:first-child{margin-top:0}
+:root .form-card .reward-note{margin-bottom:var(--space-4)}
+/* A list card can be a button (drop-off choice): full width, left aligned */
+:root button.list-card-main{width:100%;margin:0;padding:0;border:0;background:none;font:inherit;text-align:left;cursor:pointer}
+/* Reservation detail: everything about the outcome sits in one outlined card */
+:root .reservation-outcome{display:grid;gap:var(--space-2);margin-top:var(--space-3);padding:var(--space-4);border:var(--border);border-radius:var(--radius-card);background:var(--color-surface)}
+:root .reservation-outcome:empty{display:none}
+:root .reservation-outcome>p,:root .reservation-outcome .field-help{margin:0}
+:root .reservation-outcome .issue-summary{margin:0;border:0;border-radius:var(--radius-image);background:var(--color-linen)}
+:root .reservation-outcome .text-button{align-self:start;margin-left:calc(-1 * var(--space-2))}
+/* Guest prompt: question in soft ink, "Log in" as the text button */
+:root .empty-state .auth-switch{margin:0;font:var(--text-body);color:var(--color-ink-soft)}
+/* Sheet actions: the destructive confirm (walnut) goes first like other primaries */
+:root :is(.sheet-actions,.action-stack) .button.danger{order:-1;width:100%}

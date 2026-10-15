@@ -3,13 +3,13 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { Auth, api } from './lib';
 import { PhotoUpload } from './deposits';
-import { TopBar, MaterialCode, capitalize } from './ui';
+import { TopBar, MaterialCode, capitalize, formatShortDate } from './ui';
 
 type Photo={id:number;url:string};
 export type Issue={id:number;reason:string;reason_label:string;notes:string;status:string;created_at:string;resolution:string|null;resolved_at:string|null;photos:Photo[]};
 type Review=Issue&{material_id:number;name:string;display_code:string;stock_quantity:number;unit:string;condition:string;material_notes:string;material_status:string;version:number;placement_photos:Photo[]};
 export function IssueDetails({issue:i,actions=true}:{issue:Issue;actions?:boolean}) {
-  return <section className="issue-summary"><b>{i.status==='open'?'Needs review':`Issue resolved — ${i.resolution}`}</b><p>Reported: {i.reason_label||i.reason.replaceAll('_',' ')}</p><p className="notes-text">{i.notes||'No additional description.'}</p><p className="field-help">Reported: <time dateTime={i.created_at}>{new Date(i.created_at).toLocaleString('en',{dateStyle:'medium',timeStyle:'long'})}</time></p><div className="record-thumbnails">{i.photos.map(p=><a key={p.id} href={p.url} target="_blank" rel="noreferrer"><img src={p.url} alt="Reported problem"/></a>)}</div>{i.status==='open'&&<><p>This material is temporarily hidden from Explore.</p>{actions&&<><Link className="button outline full spaced" to={`/me/issues/${i.id}`}>Review and relist</Link><Link className="text-link spaced" to={`/me/issues/${i.id}?action=remove`}>Remove material</Link></>}</>}{i.resolved_at&&<p className="field-help">Resolved: {new Date(i.resolved_at).toLocaleString('en')}</p>}</section>;
+  return <section className="issue-summary"><b>{i.status==='open'?'Needs review':`Issue resolved — ${i.resolution}`}</b><p>Reported: {i.reason_label||i.reason.replaceAll('_',' ')}</p><p className="notes-text">{i.notes||'No additional description.'}</p><p className="field-help">Reported: <time dateTime={i.created_at}>{formatShortDate(i.created_at)}</time></p><div className="record-thumbnails">{i.photos.map(p=><a key={p.id} href={p.url} target="_blank" rel="noreferrer"><img src={p.url} alt="Reported problem"/></a>)}</div>{i.status==='open'&&<><p>This material is temporarily hidden from Explore.</p>{actions&&<><Link className="button outline full spaced" to={`/me/issues/${i.id}`}>Review and relist</Link><Link className="text-link spaced" to={`/me/issues/${i.id}?action=remove`}>Remove material</Link></>}</>}{i.resolved_at&&<p className="field-help">Resolved {formatShortDate(i.resolved_at)}</p>}</section>;
 }
 export function ActionRequired({count}:{count:number}) {
   return count>0?<aside className="issue-summary" role="status"><b>Action required</b><p>{count} {count===1?'report':'reports'} pending review</p><Link className="text-link spaced" to="/me/posts">Review your materials <ChevronRight size={18}/></Link></aside>:null;

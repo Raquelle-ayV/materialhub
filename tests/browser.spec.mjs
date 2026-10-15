@@ -24,7 +24,7 @@ test('mobile registration, persisted login, credits, logout, and preview navigat
   await page.getByRole('link',{name:'Back',exact:true}).click();
   await page.screenshot({path:'test-results/profile-mobile.png',fullPage:true});
   await page.getByRole('button',{name:'Log out',exact:true}).click();
-  await expect(page.getByRole('heading',{name:'Welcome back'})).toBeVisible();
+  await expect(page.getByText('Log in to pick up where you left off.')).toBeVisible();
   await page.getByLabel('Username',{exact:true}).fill(username);
   await page.getByLabel('Password',{exact:true}).fill('wrong-password');
   await page.getByRole('button',{name:'Log in',exact:true}).click();

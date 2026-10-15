@@ -28,7 +28,7 @@
 .material-strip-row>.photo-fallback span{display:none}
 .material-strip-text{flex:1;min-width:0;display:grid;gap:3px}
 .material-strip-text b{font-size:var(--fs-help);overflow-wrap:anywhere}
-.material-strip-text small{font-size:var(--fs-help);color:var(--color-ink-soft);font-family:var(--font-code)}
+.material-strip-text small{font-size:var(--fs-help);color:var(--color-ink-soft);font-family:var(--font-family)}
 .material-strip .icon-button{width:36px;height:36px;background:none}
 .material-strip .strip-toggle svg{transition:transform .2s}
 .material-strip.open .strip-toggle svg{transform:rotate(180deg)}
@@ -100,13 +100,13 @@
 .zone-sign svg{width:92px;height:92px;color:var(--color-walnut);fill:currentColor;opacity:.85}
 .zone-sign small{display:block;font-size:var(--fs-label);letter-spacing:.12em;color:var(--color-ink-soft)}
 .zone-sign b{display:block;font-size:var(--fs-body);margin:2px 0 4px;overflow-wrap:anywhere}
-.zone-sign strong{font-weight:600;font-size:var(--fs-title);font-family:var(--font-code);letter-spacing:3px;color:var(--color-walnut)}
+.zone-sign strong{font-weight:600;font-size:var(--fs-title);font-family:var(--font-family);letter-spacing:3px;color:var(--color-walnut)}
 .zone-sign figcaption{grid-column:1/-1;font-size:var(--fs-label);color:var(--color-ink-soft)}
 
 /* Find area:manual zone code */
 .manual-toggle{display:block;margin:16px auto 0;background:none;border:0;font-size:var(--fs-help);cursor:pointer}
 .manual-zone{margin-top:16px;padding:16px;border-radius:var(--radius-card);background:var(--color-linen)}
-.manual-zone input{font-weight:600;font-size:var(--fs-section);font-family:var(--font-code);letter-spacing:4px;text-transform:uppercase}
+.manual-zone input{font-weight:600;font-size:var(--fs-section);font-family:var(--font-family);letter-spacing:4px;text-transform:uppercase}
 
 /* Pickup step 3 */
 .placement-photos h2{font-size:var(--fs-body);margin:20px 0 8px}
@@ -128,7 +128,7 @@
 /* Reservation page */
 .reservation-hero{display:grid;justify-items:center;text-align:center;gap:8px;padding:24px 16px;margin:4px 0 16px;border-radius:var(--radius-card);background:var(--color-linen)}
 .reservation-hero p{margin:8px 0 0;font-size:var(--fs-help);color:var(--color-ink-soft)}
-.reservation-code{font-family:var(--font-code);letter-spacing:4px;color:var(--color-ink)}
+.reservation-code{font-family:var(--font-family);letter-spacing:4px;color:var(--color-ink)}
 .reservation-hero small{font-size:var(--fs-help);color:var(--color-ink-soft)}
 .due-line{margin:4px 0;font-size:var(--fs-help);font-weight:600;color:var(--color-ink)}
 .reservation-hero .due-line{color:var(--color-ink)}
@@ -148,9 +148,9 @@
 .material-card.unavailable .material-image{filter:grayscale(1);opacity:.55}
 .material-card.unavailable h3,.material-card.unavailable .material-status{color:var(--color-ink-soft)}
 
-/* Codes people read off labels and signs:one monospace face everywhere */
-:root{--font-code:Consolas,"SF Mono",Menlo,"Roboto Mono","Courier New",monospace}
-.zone-sign strong,.reservation-code,.label-code,.manual-zone input,.material-strip-text small{font-family:var(--font-code)}
+/* Codes people read off labels and signs: the brand font, same face everywhere */
+:root{}
+.zone-sign strong,.reservation-code,.label-code,.manual-zone input,.material-strip-text small{font-family:var(--font-family)}
 .manual-zone input::placeholder{text-transform:none;letter-spacing:normal;font-weight:400;font-family:inherit}
 /* Pick up:keep "Find the label" above the fold */
 .placement-photos .material-gallery{margin-bottom:0}

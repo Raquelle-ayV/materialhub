@@ -2,7 +2,7 @@
 :root{
   /* Type:one font stack, five sizes */
   
-  --font-code:Consolas,"SF Mono",Menlo,"Roboto Mono","Courier New",monospace;
+  
   --fs-title:32px;    /* page titles, bold */
   --fs-section:20px;  /* section titles, semibold */
   --fs-body:16px;     /* body text, inputs, buttons */
@@ -10,7 +10,7 @@
   --fs-label:12px;    /* labels, badges, tab names */
   --fw-bold:600;--fw-semibold:600;--fw-regular:400;
   /* Material codes (MaterialCode component) */
-  --code-lg:48px;--code-md:22px;--code-sm:13px;--code-tracking:.08em;
+  --code-lg:32px;--code-md:24px;--code-sm:12px;--code-tracking:.08em;
 
   /* Colour */
   
@@ -30,7 +30,7 @@
 
 html,body,button,input,select,textarea{font-family:var(--font-family)}
 body{font-size:var(--fs-body);color:var(--color-ink)}
-h1,.page-heading h1,.flow-page h1,.detail-title{font-size:var(--fs-title);font-weight:var(--fw-600);letter-spacing:-.3px}
+h1,.page-heading h1,.flow-page h1,.detail-title{font-size:var(--fs-title);font-weight:var(--fw-semibold);letter-spacing:-.3px}
 h2,.section-title h2,.spec-heading{font-size:var(--fs-section);font-weight:var(--fw-semibold)}
 
 /* Form fields:a chosen value looks like typed text; placeholders are clearly lighter */
@@ -53,7 +53,7 @@ select option{color:var(--color-ink)}
 .autosave.failed{color:var(--color-walnut)}
 
 /* Material codes:one face, weight and spacing; three sizes */
-.mcode{font-family:var(--font-code);font-weight:var(--fw-600);letter-spacing:var(--code-tracking);color:inherit;font-style:normal}
+.mcode{font-family:var(--font-family);font-weight:var(--fw-semibold);letter-spacing:var(--code-tracking);color:inherit;font-style:normal}
 .mcode-lg{font-size:var(--code-lg);line-height:1.1}
 .mcode-md{font-size:var(--code-md)}
 .mcode-sm{font-size:var(--code-sm);font-weight:var(--fw-semibold);color:var(--color-ink-soft)}

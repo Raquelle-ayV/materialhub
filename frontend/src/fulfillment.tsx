@@ -5,15 +5,15 @@ import { Auth, api, type User } from './lib';
 import { PhotoUpload } from './deposits';
 import { FlowPage, HubGuide, FindArea } from './flow';
 import type { Reservation } from './reservations';
-import { MaterialStrip, SuccessPage, PhotoCarousel, TopBar, MaterialCode, capitalize, formatQuantity, credits } from './ui';
+import { MaterialStrip, SuccessPage, PhotoCarousel, TopBar, MaterialCode, capitalize, formatQuantity, formatShortDate, credits } from './ui';
 
 type Photo={id:number;url:string};
 export type FulfillmentFields={verified_zone_id:number|null;zone_id_snapshot:number;material_code_verified_at:string|null;completed_at:string|null;return_deadline_at:string|null;can_return:boolean;dimensions_spec:string;dimensions_not_applicable:number;condition:string;color:string;category:string;custom_category_name:string|null;zone_code:string|null;placement_photos:Photo[];issue:{reason_label:string;reason:string;notes:string;status:string;resolution:string|null;photos:Photo[]}|null;return:{verified_zone_id:number|null;status:string;photos:Photo[]}|null};
 const reasons=['Material is missing','Wrong material','Damaged','Does not match the listing','Other'];
 export function ReservationOutcome({r}:{r:Reservation}) {
   return <>
-    {r.completed_at&&<p className="field-help">Collected: {new Date(r.completed_at).toLocaleString('en')}</p>}
-    {r.status==='collected'&&<><p className="field-help">1 credit spent. Return deadline: {new Date(r.return_deadline_at!).toLocaleString('en',{dateStyle:'medium',timeStyle:'long'})}</p>{r.can_return&&Date.parse(r.return_deadline_at!)>Date.now()?<Link className="button outline full" to={`/reservations/${r.id}/return`}>Return material</Link>:<p className="field-help">The 24-hour return window has ended.</p>}</>}
+    {r.completed_at&&<p className="field-help">Collected {formatShortDate(r.completed_at)}</p>}
+    {r.status==='collected'&&<><p className="field-help">1 credit spent. Return by {formatShortDate(r.return_deadline_at!)}</p>{r.can_return&&Date.parse(r.return_deadline_at!)>Date.now()?<Link className="text-button" to={`/reservations/${r.id}/return`}>Return material</Link>:<p className="field-help">The 24-hour return window has ended.</p>}</>}
     {r.status==='returned'&&<p className="field-help">All reserved material returned. 1 credit refunded.</p>}
     {r.issue&&<section className="issue-summary"><b>{r.issue.status==='open'?'Issue reported. Open, needs review':'Issue resolved — '+r.issue.resolution}</b><p>{r.issue.reason_label||r.issue.reason.replaceAll('_',' ')}</p><p className="notes-text">{r.issue.notes}</p><p className="field-help">1 credit released. {r.issue.status==='open'?'This material is hidden from Explore pending review.':r.issue.resolution==='relisted'?'The provider reviewed and relisted the material.':'The provider removed this material from Explore.'}</p><div className="record-thumbnails">{r.issue.photos.map(p=><img key={p.id} src={p.url} alt="Reported problem"/>)}</div></section>}
   </>;

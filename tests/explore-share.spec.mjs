@@ -10,7 +10,7 @@ test('Share tab lists only pending materials with their current step; steps are 
  for(const[path,data]of[['arrive',{}],['verify-zone',{qr:'REMATERIAL|ZONE|BOARD_FOAM'}],['placement',{photo_ids:[await upload()]}],['confirm',{}]])expect((await page.request.post(`/api/deposits/${old.id}/${path}`,{data})).ok()).toBe(true);
  const account=async()=>(await(await page.request.get('/api/auth/me')).json()).user;
  expect((await account()).balance).toBe(3);
- const items=page.locator('.share-active .active-task');
+ const items=page.locator('.share-active .list-card-main');
  await page.goto('/deposit');await expect(page.getByText('Nothing in progress',{exact:true})).toBeVisible();await expect(items).toHaveCount(0);await expect(page.getByText('Completed material')).toHaveCount(0);
  await page.getByRole('button',{name:'Add new material',exact:true}).click();await page.getByRole('button',{name:/^One item/}).click();await expect(page.getByRole('heading',{name:'Add information'})).toBeVisible();await expect(page.getByLabel('Material name',{exact:false})).toHaveValue('');
  await expect(page.locator('.flow-progress li.locked')).toHaveCount(3);

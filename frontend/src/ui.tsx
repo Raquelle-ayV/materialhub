@@ -38,9 +38,9 @@ type Tone='green'|'amber'|'grey';
 const materialStatus:Record<string,[string,Tone]>={available:['Available','green'],reserved:['Reserved','amber'],ready_for_drop_off:['Ready for drop-off','amber'],unavailable:['Unavailable','grey'],collected:['Collected','grey'],closed:['Removed','grey']};
 const reservationStatus:Record<string,[string,Tone]>={reserved:['Active','green'],collected:['Collected','grey'],returned:['Returned','grey'],cancelled:['Cancelled','grey'],expired:['Expired','grey'],issue_reported:['Issue reported','amber']};
 /** Available / Active = green; Ready for drop-off / Reserved = amber; Unavailable / Collected / Expired = grey. */
-export function StatusBadge({status,kind='material',label}:{status:string;kind?:'material'|'reservation';label?:string}) {
+export function StatusBadge({status,kind='material',label,plain=false}:{status:string;kind?:'material'|'reservation';label?:string;plain?:boolean}) {
   const [text,tone]=(kind==='reservation'?reservationStatus:materialStatus)[status]||[status.replaceAll('_',' '),'grey' as Tone];
-  return <span className={`status-badge tone-${tone}`}>{label||text}</span>;
+  return <span className={`status-badge tone-${tone} ${plain?'status-text':''}`}>{label||text}</span>;
 }
 
 /** Top navigation for every inner page: back arrow only on the left, page title in the middle, optional note on the right. */
@@ -108,29 +108,29 @@ export function formatQuantity(n:number,unit:string) {
   return [n,next,...rest].join(' ');
 }
 
-/** "Due tomorrow, 3:36 PM (23h left)" — no seconds or time zone. */
+/** "Due Oct 9, 3:36 PM (23h left)": no seconds, year or time zone. */
 export function formatDue(iso:string,now=Date.now()) {
   const due=new Date(iso),today=new Date(now);const dayOffset=Math.round((new Date(due.getFullYear(),due.getMonth(),due.getDate()).getTime()-new Date(today.getFullYear(),today.getMonth(),today.getDate()).getTime())/86400000);
-  const day=dayOffset===0?'today':dayOffset===1?'tomorrow':due.toLocaleDateString('en',{weekday:'short',month:'short',day:'numeric'});
-  const time=due.toLocaleTimeString('en',{hour:'numeric',minute:'2-digit'});const mins=Math.ceil((due.getTime()-now)/60000);
+  void dayOffset;const mins=Math.ceil((due.getTime()-now)/60000);
   const left=mins<=0?'deadline passed':mins<60?`${mins}m left`:`${Math.floor(mins/60)}h left`;
-  return `Due ${day}, ${time} (${left})`;
+  return `Due ${formatShortDate(iso)} (${left})`;
 }
 
 /** "1 credit", "5 credits" */
 export const credits=(n:number)=>`${n} credit${n===1?'':'s'}`;
 
-export const formatMoment=(date:string)=>new Date(date).toLocaleString('en',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+export const formatMoment=(date:string)=>formatShortDate(date);
 
 /** "Oct 8, 7:36 PM": no seconds, no year, no time zone. */
 export const formatShortDate=(iso:string)=>new Date(iso).toLocaleString('en',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
 
 /** Shared list card (My posts, My reservations…): thumbnail, three lines and a chevron; an optional footer holds everything else about the record. */
-export function MaterialListCard({to,image,thumb,code,category,name,status,footer,className=''}:{to:string;image?:string;thumb?:ReactNode;code?:string;category?:string|null;name:string;status:ReactNode;footer?:ReactNode;className?:string}) {
-  return <article className={`list-card ${className}`}>
-    <Link className="list-card-main" to={to}>{thumb||<MaterialPhoto className="list-card-thumb" src={image} alt=""/>}
+export function MaterialListCard({to,onClick,image,thumb,code,category,name,status,footer,className=''}:{to?:string;onClick?:()=>void;image?:string;thumb?:ReactNode;code?:string;category?:string|null;name:string;status:ReactNode;footer?:ReactNode;className?:string}) {
+  const body=<>{thumb||<MaterialPhoto className="list-card-thumb" src={image} alt=""/>}
       <div className="list-card-text">{(code||category)&&<p className="list-card-meta">{code&&<span>{code}</span>}{category&&<span>{category}</span>}</p>}<b>{capitalize(name)}</b><p className="list-card-meta">{status}</p></div>
-      <ChevronRight className="list-card-chevron" size={20}/></Link>
+      <ChevronRight className="list-card-chevron" size={20}/></>;
+  return <article className={`list-card ${className}`}>
+    {to?<Link className="list-card-main" to={to}>{body}</Link>:<button type="button" className="list-card-main" onClick={onClick}>{body}</button>}
     {footer&&<div className="list-card-footer">{footer}</div>}
   </article>;
 }
