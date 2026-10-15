@@ -121,3 +121,16 @@ export function formatDue(iso:string,now=Date.now()) {
 export const credits=(n:number)=>`${n} credit${n===1?'':'s'}`;
 
 export const formatMoment=(date:string)=>new Date(date).toLocaleString('en',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+
+/** "Oct 8, 7:36 PM": no seconds, no year, no time zone. */
+export const formatShortDate=(iso:string)=>new Date(iso).toLocaleString('en',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+
+/** Shared list card (My posts, My reservations…): thumbnail, three lines and a chevron; an optional footer holds everything else about the record. */
+export function MaterialListCard({to,image,thumb,code,category,name,status,footer,className=''}:{to:string;image?:string;thumb?:ReactNode;code?:string;category?:string|null;name:string;status:ReactNode;footer?:ReactNode;className?:string}) {
+  return <article className={`list-card ${className}`}>
+    <Link className="list-card-main" to={to}>{thumb||<MaterialPhoto className="list-card-thumb" src={image} alt=""/>}
+      <div className="list-card-text">{(code||category)&&<p className="list-card-meta">{code&&<span>{code}</span>}{category&&<span>{category}</span>}</p>}<b>{capitalize(name)}</b><p className="list-card-meta">{status}</p></div>
+      <ChevronRight className="list-card-chevron" size={20}/></Link>
+    {footer&&<div className="list-card-footer">{footer}</div>}
+  </article>;
+}

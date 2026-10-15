@@ -1,13 +1,13 @@
-import { MaterialPhoto, TopBar, MaterialCode, StatusBadge, capitalize, formatQuantity } from './ui';
+import { MaterialListCard, TopBar, formatQuantity } from './ui';
 import { useContext, useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Archive, ArrowLeft, ChevronRight, FileText, Plus, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Archive, FileText, Plus, Trash2 } from 'lucide-react';
 import { Auth, api } from './lib';
 import { ActionRequired, IssueDetails, type Issue } from './reviews';
 import { messageOf, useI18n, type Message } from './i18n';
 import { AddMaterialButton } from './capture';
 
-type Post = { id:number; material_id:number; display_code:string; name:string; unit:string; status:string; deposit_status:string; stock_quantity:number; initial_quantity:number; collected_quantity:number; photos:{id:number;url:string}[]; issues:Issue[] };
+type Post = { id:number; material_id:number; display_code:string; name:string; category:string; unit:string; status:string; deposit_status:string; stock_quantity:number; initial_quantity:number; collected_quantity:number; photos:{id:number;url:string}[]; issues:Issue[] };
 type Management = { material_id:number; version:number; has_history:boolean; disposition:'deleted'|'archived'|null; can_delete:boolean; can_archive:boolean; blocked_reason:string };
 type Draft = { request_key:string; name?:string; photo_ids:number[] };
 type Selection = { action:'delete'|'archive'|'draft'; name:string; post?:Post; state?:Management; draft?:Draft };
@@ -44,23 +44,24 @@ export function ManagedPosts() {
     {error&&!selection&&<div className="notice" role="alert">{msg(error)}</div>}
     {notice&&<p className="post-management-notice" role="status">{notice}</p>}
     <ActionRequired count={posts.reduce((count,post)=>count+post.issues.filter(issue=>issue.status==='open').length,0)}/>
-    {!ready?<p>Loading your posts…</p>:<div className="post-list">
-      {draft&&<article className="managed-post">
-        <Link className="active-task" to="/deposit/new"><FileText size={24}/><div><b>{draft.name||'Untitled material'}</b><small>Draft. Continue adding information</small></div><ChevronRight size={18}/></Link>
-        <div className="post-management-actions"><button className="button outline" onClick={()=>{setError('');setSelection({action:'draft',name:draft.name||'Untitled material',draft});}}><Trash2 size={17}/>Delete draft</button></div>
-      </article>}
+    {!ready?<p>Loading your posts…</p>:<div className="post-list list-stack">
+      {draft&&<MaterialListCard className="managed-post" to="/deposit/new" thumb={<span className="list-card-thumb list-card-icon"><FileText size={24}/></span>} category="Draft" name={draft.name||'Untitled material'} status="Continue adding information"
+        footer={<div className="list-card-actions"><button type="button" className="list-text-button" aria-label="Delete draft" onClick={()=>{setError('');setSelection({action:'draft',name:draft.name||'Untitled material',draft});}}><Trash2 size={16}/>Delete</button></div>}/>}
       {posts.map(post=>{
         const state=management.find(item=>item.material_id===post.material_id), archived=state?.disposition==='archived'||post.status==='closed';
         const status=archived?'Removed / archived':post.deposit_status!=='confirmed'?'Ready for drop-off':post.status==='unavailable'?'Needs review':post.status.charAt(0).toUpperCase()+post.status.slice(1);
-        return <article className="managed-post" key={post.id}>
-          <Link className="active-task" to={`/deposits/${post.id}${post.deposit_status==='confirmed'?'/success':''}`}><MaterialPhoto src={post.photos[0]?.url} alt=""/><div><MaterialCode code={post.display_code}/><b>{capitalize(post.name)}</b><small>{status}, {formatQuantity(post.deposit_status==='confirmed'?post.stock_quantity:post.initial_quantity,post.unit)}</small>{post.deposit_status==='confirmed'&&<small className="post-update">{formatQuantity(post.collected_quantity,post.unit)} collected, {post.stock_quantity} remaining</small>}{post.issues.map(issue=><small className="post-update" key={issue.id}>Reported: {issue.reason_label||issue.reason.replaceAll('_',' ')} ({issue.status})</small>)}</div><ChevronRight size={18}/></Link>
-          {state&&!archived&&<div className="post-management-actions">
-            <button className="button outline" disabled={!state.can_delete&&!state.can_archive} onClick={()=>{setError('');setSelection({action:state.has_history?'archive':'delete',name:post.name,post,state});}}>{state.has_history?<Archive size={17}/>:<Trash2 size={17}/>} {state.has_history?'Archive material':'Delete material'}</button>
-            {state.blocked_reason&&<p>{state.blocked_reason}</p>}
-            {!state.blocked_reason&&state.has_history&&<p>Archive keeps all reservation, collection and credit history.</p>}
-          </div>}
-          {post.issues.map(issue=><IssueDetails key={issue.id} issue={issue}/>)}
-        </article>;
+        const notes=[post.deposit_status==='confirmed'?`${formatQuantity(post.collected_quantity,post.unit)} collected, ${post.stock_quantity} remaining`:'',
+          ...post.issues.filter(issue=>issue.status!=='open').map(issue=>`Reported: ${issue.reason_label||issue.reason.replaceAll('_',' ')} (${issue.status})`),
+          state&&!archived?state.blocked_reason||(state.has_history?'Archive keeps all reservation, collection and credit history.':''):''].filter(Boolean);
+        const open=post.issues.filter(issue=>issue.status==='open');
+        const action=state&&!archived;
+        return <MaterialListCard className="managed-post" key={post.id} to={`/deposits/${post.id}${post.deposit_status==='confirmed'?'/success':''}`} image={post.photos[0]?.url} code={post.display_code} category={post.category}
+          name={post.name} status={<><span>{status}</span><span>{formatQuantity(post.deposit_status==='confirmed'?post.stock_quantity:post.initial_quantity,post.unit)}</span></>}
+          footer={notes.length||open.length||action?<>
+            {notes.map(note=><p key={note}>{note}</p>)}
+            {open.map(issue=><IssueDetails key={issue.id} issue={issue}/>)}
+            {action&&<div className="list-card-actions"><button type="button" className="list-text-button" aria-label={state.has_history?'Archive material':'Delete material'} disabled={!state.can_delete&&!state.can_archive} onClick={()=>{setError('');setSelection({action:state.has_history?'archive':'delete',name:post.name,post,state});}}>{state.has_history?<Archive size={16}/>:<Trash2 size={16}/>}{state.has_history?'Archive':'Delete'}</button></div>}
+          </>:undefined}/>;
       })}
       {!draft&&!posts.length&&<p>No materials yet.</p>}
     </div>}

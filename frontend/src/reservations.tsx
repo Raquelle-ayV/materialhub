@@ -1,10 +1,10 @@
-import { ArrowLeft, Minus, Plus } from 'lucide-react';
+import { ArrowLeft, Minus, Plus, Undo2 } from 'lucide-react';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Auth, api, type User } from './lib';
 import { rememberMaterial } from './recent-materials';
 import { ReservationOutcome, type FulfillmentFields } from './fulfillment';
-import { FavoriteButton, BottomSheet, MaterialPhoto, PhotoCarousel, TopBar, MaterialCode, StatusBadge, capitalize, formatQuantity, formatDue, credits as creditsLabel } from './ui';
+import { FavoriteButton, BottomSheet, MaterialPhoto, PhotoCarousel, TopBar, MaterialCode, StatusBadge, capitalize, formatQuantity, formatDue, formatShortDate, MaterialListCard, credits as creditsLabel } from './ui';
 import { hubConfig } from './hub-config';
 
 type Material = {id:number;owner_id:number;name:string;display_code:string;category:string;custom_category_name:string|null;zone:string;stock_quantity:number;available_quantity:number;unit:string;dimensions_spec:string;dimensions_not_applicable:number;condition:string;color:string;notes:string;reference_url:string|null;status:string;is_demo:number;is_favorite?:boolean;photos:{id:number;url:string}[];video?:{id:number;url:string}|null};
@@ -54,6 +54,16 @@ export function MaterialDetail(){
   </div>;
 }
 
+const reservationStatusText:Record<string,string>={reserved:'Reserved',collected:'Collected',returned:'Returned',cancelled:'Cancelled',expired:'Expired',issue_reported:'Issue reported'};
+/** Card footer in My reservations: when it happened, what it cost, a return shortcut and any report, all inside the card. */
+function ReservationFooter({r}:{r:Reservation&{cancelled_at?:string|null}}){
+  const returnOpen=r.status==='collected'&&r.can_return&&!!r.return_deadline_at&&Date.parse(r.return_deadline_at)>Date.now();
+  const time=r.status==='reserved'?`Pick up by ${formatShortDate(r.expires_at)}`:(r.status==='collected'||r.status==='returned')&&r.completed_at?`Collected ${formatShortDate(r.completed_at)}`:r.status==='cancelled'&&r.cancelled_at?`Cancelled ${formatShortDate(r.cancelled_at)}`:r.status==='expired'?`Expired ${formatShortDate(r.expires_at)}`:'';
+  const credit=r.status==='returned'?<span>1 credit refunded</span>:r.status==='collected'?<><span>1 credit spent</span><span>{returnOpen?`Return by ${formatShortDate(r.return_deadline_at!)}`:'Return window closed'}</span></>:r.status==='reserved'?<span>1 credit held</span>:r.status==='expired'?<span>1 credit spent</span>:<span>1 credit released</span>;
+  return <>{time&&<p>{time}</p>}<p className="list-card-meta">{credit}</p>
+    {r.issue&&<div className="list-issue"><p className="list-issue-title">{r.issue.status==='open'?<><span>Issue reported</span> <span>Needs review</span></>:<><span>Issue resolved</span> <span>{r.issue.resolution==='relisted'?'Relisted':'Removed'}</span></>}</p><p>{r.issue.reason_label||r.issue.reason.replaceAll('_',' ')}</p>{r.issue.notes&&<p>{r.issue.notes}</p>}</div>}
+    {returnOpen&&<div className="list-card-actions"><Link className="list-text-button" to={`/reservations/${r.id}/return`}><Undo2 size={16}/>Return material</Link></div>}</>;
+}
 export function MyReservations({detail=false}:{detail?:boolean}){
   const{id}=useParams();const{user,loading,setUser}=useContext(Auth);const[rows,setRows]=useState<Reservation[]>([]),[error,setError]=useState(''),[ready,setReady]=useState(false),[busy,setBusy]=useState<number|null>(null),[revision,setRevision]=useState(0);const lock=useRef(false);const[confirming,setConfirming]=useState(false);
   useEffect(()=>{if(!user)return;let active=true;setReady(false);setError('');const load=()=>api<{reservations?:Reservation[];reservation?:Reservation}>(detail?`/reservations/${id}`:'/me/reservations').then(r=>{if(active){setRows(r.reservations||[r.reservation!]);setReady(true);}}).catch(e=>{if(active){setError(e.message);setReady(true);}});void load();const timer=setInterval(load,10000);window.addEventListener('focus',load);return()=>{active=false;clearInterval(timer);window.removeEventListener('focus',load);};},[user?.id,detail,id,revision]);
@@ -70,5 +80,6 @@ export function MyReservations({detail=false}:{detail?:boolean}){
           <BottomSheet open={confirming} onClose={()=>setConfirming(false)} title="Cancel this reservation?"><p className="sheet-line muted">Your 1 credit is released and the material goes back on the shelf.</p><div className="action-stack"><button className="button dark full" disabled={busy!==null} onClick={async()=>{await cancel(r);setConfirming(false);}}>{busy===r.id?'Cancelling…':'Cancel reservation'}</button><button className="button outline full" onClick={()=>setConfirming(false)}>Keep it</button></div></BottomSheet>
           <div className="flow-action"><Link className="button dark full" to={`/reservations/${r.id}/guide`}>Start pickup</Link></div></>}
       </>}</div>;}
-  return <div className="flow-page"><TopBar to="/me" title="My reservations"/><ErrorBox error={error}/>{error&&<button className="button outline" onClick={()=>setRevision(n=>n+1)}>Retry</button>}{!ready?<p className="loading">Loading reservations…</p>:!rows.length&&!error?<div className="empty-state"><h2>No reservations yet</h2><p>Your active, cancelled and expired reservations will appear here.</p><Link to="/" className="button dark">Explore materials</Link></div>:<div className="reservation-list">{rows.map(r=><article key={r.id} className="reservation-card"><Link className="active-task" to={`/reservations/${r.id}`}><img src={r.image} alt={r.name}/><div><MaterialCode code={r.display_code}/><b>{capitalize(r.name)}</b><small>{formatQuantity(r.reserved_quantity,r.unit_snapshot)}, {r.zone}</small></div></Link><StatusBadge kind="reservation" status={r.status}/>{r.status==='reserved'?<p className="due-line"><Due expires={r.expires_at}/></p>:<p className="field-help">{ended(r)}</p>}<ReservationOutcome r={r}/></article>)}</div>}</div>;
+  return <div className="flow-page reservations-page"><TopBar to="/me" title="My reservations"/><ErrorBox error={error}/>{error&&<button className="button outline" onClick={()=>setRevision(n=>n+1)}>Retry</button>}{!ready?<p className="loading">Loading reservations…</p>:!rows.length&&!error?<div className="empty-state"><h2>No reservations yet</h2><p>Your active, cancelled and expired reservations will appear here.</p><Link to="/" className="button dark">Explore materials</Link></div>:<div className="reservation-list list-stack">{rows.map(r=><MaterialListCard key={r.id} className="reservation-card" to={`/reservations/${r.id}`} image={r.image} code={r.display_code} category={r.category} name={r.name}
+    status={<><span>{reservationStatusText[r.status]||r.status}</span><span>{formatQuantity(r.reserved_quantity,r.unit_snapshot)}</span></>} footer={<ReservationFooter r={r}/>}/>)}</div>}</div>;
 }
