@@ -22,7 +22,7 @@ function settle(db,r,status,date) {
   db.prepare('INSERT INTO activities(recipient_id,actor_id,type,material_id,reservation_id,created_at,event_key) VALUES (?,?,?,?,?,?,?)').run(m.owner_id,r.user_id,`reservation_${status}`,r.material_id,r.id,date,`reservation:settle:${r.id}`);
 }
 export function installReservationRoutes(app,db,requireUser) {
-  const select=`SELECT r.*,m.name,m.display_code,m.stock_quantity,m.status AS material_status,z.name AS zone,
+  const select=`SELECT r.*,m.name,m.display_code,m.stock_quantity,m.status AS material_status,z.name AS zone,z.qr_key,
     (SELECT CASE WHEN x.storage_key LIKE '/placeholders/%' THEN x.storage_key ELSE '/api/media/'||x.id END FROM material_photos p JOIN media x ON x.id=p.media_id WHERE p.material_id=m.id AND p.kind='material' ORDER BY p.sort_order,p.id LIMIT 1) AS image
     FROM reservations r JOIN materials m ON m.id=r.material_id JOIN zones z ON z.id=r.zone_id_snapshot`;
   function owned(id,user) {const r=db.prepare(`${select} WHERE r.id=? AND r.user_id=?`).get(Number(id)||-1,user);if(!r)fail('Reservation not found.',404);return r;}

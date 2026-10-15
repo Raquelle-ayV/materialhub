@@ -141,18 +141,12 @@ export function DepositPage(){ const {t,msg,language}=useI18n();
   const notice=<>{toast&&<Toast tone="status" message={toast} onDone={()=>setToast('')}/>}<ErrorMessage error={error||stepError}/></>;
   if(current===2)return <FlowPage {...page} action={<button className="button dark full" onClick={()=>void findArea()} disabled={entering}>{entering?t("Opening…"):t("I’m at the Hub")}</button>}><HubGuide zone={d.zone}/>{notice}</FlowPage>;
   const verifyZone=async(body:{qr:string})=>{await api(`/deposits/${id}/verify-zone`,body);navigate(`${root}/place`);};
-  if(current===3)return <FlowPage {...page}><FindArea zone={d.zone} onVerify={verifyZone}/>{demoTools&&<DemoScanButton onScan={()=>verifyZone({qr:`REMATERIAL|ZONE|${d.qr_key}`})}/>}{notice}</FlowPage>;
+  if(current===3)return <FlowPage {...page}><FindArea zone={d.zone} qrKey={d.qr_key} onVerify={verifyZone}/>{notice}</FlowPage>;
   const blocked=busy||uploading||photoSaving||!!photoError||!placement.length;
   return <FlowPage {...page} hint={!placement.length?'Add at least 1 placement photo':undefined} action={<button className="button dark full" disabled={blocked} onClick={confirm}>{busy?t("Confirming…"):t("Confirm drop-off")}<Check size={18}/></button>}>
     <div className="zone-confirm"><CheckCircle2 size={24}/><div><small>{t("Zone confirmed")}</small><b>{t(d.zone)}</b></div></div><ol className="placement-guide"><li><b>{t("Write and attach your label")}</b><p>{t("Take a blank label from Material Hub. Write the code below and attach it to the material or its packaging.")}</p><strong className="label-code"><MaterialCode code={d.display_code} size="lg"/></strong></li><li><b>{t("Place it on the shelf")}</b><p>{t("Leave it in the {{zone}} Zone, with the label clearly visible.",{zone:t(d.zone)})}</p></li><li><b>{t("Take a placement photo")}</b><p>{t("Show the material and its surroundings so the next maker can find it.")}</p></li></ol><PhotoUpload photos={placement} onChange={savePlacement} max={3} label={t("Placement photos")} disabled={busy} onBusy={setUploading}/>{photoSaving&&<p role="status" className="field-help">{t("Saving placement photos…")}</p>}<ErrorMessage error={photoError}/>{photoError&&<button className="button outline full" onClick={()=>savePlacement(placement)}>{t("Retry saving photos")}</button>}{notice}
   </FlowPage>;
 }
-
-/** Demo recordings only: shown on the dev server opened at localhost, never in the built app or on other hosts. */
-const demoTools=import.meta.env.DEV&&['localhost','127.0.0.1'].includes(window.location.hostname);
-/** Sends the same zone QR text a real scan of this material's zone would, so the normal server check still runs. */
-function DemoScanButton({onScan}:{onScan:()=>Promise<void>}){const [busy,setBusy]=useState(false);const [error,setError]=useState<Message>('');
-  return <div className="demo-scan"><button type="button" className="text-button" disabled={busy} onClick={async()=>{setBusy(true);setError('');try{await onScan();}catch(e){setError(messageOf(e));setBusy(false);}}}>{busy?'…':'模拟扫码成功'}</button><small>Demo only, local dev</small><ErrorMessage error={error}/></div>;}
 
 export function ShareMaterial(){ const {t}=useI18n();
   const location=useLocation();const navigate=useNavigate();const[toast,setToast]=useState('');

@@ -45,7 +45,7 @@ export function Mockup() {
       <span className="mockup-button action"/><span className="mockup-button volume-up"/><span className="mockup-button volume-down"/><span className="mockup-button power"/>
       <div className="mockup-bezel">
         <div className="mockup-screen" style={{ width: SCREEN.width, height: SCREEN.height }}>
-          <iframe ref={frame} src="/" title="Rematerial app" onLoad={dress} width={SCREEN.width} height={SCREEN.height}/>
+          <iframe ref={frame} src="/" title="Rematerial app" allow="camera; microphone" onLoad={dress} width={SCREEN.width} height={SCREEN.height}/>
           <span className="mockup-island" aria-hidden="true"/>
           <span className="mockup-home" aria-hidden="true"/>
         </div>

@@ -32,9 +32,15 @@ export function HubGuide({zone}:{zone?:string}) {
 }
 
 /** Zone check by camera; a wrong zone names both the zone you are at and the one you need. */
-export function FindArea({zone,onVerify}:{zone:string;onVerify:(body:{qr:string})=>Promise<void>}) {
+/** Screen recordings only: true when the app runs inside the /mockup phone frame on the local dev server. */
+export const inMockup=import.meta.env.DEV&&(()=>{try{return window.self!==window.top&&window.top!.location.pathname==='/mockup';}catch{return false;}})();
+/** Mockup only: sends the same zone QR text a real scan would, so the normal server check still runs. */
+function SkipScan({onSkip}:{onSkip:()=>Promise<void>}){const [busy,setBusy]=useState(false);const [error,setError]=useState<Message>('');
+  return <div className="demo-scan"><button type="button" className="text-button" disabled={busy} onClick={async()=>{setBusy(true);setError('');try{await onSkip();}catch(e){setError(messageOf(e));setBusy(false);}}}>{busy?'…':'跳过扫码'}</button><small>Mockup only</small><ErrorMessage error={error}/></div>;}
+
+export function FindArea({zone,onVerify,qrKey}:{zone:string;onVerify:(body:{qr:string})=>Promise<void>;qrKey?:string}) {
   return <><div className="zone-confirm"><MapPin size={21}/><div><small>Your material zone</small><b>{zone}</b></div></div>
-    <CameraScanner autoStart onScan={qr=>onVerify({qr})}/></>;
+    {inMockup&&qrKey&&<SkipScan onSkip={()=>onVerify({qr:`REMATERIAL|ZONE|${qrKey}`})}/>}<CameraScanner autoStart onScan={qr=>onVerify({qr})}/></>;
 }
 
 export function CameraScanner({onScan,autoStart=false,onUnavailable}:{onScan:(qr:string)=>Promise<void>;autoStart?:boolean;onUnavailable?:()=>void}) { const {t}=useI18n(); 
