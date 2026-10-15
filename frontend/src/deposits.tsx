@@ -8,6 +8,7 @@ import { FlowPage, HubGuide, FindArea } from './flow';
 import { Due, type Reservation } from './reservations';
 import { ActionRequired, IssueDetails, type Issue } from './reviews';
 import { useI18n, messageOf, validateForm, ApiError, type Message } from './i18n';
+import { CelebrationPage } from './success';
 import { AddMaterialButton, CameraRoll, uploadVideo } from './capture';
 
 export type Photo = {id:number;url:string};
@@ -133,6 +134,10 @@ export function DepositPage(){ const {t,msg,language}=useI18n();
   async function confirm(){setBusy(true);setError('');try{await queue.current;await api(`/deposits/${id}/confirm`,{});const auth=await api<{user:User}>('/auth/me');setUser(auth.user);navigate(`/deposits/${id}/success`);}catch(e){setError(messageOf(e));}finally{setBusy(false);}}
   const root=`/deposits/${id}`;
   if(stage==='steps')return <Navigate to="/deposit" replace/>;
+  if(stage==='success'&&(d.status==='available'||d.status==='reserved')&&!d.issues?.length)return <div className="flow-page"><CelebrationPage title="Drop-off completed!" subtitle={`${d.display_code} is now available for others`}
+    material={{name:`${capitalize(d.name)} × ${d.initial_quantity}`,image:d.photos[0]?.url,detail:`${t(d.zone)} zone`}}
+    credit={{lead:'+1 credit earned, you now have ',from:Math.max(0,user.available-1),to:user.available,tail:user.available===1?' credit':' credits',accent:true}}
+    primary={{to:'/',label:'Done'}} secondary={{to:'/deposit/new?fresh=1',label:'Share another material'}}/></div>;
   if(stage==='success')return <SuccessPage title={d.status==='available'||d.status==='reserved'?'Your material is on the shelf':d.status==='unavailable'?'Your material is under review':d.status==='collected'?'All of it has been collected':'Your material was removed'} subtitle={d.status==='available'?'Now live on Explore':undefined}
       material={{id:d.material_id,name:d.name,code:d.display_code,image:d.photos[0]?.url}} credit={{title:'+1 credit earned',note:`You now have ${credits(user.available)}`}} secondary={{to:'/deposit/new?fresh=1',label:'Share another'}}>
       {d.issues?.length>0&&<section className="issue-summary"><b>{d.status==='closed'?'Removed / archived':'Needs review'}</b>{d.issues.map(i=><div key={i.id}><b>Reported: {i.reason_label||i.reason.replaceAll('_',' ')} ({i.status})</b><p className="notes-text">{i.notes}</p><div className="record-thumbnails">{i.photos.map(p=><MaterialPhoto key={p.id} src={p.url} alt="Reported problem"/>)}</div></div>)}</section>}</SuccessPage>;

@@ -1,0 +1,43 @@
+/* Shared success screen (success.tsx). Sizes in px follow the success-page brief (14 / 15 / 13 / 22). */
+:root .celebrate{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-4);min-height:calc(100dvh - 96px);padding:var(--space-6) 0 12vh;box-sizing:border-box;text-align:center}
+:root .celebrate h1{margin:var(--space-2) 0 0;font:var(--text-title);color:var(--color-ink)}
+:root .celebrate-subtitle{margin:calc(-1 * var(--space-2)) 0 0;font:400 14px/1.4 var(--font-family);color:var(--color-ink-soft)}
+
+/* Check badge: 72px walnut disc pops in (overshoot to 1.1), then the tick is drawn */
+:root .celebrate-badge{display:grid;place-items:center;width:72px;height:72px;border-radius:50%;background:var(--color-walnut);animation:celebrate-pop .4s cubic-bezier(.2,.8,.3,1) both}
+:root .celebrate-badge svg{width:72px;height:72px;fill:none;stroke:var(--color-on-walnut);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+:root .celebrate-badge path{stroke-dasharray:40;stroke-dashoffset:40;animation:celebrate-draw .4s ease-out .3s forwards}
+@keyframes celebrate-pop{0%{transform:scale(0)}70%{transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes celebrate-draw{to{stroke-dashoffset:0}}
+
+/* Title, subtitle, card, credit line and buttons rise 12px and fade in, 80ms apart, from 600ms */
+:root .celebrate-in{opacity:0;animation:celebrate-rise .4s ease-out forwards;animation-delay:calc(600ms + var(--i) * 80ms)}
+@keyframes celebrate-rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* Material card: white, radius 16, no outline, soft shadow; code under a dashed line */
+:root .celebrate-card{width:100%;max-width:320px;box-sizing:border-box;border-radius:var(--radius-card);background:var(--color-surface);box-shadow:0 2px 12px color-mix(in srgb,var(--color-ink) 8%,transparent);text-align:left}
+:root .celebrate-material{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-4)}
+:root .celebrate-material :is(img,.photo-fallback){flex:none;width:64px;height:64px;min-height:0;border-radius:var(--radius-image);object-fit:cover}
+:root .celebrate-material div{display:grid;gap:2px;min-width:0}
+:root .celebrate-material b{font:600 15px/1.3 var(--font-family);color:var(--color-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+:root .celebrate-material span{font:var(--text-caption);color:var(--color-ink-soft)}
+:root .celebrate-code{display:grid;justify-items:center;gap:var(--space-1);padding:var(--space-3) var(--space-4) var(--space-4);border-top:1.5px dashed var(--color-line);text-align:center}
+:root .celebrate-code small{font:var(--text-caption);color:var(--color-ink-soft)}
+:root .celebrate-code strong{font:700 22px/1.2 var(--font-family);letter-spacing:.14em;color:var(--color-ink)}
+
+/* Credit line: no box, one small centred line; the number ticks */
+:root .celebrate-credit{margin:0;font:400 13px/1.4 var(--font-family);color:var(--color-ink-soft)}
+:root .celebrate-credit.accent{color:var(--color-walnut);font-weight:600}
+:root .celebrate-count{display:inline-block;min-width:.7em;animation:celebrate-tick .35s cubic-bezier(.2,.8,.3,1.4)}
+@keyframes celebrate-tick{0%{transform:translateY(-6px) scale(1.25);opacity:.3}100%{transform:none;opacity:1}}
+
+/* Buttons sit with the content (no divider, not a fixed bar) */
+:root .celebrate-actions{display:grid;justify-items:center;gap:var(--space-2);width:100%;max-width:320px;margin-top:var(--space-2)}
+:root .celebrate-actions .button{width:100%}
+
+/* Reduced motion: no pop, no drawing, no confetti; everything simply fades in */
+:root .celebrate.calm .celebrate-badge,:root .celebrate.calm .celebrate-count{animation:celebrate-fade .3s ease-out both}
+:root .celebrate.calm .celebrate-badge path{animation:none;stroke-dashoffset:0}
+:root .celebrate.calm .celebrate-in{animation:celebrate-fade .3s ease-out both;animation-delay:0s}
+@keyframes celebrate-fade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){:root .celebrate-badge,:root .celebrate-badge path,:root .celebrate-in,:root .celebrate-count{animation-duration:.3s!important;animation-delay:0s!important}:root .celebrate-badge path{stroke-dashoffset:0}}

@@ -6,6 +6,7 @@ import { rememberMaterial } from './recent-materials';
 import { ReservationOutcome, type FulfillmentFields } from './fulfillment';
 import { FavoriteButton, BottomSheet, MaterialPhoto, PhotoCarousel, TopBar, MaterialCode, StatusBadge, capitalize, formatQuantity, formatDue, formatShortDate, MaterialListCard, credits as creditsLabel } from './ui';
 import { hubConfig } from './hub-config';
+import { CelebrationPage } from './success';
 
 type Material = {id:number;owner_id:number;name:string;display_code:string;category:string;custom_category_name:string|null;zone:string;stock_quantity:number;available_quantity:number;unit:string;dimensions_spec:string;dimensions_not_applicable:number;condition:string;color:string;notes:string;reference_url:string|null;status:string;is_demo:number;is_favorite?:boolean;photos:{id:number;url:string}[];video?:{id:number;url:string}|null};
 export type Reservation = FulfillmentFields & {id:number;material_id:number;name:string;display_code:string;image:string;status:string;reserved_quantity:number;unit_snapshot:string;expires_at:string;zone:string};
@@ -28,7 +29,7 @@ export function MaterialDetail(){
   async function reserve(){if(lock.current||!m||m.is_demo)return;lock.current=true;setBusy(true);setError('');const storageKey=`reservation-request:${user?.id}:${m.id}:${quantity}`;
     try{requestKey.current=sessionStorage.getItem(storageKey)||crypto.randomUUID();sessionStorage.setItem(storageKey,requestKey.current);
       const r=await api<{reservation:Reservation}>(`/materials/${m.id}/reserve`,{quantity,request_key:requestKey.current});
-      sessionStorage.removeItem(storageKey);navigate(`/reservations/${r.reservation.id}`);api<{user:User}>('/auth/me').then(a=>setUser(a.user)).catch(()=>{});
+      sessionStorage.removeItem(storageKey);navigate(`/reservations/${r.reservation.id}/reserved`);api<{user:User}>('/auth/me').then(a=>setUser(a.user)).catch(()=>{});
     }catch(e){setError((e as Error).message);api<{material:Material}>(`/materials/${m.id}`).then(r=>setM(r.material)).catch(()=>{});}finally{lock.current=false;setBusy(false);}}
   if(!m)return <div className="flow-page"><TopBar to="/" title="Material details"/><ErrorBox error={error}/>{error?<button className="text-button" onClick={()=>{setError('');setReload(v=>v+1);}}>Retry</button>:<p className="loading">Loading material…</p>}</div>;
   const own=m.owner_id===user?.id;const credits=user?.available??0;
@@ -63,6 +64,18 @@ function ReservationFooter({r}:{r:Reservation&{cancelled_at?:string|null}}){
   return <>{time&&<p>{time}</p>}<p className="list-card-meta">{credit}</p>
     {r.issue&&<div className="list-issue"><p className="list-issue-title">{r.issue.status==='open'?<><span>Issue reported</span> <span>Needs review</span></>:<><span>Issue resolved</span> <span>{r.issue.resolution==='relisted'?'Relisted':'Removed'}</span></>}</p><p>{r.issue.reason_label||r.issue.reason.replaceAll('_',' ')}</p>{r.issue.notes&&<p>{r.issue.notes}</p>}</div>}
     {returnOpen&&<div className="list-card-actions"><Link className="list-text-button" to={`/reservations/${r.id}/return`}><Undo2 size={16}/>Return material</Link></div>}</>;
+}
+/** Shown right after "Confirm reservation": where to pick it up, the code to show, and the credit spent. */
+export function ReservationReserved(){
+  const{id}=useParams();const{user,loading}=useContext(Auth);const[r,setR]=useState<(Reservation&{created_at:string})|null>(null);const[available,setAvailable]=useState<number|null>(null);const[error,setError]=useState('');
+  useEffect(()=>{if(!user)return;let active=true;Promise.all([api<{reservation:Reservation&{created_at:string}}>(`/reservations/${id}`),api<{user:User}>('/auth/me')]).then(([a,b])=>{if(active){setR(a.reservation);setAvailable(b.user.available);}}).catch(e=>{if(active)setError((e as Error).message);});return()=>{active=false;};},[user?.id,id]);
+  if(loading)return <p className="loading">Loading your account…</p>;if(!user)return <LoginRequired/>;
+  if(!r||available===null)return <div className="flow-page"><ErrorBox error={error}/>{!error&&<p className="loading">Loading reservation…</p>}</div>;
+  const hours=Math.max(1,Math.round((Date.parse(r.expires_at)-Date.parse(r.created_at))/3600000));
+  return <div className="flow-page"><CelebrationPage title="Material reserved!" subtitle={`Pick it up at ${hubConfig.location||hubConfig.name} within ${hours} hours`}
+    material={{name:capitalize(r.name),image:r.image,detail:formatQuantity(r.reserved_quantity,r.unit_snapshot)}} code={{label:'Show this code at pickup',value:r.display_code}}
+    credit={{lead:'−1 credit, ',from:available+1,to:available,tail:available===1?' credit left':' credits left'}}
+    primary={{to:`/reservations/${r.id}`,label:'Done'}} secondary={{to:'/me/reservations',label:'View my reservations'}}/></div>;
 }
 export function MyReservations({detail=false}:{detail?:boolean}){
   const{id}=useParams();const{user,loading,setUser}=useContext(Auth);const[rows,setRows]=useState<Reservation[]>([]),[error,setError]=useState(''),[ready,setReady]=useState(false),[busy,setBusy]=useState<number|null>(null),[revision,setRevision]=useState(0);const lock=useRef(false);const[confirming,setConfirming]=useState(false);
