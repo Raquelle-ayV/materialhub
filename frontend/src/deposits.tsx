@@ -11,7 +11,7 @@ import { useI18n, messageOf, validateForm, ApiError, type Message } from './i18n
 import { AddMaterialButton, CameraRoll, uploadVideo } from './capture';
 
 export type Photo = {id:number;url:string};
-type Deposit = {id:number;material_id:number;zone_code:string|null;display_code:string;name:string;category_id:number;category:string;custom_category_name:string|null;initial_quantity:number;stock_quantity:number;unit:string;dimensions_spec:string;dimensions_not_applicable:number;color:string;condition:string;reference_url:string|null;notes:string;zone_id:number;zone:string;version:number;status:string;deposit_status:string;arrived_at:string|null;recorded_at:string;verified_zone_id:number|null;photos:Photo[];placement_photos:Photo[];video:Photo|null;collected_quantity:number;issues:Issue[]};
+type Deposit = {id:number;material_id:number;zone_code:string|null;qr_key:string;display_code:string;name:string;category_id:number;category:string;custom_category_name:string|null;initial_quantity:number;stock_quantity:number;unit:string;dimensions_spec:string;dimensions_not_applicable:number;color:string;condition:string;reference_url:string|null;notes:string;zone_id:number;zone:string;version:number;status:string;deposit_status:string;arrived_at:string|null;recorded_at:string;verified_zone_id:number|null;photos:Photo[];placement_photos:Photo[];video:Photo|null;collected_quantity:number;issues:Issue[]};
 export type FormData = {request_key:string;name:string;category_id:string;custom_category_name:string;quantity:string;unit:string;dimensions_spec:string;dimensions_not_applicable:boolean;color:string;condition:string;reference_url:string;notes:string;photo_ids:number[];video_id?:number|null};
 export const blank = ():FormData => ({request_key:crypto.randomUUID(),name:'',category_id:'',custom_category_name:'',quantity:'',unit:'',dimensions_spec:'',dimensions_not_applicable:false,color:'',condition:'',reference_url:'',notes:'',photo_ids:[],video_id:null});
 const unitsByCategory:Record<string,string[]>={'Paper & Sheet':['sheets'],'Board & Foam':['boards','pieces'],'Wood':['boards','pieces'],'Fabric & Textile':['pieces','meters']};
@@ -140,12 +140,19 @@ export function DepositPage(){ const {t,msg,language}=useI18n();
   const page={back:{to:'/deposit',label:t("Share")},steps,current,strip:<DepositStrip d={d}/>};
   const notice=<>{toast&&<Toast tone="status" message={toast} onDone={()=>setToast('')}/>}<ErrorMessage error={error||stepError}/></>;
   if(current===2)return <FlowPage {...page} action={<button className="button dark full" onClick={()=>void findArea()} disabled={entering}>{entering?t("Opening…"):t("I’m at the Hub")}</button>}><HubGuide zone={d.zone}/>{notice}</FlowPage>;
-  if(current===3)return <FlowPage {...page}><FindArea zone={d.zone} onVerify={async body=>{await api(`/deposits/${id}/verify-zone`,body);navigate(`${root}/place`);}}/>{notice}</FlowPage>;
+  const verifyZone=async(body:{qr:string})=>{await api(`/deposits/${id}/verify-zone`,body);navigate(`${root}/place`);};
+  if(current===3)return <FlowPage {...page}><FindArea zone={d.zone} onVerify={verifyZone}/>{demoTools&&<DemoScanButton onScan={()=>verifyZone({qr:`REMATERIAL|ZONE|${d.qr_key}`})}/>}{notice}</FlowPage>;
   const blocked=busy||uploading||photoSaving||!!photoError||!placement.length;
   return <FlowPage {...page} hint={!placement.length?'Add at least 1 placement photo':undefined} action={<button className="button dark full" disabled={blocked} onClick={confirm}>{busy?t("Confirming…"):t("Confirm drop-off")}<Check size={18}/></button>}>
     <div className="zone-confirm"><CheckCircle2 size={24}/><div><small>{t("Zone confirmed")}</small><b>{t(d.zone)}</b></div></div><ol className="placement-guide"><li><b>{t("Write and attach your label")}</b><p>{t("Take a blank label from Material Hub. Write the code below and attach it to the material or its packaging.")}</p><strong className="label-code"><MaterialCode code={d.display_code} size="lg"/></strong></li><li><b>{t("Place it on the shelf")}</b><p>{t("Leave it in the {{zone}} Zone, with the label clearly visible.",{zone:t(d.zone)})}</p></li><li><b>{t("Take a placement photo")}</b><p>{t("Show the material and its surroundings so the next maker can find it.")}</p></li></ol><PhotoUpload photos={placement} onChange={savePlacement} max={3} label={t("Placement photos")} disabled={busy} onBusy={setUploading}/>{photoSaving&&<p role="status" className="field-help">{t("Saving placement photos…")}</p>}<ErrorMessage error={photoError}/>{photoError&&<button className="button outline full" onClick={()=>savePlacement(placement)}>{t("Retry saving photos")}</button>}{notice}
   </FlowPage>;
 }
+
+/** Demo recordings only: shown on the dev server opened at localhost, never in the built app or on other hosts. */
+const demoTools=import.meta.env.DEV&&['localhost','127.0.0.1'].includes(window.location.hostname);
+/** Sends the same zone QR text a real scan of this material's zone would, so the normal server check still runs. */
+function DemoScanButton({onScan}:{onScan:()=>Promise<void>}){const [busy,setBusy]=useState(false);const [error,setError]=useState<Message>('');
+  return <div className="demo-scan"><button type="button" className="text-button" disabled={busy} onClick={async()=>{setBusy(true);setError('');try{await onScan();}catch(e){setError(messageOf(e));setBusy(false);}}}>{busy?'…':'模拟扫码成功'}</button><small>Demo only, local dev</small><ErrorMessage error={error}/></div>;}
 
 export function ShareMaterial(){ const {t}=useI18n();
   const location=useLocation();const navigate=useNavigate();const[toast,setToast]=useState('');

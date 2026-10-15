@@ -273,3 +273,7 @@ body{background:var(--color-bg);color:var(--color-ink);font:var(--text-body)}
 :root .empty-state .auth-switch{margin:0;font:var(--text-body);color:var(--color-ink-soft)}
 /* Sheet actions: the destructive confirm (walnut) goes first like other primaries */
 :root :is(.sheet-actions,.action-stack) .button.danger{order:-1;width:100%}
+
+/* Demo-only "simulate scan" (local dev server only) */
+:root .demo-scan{display:grid;justify-items:center;gap:var(--space-1);margin-top:var(--space-3);padding:var(--space-3);border:1px dashed var(--color-taupe);border-radius:var(--radius-card)}
+:root .demo-scan small{font:var(--text-caption);color:var(--color-ink-soft)}
