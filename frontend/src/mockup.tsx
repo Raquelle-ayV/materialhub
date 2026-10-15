@@ -4,7 +4,7 @@ import './mockup.css';
 /** Screen recording prop (local dev only): the app running inside a CSS-drawn iPhone. */
 const SCREEN = { width: 393, height: 852 };
 const FRAME = { width: SCREEN.width + 2 * 16, height: SCREEN.height + 2 * 16 }; // metal edge + black bezel
-const MARGIN = 40;
+const GAP = 40; // space above and below the phone
 
 // Inside the phone: no scrollbars, and the pointer becomes a soft grey fingertip.
 const fingertip = (size: number, alpha: number) => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}'><circle cx='${size / 2}' cy='${size / 2}' r='${size / 2 - 1}' fill='rgba(90,90,90,${alpha})' stroke='rgba(255,255,255,.55)' stroke-width='1.5'/></svg>`)}") ${size / 2} ${size / 2}, pointer`;
@@ -27,7 +27,8 @@ export function Mockup() {
   useEffect(() => {
     document.title = 'Rematerial mockup';
     document.documentElement.classList.add('mockup-page');
-    const fit = () => setScale(Math.min(1, (window.innerWidth - MARGIN) / FRAME.width, (window.innerHeight - MARGIN) / FRAME.height));
+    // Height decides the size (40px above and below); width only limits it so the phone is never cut off.
+    const fit = () => setScale(Math.max(.1, Math.min((window.innerHeight - 2 * GAP) / FRAME.height, (window.innerWidth - 2 * GAP) / FRAME.width)));
     fit(); window.addEventListener('resize', fit);
     return () => { window.removeEventListener('resize', fit); document.documentElement.classList.remove('mockup-page'); };
   }, []);
@@ -41,6 +42,7 @@ export function Mockup() {
     for (const type of ['pointerup', 'pointercancel', 'pointerleave']) doc.addEventListener(type, () => root.classList.remove('mockup-pressing'));
   }
   return <main className="mockup-stage">
+    <div className="mockup-fit" style={{ width: FRAME.width * scale, height: FRAME.height * scale }}>
     <div className="mockup-device" style={{ width: FRAME.width, height: FRAME.height, transform: `scale(${scale})` }}>
       <span className="mockup-button action"/><span className="mockup-button volume-up"/><span className="mockup-button volume-down"/><span className="mockup-button power"/>
       <div className="mockup-bezel">
@@ -50,6 +52,7 @@ export function Mockup() {
           <span className="mockup-home" aria-hidden="true"/>
         </div>
       </div>
+    </div>
     </div>
   </main>;
 }
