@@ -23,17 +23,17 @@ test('B fulfillment: durable pickup, issue freeze and full returns',async t=>{
   const post=(r,path,body={},cookie=b.cookie)=>req(`/reservations/${r.id}/${path}`,body,cookie);
   const state=async(r,cookie=b.cookie)=>(await req(`/reservations/${r.id}`,undefined,cookie)).data.reservation;
   const stock=d=>db.prepare('SELECT status,stock_quantity FROM materials WHERE id=?').get(d.material_id);
-  const verify=async(r,d,cookie=b.cookie)=>{assert.equal((await post(r,'verify-zone',{qr:'REMATERIAL|ZONE|BOARD_FOAM'},cookie)).status,200);assert.equal((await post(r,'verify-material',{material_code:d.display_code},cookie)).status,200);};
-  const pickup=(r,d,cookie=b.cookie)=>post(r,'pickup',{material_code:d.display_code,matches:true},cookie);
+  const verify=async(r,d,cookie=b.cookie)=>{assert.equal((await post(r,'verify-zone',{qr:'REMATERIAL|ZONE|BOARD_FOAM'},cookie)).status,200);};
+  const pickup=(r,d,cookie=b.cookie)=>post(r,'pickup',{},cookie);
   const prepareReturn=async(r,cookie=b.cookie)=>{assert.equal((await post(r,'return/start',{},cookie)).status,200);assert.equal((await post(r,'return/verify-zone',{qr:'REMATERIAL|ZONE|BOARD_FOAM'},cookie)).status,200);const photo=await upload(cookie);assert.equal((await post(r,'return/photos',{photo_ids:[photo]},cookie)).status,200);return photo;};
   try{await start();a=await req('/auth/register',{username:'fulfill_provider',password:'test-password'});b=await req('/auth/register',{username:'fulfill_collector',password:'test-password'});c=await req('/auth/register',{username:'fulfill_other',password:'test-password'});
     const d=await material();const r=await reserve(d);let returnedPhoto;
-    await t.test('wrong zone, missing scan and wrong label never alter reservation, inventory or credits',async()=>{
+    await t.test('wrong zone and missing scan never alter reservation, inventory or credits',async()=>{
       const before=await account(b.cookie);assert.equal((await pickup(r,d)).status,409);
+      assert.equal((await post(r,'pickup',{qr:'REMATERIAL|ZONE|WOOD'})).status,400);assert.equal((await state(r)).verified_zone_id,null);
       assert.equal((await post(r,'verify-zone',{qr:'REMATERIAL|ZONE|WOOD'})).status,400);assert.equal((await state(r)).verified_zone_id,null);
       assert.equal((await post(r,'verify-zone',{qr:'REMATERIAL|ZONE|BOARD_FOAM'})).status,200);
-      assert.equal((await state(r)).verified_zone_id,1);assert.equal((await post(r,'verify-material',{material_code:'M999999'})).status,400);
-      assert.equal((await state(r)).material_code_verified_at,null);assert.deepEqual(await account(b.cookie),before);assert.equal(stock(d).stock_quantity,3);assert.equal((await state(r)).status,'reserved');
+      assert.equal((await state(r)).verified_zone_id,1);assert.deepEqual(await account(b.cookie),before);assert.equal(stock(d).stock_quantity,3);assert.equal((await state(r)).status,'reserved');
       assert.equal((await post(r,'verify-zone',{qr:'REMATERIAL|ZONE|BOARD_FOAM'},c.cookie)).status,404);
     });
     await t.test('pickup rollback is atomic and duplicate pickup spends held credit only once',async()=>{

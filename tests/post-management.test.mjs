@@ -92,7 +92,7 @@ test('My posts: owner management preserves reservations, rewards, inventory and 
     });
     await t.test('archiving after pickup preserves the original 24-hour return and refunds once without relisting',async()=>{
       const d=await material(),reservation=(await req(`/materials/${d.material_id}/reserve`,{quantity:1,request_key:randomUUID()},buyer.cookie)).data.reservation;
-      for(const[path,body]of[['verify-zone',{qr:'REMATERIAL|ZONE|BOARD_FOAM'}],['verify-material',{material_code:d.display_code}],['pickup',{material_code:d.display_code,matches:true}]])assert.equal((await req(`/reservations/${reservation.id}/${path}`,body,buyer.cookie)).status,200);
+      for(const[path,body]of[['pickup',{qr:'REMATERIAL|ZONE|BOARD_FOAM'}]])assert.equal((await req(`/reservations/${reservation.id}/${path}`,body,buyer.cookie)).status,200);
       assert.equal((await manage(d,'archive')).status,200);const balance=(await req('/auth/me',undefined,buyer.cookie)).data.user.balance;
       for(const[path,body]of[['return/start',{}],['return/verify-zone',{qr:'REMATERIAL|ZONE|BOARD_FOAM'}]])assert.equal((await req(`/reservations/${reservation.id}/${path}`,body,buyer.cookie)).status,200);
       const photo=await upload(buyer.cookie);

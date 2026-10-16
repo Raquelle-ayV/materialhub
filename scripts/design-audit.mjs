@@ -75,7 +75,7 @@ try {
   const leo = await account('leo');
   const reserve = async d => (await call(leo, `/materials/${d.material_id}/reserve`, { quantity: 1, request_key: randomUUID() })).reservation;
   const zoneOf = d => `REMATERIAL|ZONE|${zones[d.category_id]}`;
-  const pickUp = async (r, d) => { await call(leo, `/reservations/${r.id}/verify-zone`, { qr: zoneOf(d) }); await call(leo, `/reservations/${r.id}/verify-material`, { material_code: d.display_code }); await call(leo, `/reservations/${r.id}/pickup`, { material_code: d.display_code, matches: true }); };
+  const pickUp = async (r, d) => { await call(leo, `/reservations/${r.id}/pickup`, { qr: zoneOf(d) }); };
   const collected = await reserve(listed[1]); await pickUp(collected, listed[1]);
   const returned = await reserve(listed[2]); await pickUp(returned, listed[2]);
   await call(leo, `/reservations/${returned.id}/return/start`, {}); await call(leo, `/reservations/${returned.id}/return/verify-zone`, { qr: zoneOf(listed[2]) });

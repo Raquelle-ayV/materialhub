@@ -24,11 +24,11 @@ function PlacementPhotos({r}:{r:Reservation}) {return r.placement_photos.length?
 export function FulfillmentPage(){
   const{id,stage}=useParams();const{user,loading,setUser}=useContext(Auth);const navigate=useNavigate();const routeState=useLocation().state;
   const[r,setR]=useState<Reservation|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[revision,setRevision]=useState(0);
-  const[code,setCode]=useState(''),[reason,setReason]=useState(''),[notes,setNotes]=useState(''),[photos,setPhotos]=useState<Photo[]>([]),[uploading,setUploading]=useState(false),[placed,setPlaced]=useState(false),[photoError,setPhotoError]=useState(''),[savingPhotos,setSavingPhotos]=useState(false);
+  const[reason,setReason]=useState(''),[notes,setNotes]=useState(''),[photos,setPhotos]=useState<Photo[]>([]),[uploading,setUploading]=useState(false),[placed,setPlaced]=useState(false),[photoError,setPhotoError]=useState(''),[savingPhotos,setSavingPhotos]=useState(false);
   const lock=useRef(false),queue=useRef<Promise<unknown>>(Promise.resolve()),photoRevision=useRef(0);
   const routeKey=[user?.id,id,stage].join('/');const[loadedFor,setLoadedFor]=useState('');
   const returning=stage?.startsWith('return');const root=`/reservations/${id}`;
-  useEffect(()=>{if(!user)return;let live=true;setR(null);setError('');setCode('');setPlaced(false);setPhotos([]);setPhotoError('');
+  useEffect(()=>{if(!user)return;let live=true;setR(null);setError('');setPlaced(false);setPhotos([]);setPhotoError('');
     const load=async()=>{const result=await api<{reservation:Reservation}>(root+(stage==='return'?'/return/start':''),stage==='return'?{}:undefined);if(live){setR(result.reservation);setLoadedFor(routeKey);if(returning)setPhotos(result.reservation.return?.photos||[]);}};
     void load().catch(e=>{if(live)setError(e.message);});return()=>{live=false;};
   },[id,stage,user?.id,revision]);
@@ -38,14 +38,14 @@ export function FulfillmentPage(){
   if(!r||loadedFor!==routeKey)return <div className="flow-page"><p>{error||'Loading reservation…'}</p>{error&&<button className="button outline" onClick={()=>setRevision(n=>n+1)}>Retry</button>}<Link className="text-link" to="/me/reservations">My reservations</Link></div>;
   if(stage==='success'&&!['collected','returned'].includes(r.status))return <Navigate to={root} replace/>;
   if(stage!=='success'&&((returning&&r.status!=='collected')||(!returning&&r.status!=='reserved')))return <Navigate to={root} replace/>;
-  if(['check','problem'].includes(stage!)&&r.verified_zone_id!==r.zone_id_snapshot)return <Navigate to={`${root}/scan`} replace/>;
+  // There is no separate code-check step any more; old links land on the scan.
+  if(stage==='check')return <Navigate to={`${root}/scan`} replace/>;
   if(returning&&stage!=='return'&&!r.return)return <Navigate to={root+'/return'} replace/>;
   if(stage==='return-place'&&r.return?.verified_zone_id!==r.zone_id_snapshot)return <Navigate to={`${root}/return`} replace/>;
-  const pickupStep=({guide:1,scan:2,check:3} as Record<string,number>)[stage||''];
-  const zoneVerified=r.verified_zone_id===r.zone_id_snapshot;
+  const pickupStep=({guide:1,scan:2} as Record<string,number>)[stage||''];
   const strip=<MaterialStrip image={r.image} name={r.name} code={r.display_code}><ReservationDetails r={r}/></MaterialStrip>;
   const errorBox=error&&<div role="alert" className="notice">{error}</div>;
-  // The celebration is the last step of the pickup itself, right after "Confirm pickup".
+  // The celebration is the last step of the pickup itself, right after the correct Zone QR is scanned.
   if(stage==='success'&&r.status==='collected'&&(routeState as {celebrate?:boolean}|null)?.celebrate){const left=user?.available??0;return <div className="flow-page"><CelebrationPage title="Pickup completed!" subtitle="Enjoy your material, return it within 24 hours if you don’t need it"
     material={{name:capitalize(r.name),image:r.image,detail:formatQuantity(r.reserved_quantity,r.unit_snapshot)}}
     credit={{lead:'1 credit used, ',from:left,to:left,tail:left===1?' credit left':' credits left'}}
@@ -53,17 +53,16 @@ export function FulfillmentPage(){
   if(stage==='success')return <SuccessPage title={r.status==='returned'?'Thanks for returning it':'Enjoy your material'} material={{id:r.material_id,name:r.name,code:r.display_code,image:r.image,detail:formatQuantity(r.reserved_quantity,r.unit_snapshot)}}
     credit={r.status==='returned'?{title:'1 credit refunded',note:`You now have ${credits(user?.available??0)}`}:{title:'1 credit used',note:`You have ${credits(user?.available??0)} left`}} secondary={{to:'/me/reservations',label:'My reservations'}}/>;
   if(pickupStep){
-    const page={back:{to:root,label:'Reservation'},current:pickupStep,strip,steps:[{label:'Go to the Hub',to:`${root}/guide`},{label:'Find area',to:`${root}/scan`},{label:'Pick up',to:zoneVerified?`${root}/check`:undefined}]};
+    const page={back:{to:root,label:'Reservation'},current:pickupStep,strip,steps:[{label:'Go to the Hub',to:`${root}/guide`},{label:'Pick up',to:`${root}/scan`}]};
     if(pickupStep===1)return <FlowPage {...page} action={<button className="button dark full" onClick={()=>navigate(`${root}/scan`)}>I’m at the Hub</button>}><HubGuide zone={r.zone}/>{errorBox}</FlowPage>;
-    if(pickupStep===2)return <FlowPage {...page}><FindArea key={`${id}-${stage}`} zone={r.zone} qrKey={r.qr_key} onVerify={async body=>{await api(`${root}/verify-zone`,body);navigate(`${root}/check`);}}/><PlacementPhotos r={r}/>{errorBox}</FlowPage>;
-    // The label code typed at the shelf confirms the right material, then completes the pickup.
-    const pickup=async()=>{if(lock.current||!code.trim())return;lock.current=true;setBusy(true);setError('');try{await api(`${root}/verify-material`,{material_code:code.trim()});await api(`${root}/pickup`,{material_code:code.trim(),matches:true});void api<{user:User}>('/auth/me').then(a=>setUser(a.user)).catch(()=>{});navigate(`${root}/success`,{state:{celebrate:true}});}catch(e){setError((e as Error).message);}finally{lock.current=false;setBusy(false);}};
-    return <FlowPage {...page} action={<><button className="button dark full" disabled={busy||!code.trim()} onClick={()=>void pickup()}>{busy?'Confirming…':'Confirm pickup'}</button><Link className="text-link report-link" to={`${root}/problem`}>Missing or doesn’t match? Report a problem</Link></>}>
-      <PlacementPhotos r={r}/><p className="find-label">Find the label <strong className="label-code"><MaterialCode code={r.display_code} size="lg"/></strong></p>
-      <form className="material-form code-check" onSubmit={e=>{e.preventDefault();void pickup();}}><label>Material code on the label<input value={code} onChange={e=>setCode(e.target.value.toUpperCase())} placeholder="e.g. M001" autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength={30}/></label></form>{errorBox}</FlowPage>;
+    // Scanning the correct Zone QR completes the pickup in one go; the server checks the zone.
+    const pickup=async(body:{qr:string})=>{await api(`${root}/pickup`,body);void api<{user:User}>('/auth/me').then(a=>setUser(a.user)).catch(()=>{});navigate(`${root}/success`,{state:{celebrate:true}});};
+    return <FlowPage {...page} action={<Link className="text-link report-link" to={`${root}/problem`}>Missing or doesn’t match? Report a problem</Link>}>
+      <FindArea key={`${id}-${stage}`} zone={r.zone} qrKey={r.qr_key} onVerify={pickup}/><p className="field-help">Scanning the Zone QR confirms you’ve taken the material.</p>
+      <p className="find-label">Find the label <strong className="label-code"><MaterialCode code={r.display_code} size="lg"/></strong></p><PlacementPhotos r={r}/>{errorBox}</FlowPage>;
   }
   const titles:Record<string,string>={return:'Return guide','return-scan':'Find area',problem:'Report a problem','return-place':'Return material'};
-  return <div className="flow-page"><TopBar to={stage==='problem'?`${root}/check`:root} title={titles[stage||'']||'Reservation'}/>{strip}
+  return <div className="flow-page"><TopBar to={stage==='problem'?`${root}/scan`:root} title={titles[stage||'']||'Reservation'}/>{strip}
     {stage==='return'&&<><HubGuide zone={r.zone}/><p className="reservation-policy">Return all {formatQuantity(r.reserved_quantity,r.unit_snapshot)} to the original zone with the label attached, and add 1–3 new placement photos. 1 credit is refunded once you confirm.</p><button className="button dark full flow-primary" disabled={!r.can_return} onClick={()=>navigate(`${root}/return-scan`)}>I’m at the Hub</button></>}
     {stage==='return-scan'&&<><FindArea key={`${id}-${stage}`} zone={r.zone} qrKey={r.qr_key} onVerify={async body=>{await api(`${root}/return/verify-zone`,body);navigate(`${root}/return-place`);}}/></>}
     {stage==='problem'&&<><form className="material-form" onSubmit={e=>{e.preventDefault();void action('issues',{reason,notes,photo_ids:photos.map(p=>p.id)},'/me/reservations');}}><label htmlFor="problem-reason">Reason</label><select id="problem-reason" value={reason} onChange={e=>setReason(e.target.value)}><option value="">Choose a reason</option>{reasons.map(s=><option key={s}>{s}</option>)}</select><label>Description{reason!=='Other'&&<span className="optional-tag">Optional</span>}<textarea maxLength={4000} rows={4} value={notes} onChange={e=>setNotes(e.target.value)}/></label><PhotoUpload photos={photos} max={3} label="Problem photos" optional onChange={setPhotos} onBusy={setUploading} disabled={busy}/><p className="reservation-policy">This ends your reservation, releases 1 credit and pauses the material for review. It does not mark the material as collected.</p><button className="button dark full" disabled={busy||uploading||!reason||(reason==='Other'&&!notes.trim())}>Submit report</button></form></>}

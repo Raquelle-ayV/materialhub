@@ -162,4 +162,3 @@
 .success-credit span{font-weight:400;font-size:var(--fs-help);color:var(--color-ink-soft)}
 .sheet-line{display:grid;gap:2px}
 .sheet-line span{font-size:var(--fs-help);color:var(--color-ink-soft)}
-.code-check{margin-top:16px}

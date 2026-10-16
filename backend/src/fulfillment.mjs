@@ -28,7 +28,6 @@ export function installFulfillmentRoutes(app,db,requireUser) {
   }
   function active(r) {if(r.status!=='reserved'||r.expires_at<=now())fail('This reservation is no longer active.');}
   function zone(r) {if(r.verified_zone_id!==r.zone_id_snapshot)fail('Scan the correct Zone QR first.');}
-  function code(r,value) {zone(r);if(typeof value!=='string'||!/^M\d{3,}$/.test(value.trim())||value.trim()!==r.display_code)fail('The material code does not match your reservation.',400);}
   function returnable(r) {if(r.status!=='collected'||!r.return_deadline_at||r.return_deadline_at<=now())fail('The 24-hour return window has ended or this reservation cannot be returned.');}
   function freshPhotos(ids,r,minimum,retId=0) {
     if(!Array.isArray(ids)||ids.length<minimum||ids.length>3||new Set(ids).size!==ids.length)fail(`Please add ${minimum}–3 photos.`,400);
@@ -58,22 +57,21 @@ export function installFulfillmentRoutes(app,db,requireUser) {
     const reservation=transaction(db,()=>{const r=owned(req.params.id,req.user.id);action(r,req.body);return reservationDetails(db,owned(r.id,req.user.id));});res.json({reservation});
   });}
   route('verify-zone',(r,b)=>{active(r);requireZone(db,b,{id:r.zone_id_snapshot,name:r.zone},'is in');db.prepare('UPDATE reservations SET verified_zone_id=?,zone_verified_at=? WHERE id=?').run(r.zone_id_snapshot,now(),r.id);});
-  route('verify-material',(r,b)=>{active(r);code(r,b.material_code);db.prepare('UPDATE reservations SET material_code_verified_at=? WHERE id=?').run(now(),r.id);});
+  // Scanning the correct Zone QR is the pickup: no label code to type. Without a qr the zone must already be verified.
   route('pickup',(r,b)=>{
     if(['collected','returned'].includes(r.status))return;
-    active(r);code(r,b.material_code);if(!r.material_code_verified_at)fail('Confirm the material label first.');
-    if(b.matches!==true)fail('Confirm that the material matches the listing.',400);
+    active(r);if(b.qr!==undefined)requireZone(db,b,{id:r.zone_id_snapshot,name:r.zone},'is in');else zone(r);
     if(!['available','reserved'].includes(r.material_status)||r.stock_quantity<r.reserved_quantity)fail('This material cannot be collected.');
     const date=now(),deadline=new Date(Date.parse(date)+86400000).toISOString();
-    db.prepare("UPDATE reservations SET status='collected',collected_quantity=reserved_quantity,completed_at=?,return_deadline_at=? WHERE id=?").run(date,deadline,r.id);
+    db.prepare("UPDATE reservations SET status='collected',collected_quantity=reserved_quantity,verified_zone_id=zone_id_snapshot,zone_verified_at=coalesce(zone_verified_at,?),completed_at=?,return_deadline_at=? WHERE id=?").run(date,date,deadline,r.id);
     db.prepare("UPDATE materials SET stock_quantity=stock_quantity-?,status=CASE WHEN stock_quantity-?>0 THEN status ELSE 'collected' END,version=version+1 WHERE id=?").run(r.reserved_quantity,r.reserved_quantity,r.material_id);
     refreshMaterialStatus(db,r.material_id);
     ledger(r,'pickup_spend',-1,-1,date);inventory(r,'pickup',-r.reserved_quantity,date);activity(r,'material_collected',date);
   });
   route('issues',(r,b)=>{
     if(r.status==='issue_reported')return;
-    active(r);zone(r);
-    // Missing/wrong materials must remain reportable even if the physical label cannot be found.
+    // Scanning the zone now completes the pickup, so a problem is reported before scanning, without a verified zone.
+    active(r);
     if(!issueReasons.includes(b.reason))fail('Please select a problem reason.',400);
     const notes=typeof b.notes==='string'?b.notes.trim():'';
     if(notes.length>4000||b.reason==='Other'&&!notes)fail('For Other, please describe the problem (up to 4000 characters).',400);
