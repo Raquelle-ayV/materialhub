@@ -131,10 +131,11 @@ export function DepositPage(){ const {t,msg,language}=useI18n();
   if(stage==='scan'&&!d.arrived_at)return <Navigate to={`/deposits/${id}/guide`} replace/>;
   if(stage==='scan'&&d.verified_zone_id===d.zone_id)return <Navigate to={`/deposits/${id}/place`} replace/>;
   function savePlacement(photos:Photo[]){setPlacement(photos);setPhotoSaving(true);setPhotoError('');const revision=++photoRevision.current;queue.current=queue.current.catch(()=>{}).then(()=>api(`/deposits/${id}/placement`,{photo_ids:photos.map(p=>p.id)})).catch(e=>{if(revision===photoRevision.current)setPhotoError(messageOf(e));throw e;}).finally(()=>{if(revision===photoRevision.current)setPhotoSaving(false);});queue.current.catch(()=>{});}
-  async function confirm(){setBusy(true);setError('');try{await queue.current;await api(`/deposits/${id}/confirm`,{});const auth=await api<{user:User}>('/auth/me');setUser(auth.user);navigate(`/deposits/${id}/success`);}catch(e){setError(messageOf(e));}finally{setBusy(false);}}
+  async function confirm(){setBusy(true);setError('');try{await queue.current;await api(`/deposits/${id}/confirm`,{});const auth=await api<{user:User}>('/auth/me');setUser(auth.user);navigate(`/deposits/${id}/success`,{state:{celebrate:true}});}catch(e){setError(messageOf(e));}finally{setBusy(false);}}
   const root=`/deposits/${id}`;
   if(stage==='steps')return <Navigate to="/deposit" replace/>;
-  if(stage==='success'&&(d.status==='available'||d.status==='reserved')&&!d.issues?.length)return <div className="flow-page"><CelebrationPage title="Drop-off completed!" subtitle={`${d.display_code} is now available for others`}
+  // The celebration is the last step of the drop-off itself; opening the post later from My posts shows the plain record.
+  if(stage==='success'&&(location.state as {celebrate?:boolean}|null)?.celebrate&&(d.status==='available'||d.status==='reserved')&&!d.issues?.length)return <div className="flow-page"><CelebrationPage title="Drop-off completed!" subtitle={`${d.display_code} is now available for others`}
     material={{name:`${capitalize(d.name)} × ${d.initial_quantity}`,image:d.photos[0]?.url,detail:`${t(d.zone)} zone`}}
     credit={{lead:'+1 credit earned, you now have ',from:Math.max(0,user.available-1),to:user.available,tail:user.available===1?' credit':' credits',accent:true}}
     primary={{to:'/',label:'Done'}} secondary={{to:'/deposit/new?fresh=1',label:'Share another material'}}/></div>;

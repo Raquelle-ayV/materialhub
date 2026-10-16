@@ -1,10 +1,11 @@
 import { ArrowLeft } from 'lucide-react';
 import { useContext, useEffect, useRef, useState } from 'react';
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Auth, api, type User } from './lib';
 import { PhotoUpload } from './deposits';
 import { FlowPage, HubGuide, FindArea } from './flow';
 import type { Reservation } from './reservations';
+import { CelebrationPage } from './success';
 import { MaterialStrip, SuccessPage, PhotoCarousel, TopBar, MaterialCode, capitalize, formatQuantity, formatShortDate, credits } from './ui';
 
 type Photo={id:number;url:string};
@@ -21,7 +22,7 @@ export function ReservationOutcome({r}:{r:Reservation}) {
 function ReservationDetails({r}:{r:Reservation}) {return <dl className="specs"><div><dt>Reserved</dt><dd>{formatQuantity(r.reserved_quantity,r.unit_snapshot)}</dd></div><div><dt>Category</dt><dd>{r.category}{r.custom_category_name?` (${r.custom_category_name})`:''}</dd></div>{!r.dimensions_not_applicable&&r.dimensions_spec&&<div><dt>Dimensions</dt><dd>{r.dimensions_spec}</dd></div>}{r.color&&<div><dt>Color</dt><dd>{capitalize(r.color)}</dd></div>}{r.condition&&<div><dt>Condition</dt><dd>{r.condition}</dd></div>}</dl>;}
 function PlacementPhotos({r}:{r:Reservation}) {return r.placement_photos.length?<section className="placement-photos"><h2>Where it was placed</h2><PhotoCarousel photos={r.placement_photos} label="Placement photos" altFor={()=>'Material placement'}/></section>:null;}
 export function FulfillmentPage(){
-  const{id,stage}=useParams();const{user,loading,setUser}=useContext(Auth);const navigate=useNavigate();
+  const{id,stage}=useParams();const{user,loading,setUser}=useContext(Auth);const navigate=useNavigate();const routeState=useLocation().state;
   const[r,setR]=useState<Reservation|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[revision,setRevision]=useState(0);
   const[code,setCode]=useState(''),[reason,setReason]=useState(''),[notes,setNotes]=useState(''),[photos,setPhotos]=useState<Photo[]>([]),[uploading,setUploading]=useState(false),[placed,setPlaced]=useState(false),[photoError,setPhotoError]=useState(''),[savingPhotos,setSavingPhotos]=useState(false);
   const lock=useRef(false),queue=useRef<Promise<unknown>>(Promise.resolve()),photoRevision=useRef(0);
@@ -44,6 +45,11 @@ export function FulfillmentPage(){
   const zoneVerified=r.verified_zone_id===r.zone_id_snapshot;
   const strip=<MaterialStrip image={r.image} name={r.name} code={r.display_code}><ReservationDetails r={r}/></MaterialStrip>;
   const errorBox=error&&<div role="alert" className="notice">{error}</div>;
+  // The celebration is the last step of the pickup itself, right after "Confirm pickup".
+  if(stage==='success'&&r.status==='collected'&&(routeState as {celebrate?:boolean}|null)?.celebrate){const left=user?.available??0;return <div className="flow-page"><CelebrationPage title="Pickup completed!" subtitle="Enjoy your material, return it within 24 hours if you don’t need it"
+    material={{name:capitalize(r.name),image:r.image,detail:formatQuantity(r.reserved_quantity,r.unit_snapshot)}}
+    credit={{lead:'1 credit used, ',from:left,to:left,tail:left===1?' credit left':' credits left'}}
+    primary={{to:'/',label:'Done'}} secondary={{to:'/me/reservations',label:'View my reservations'}}/></div>;}
   if(stage==='success')return <SuccessPage title={r.status==='returned'?'Thanks for returning it':'Enjoy your material'} material={{id:r.material_id,name:r.name,code:r.display_code,image:r.image,detail:formatQuantity(r.reserved_quantity,r.unit_snapshot)}}
     credit={r.status==='returned'?{title:'1 credit refunded',note:`You now have ${credits(user?.available??0)}`}:{title:'1 credit used',note:`You have ${credits(user?.available??0)} left`}} secondary={{to:'/me/reservations',label:'My reservations'}}/>;
   if(pickupStep){
@@ -51,7 +57,7 @@ export function FulfillmentPage(){
     if(pickupStep===1)return <FlowPage {...page} action={<button className="button dark full" onClick={()=>navigate(`${root}/scan`)}>I’m at the Hub</button>}><HubGuide zone={r.zone}/>{errorBox}</FlowPage>;
     if(pickupStep===2)return <FlowPage {...page}><FindArea key={`${id}-${stage}`} zone={r.zone} qrKey={r.qr_key} onVerify={async body=>{await api(`${root}/verify-zone`,body);navigate(`${root}/check`);}}/><PlacementPhotos r={r}/>{errorBox}</FlowPage>;
     // The label code typed at the shelf confirms the right material, then completes the pickup.
-    const pickup=async()=>{if(lock.current||!code.trim())return;lock.current=true;setBusy(true);setError('');try{await api(`${root}/verify-material`,{material_code:code.trim()});await api(`${root}/pickup`,{material_code:code.trim(),matches:true});void api<{user:User}>('/auth/me').then(a=>setUser(a.user)).catch(()=>{});navigate(`${root}/success`);}catch(e){setError((e as Error).message);}finally{lock.current=false;setBusy(false);}};
+    const pickup=async()=>{if(lock.current||!code.trim())return;lock.current=true;setBusy(true);setError('');try{await api(`${root}/verify-material`,{material_code:code.trim()});await api(`${root}/pickup`,{material_code:code.trim(),matches:true});void api<{user:User}>('/auth/me').then(a=>setUser(a.user)).catch(()=>{});navigate(`${root}/success`,{state:{celebrate:true}});}catch(e){setError((e as Error).message);}finally{lock.current=false;setBusy(false);}};
     return <FlowPage {...page} action={<><button className="button dark full" disabled={busy||!code.trim()} onClick={()=>void pickup()}>{busy?'Confirming…':'Confirm pickup'}</button><Link className="text-link report-link" to={`${root}/problem`}>Missing or doesn’t match? Report a problem</Link></>}>
       <PlacementPhotos r={r}/><p className="find-label">Find the label <strong className="label-code"><MaterialCode code={r.display_code} size="lg"/></strong></p>
       <form className="material-form code-check" onSubmit={e=>{e.preventDefault();void pickup();}}><label>Material code on the label<input value={code} onChange={e=>setCode(e.target.value.toUpperCase())} placeholder="e.g. M001" autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength={30}/></label></form>{errorBox}</FlowPage>;
