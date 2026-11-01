@@ -1,6 +1,7 @@
 ﻿# Switches this project back to the 10.8 user-test version (code + data) and serves it to phones through cpolar.
 # Usually started by 切换到10.8测试版.cmd, which runs a temporary copy so it works from any branch.
-# Data comes from the local snapshot backups\user-test-1008 (never committed). The current database is backed up first.
+# Data comes from the local snapshot backups\user-test-1008 (never committed) and runs from its own file
+# data\user-test-1008.sqlite, so data\rematerial.sqlite (the latest version's data) is never touched.
 param([string]$ProjectDir = (Split-Path $PSScriptRoot -Parent))
 $ErrorActionPreference = 'Stop'
 $branch = 'user-test-1008'
@@ -11,7 +12,7 @@ try {
     $node = (Get-Command node -ErrorAction Stop).Source
     $snapshot = Join-Path $ProjectDir "backups\$branch"
     $snapshotDb = Join-Path $snapshot 'rematerial.sqlite'
-    $database = Join-Path $ProjectDir 'data\rematerial.sqlite'
+    $database = Join-Path $ProjectDir 'data\user-test-1008.sqlite'
     $uploads = Join-Path $ProjectDir 'uploads'
 
     Write-Host '1/6 检查快照和代码...'
@@ -33,14 +34,14 @@ try {
     }
     Start-Sleep -Milliseconds 800
 
-    Write-Host '3/6 备份当前数据库...'
+    Write-Host '3/6 备份上一次 10.8 测试留下的数据...'
     $backupDir = Join-Path $ProjectDir ("backups\before-switch-" + (Get-Date -Format 'yyyyMMdd-HHmmss'))
     New-Item -ItemType Directory -Path $backupDir -Force | Out-Null
     if (Test-Path -LiteralPath $database) {
         & $node -e "const {DatabaseSync}=require('node:sqlite');const db=new DatabaseSync(process.argv[1]);try{db.prepare('VACUUM INTO ?').run(process.argv[2]);}finally{db.close();}" $database (Join-Path $backupDir 'rematerial.sqlite')
         if ($LASTEXITCODE -ne 0) { throw '数据库备份失败，已停止，没有动任何文件。' }
     }
-    "Database of branch '$previous' before switching to $branch.`r`nTo go back: stop the server on 3001, git checkout $previous, copy rematerial.sqlite to data\rematerial.sqlite and delete data\rematerial.sqlite-wal / -shm.`r`nUploaded photos are never deleted by the switch, so uploads\ needs no restore." | Out-File (Join-Path $backupDir 'RESTORE.txt') -Encoding utf8
+    "data\user-test-1008.sqlite as left by the previous 10.8 session (empty folder if there was none), saved before it was reset to the snapshot.`r`nThe latest version's data\rematerial.sqlite is not touched by this switch." | Out-File (Join-Path $backupDir 'RESTORE.txt') -Encoding utf8
     Write-Host "   已备份到 $backupDir"
 
     Write-Host "4/6 切换代码到 $branch..."
@@ -62,7 +63,7 @@ try {
     Write-Host "   数据库已恢复，补回 $added 张照片"
 
     Write-Host '6/6 打包并启动（和测试那天同一个启动脚本）...'
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $ProjectDir 'scripts\start-test-server.ps1')
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $ProjectDir 'scripts\start-test-server.ps1') -Database $database
     if ($LASTEXITCODE -ne 0) { throw '启动脚本失败，看上面的提示。' }
 
     Write-Host ''
@@ -89,7 +90,7 @@ try {
     if ($online) { Write-Host "手机打开：$url" -ForegroundColor Green }
     else { Write-Host "本机已启动，但暂时从外网打不开 $url 。cpolar 免费版网址会变，请到 http://localhost:9200 查看 rematerial 隧道的最新网址。" -ForegroundColor Yellow }
     Write-Host '网址已复制到剪贴板，二维码图片已打开，用手机扫码即可。'
-    Write-Host "原来的分支是 $previous，它的数据库备份在 $backupDir 。"
+    Write-Host "原来的分支是 $previous。最新版本的数据仍在 data\rematerial.sqlite，没有被改动。"
     exit 0
 } catch {
     Write-Host "切换失败：$($_.Exception.Message)" -ForegroundColor Red

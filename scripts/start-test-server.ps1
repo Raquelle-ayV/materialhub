@@ -1,5 +1,7 @@
 ﻿# Starts Rematerial for testers on other networks: one port (3001) serves the built pages and the API.
 # cpolar then forwards an https address to http://127.0.0.1:3001.
+# -Database picks another SQLite file (the 10.8 switch uses data\user-test-1008.sqlite); default is data\rematerial.sqlite.
+param([string]$Database)
 $ErrorActionPreference = 'Stop'
 $projectDir = Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $projectDir
@@ -8,7 +10,7 @@ try {
     $node = (Get-Command node -ErrorAction Stop).Source
     $npm = Join-Path (Split-Path $node -Parent) 'npm.cmd'
     if (!(Test-Path 'node_modules/vite/bin/vite.js')) { throw '缺少依赖。请先在项目文件夹里运行 npm install。' }
-    $database = Join-Path $projectDir 'data\rematerial.sqlite'
+    $database = if ($Database) { $Database } else { Join-Path $projectDir 'data\rematerial.sqlite' }
     if (!(Test-Path -LiteralPath $database)) { throw "找不到数据库：$database" }
 
     Write-Host '1/4 关闭旧的预览（只关这个项目的）...'
