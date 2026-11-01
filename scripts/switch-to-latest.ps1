@@ -1,28 +1,19 @@
 ﻿# Switches this project to the latest version and serves it to phones through cpolar.
 # Usually started by 切换到最新版.cmd, which runs a temporary copy so it works from any branch.
-# "Latest" = the branch with the newest commit (local or on GitHub), leaving out the frozen test versions,
-# so new branches and new commits are picked up automatically. -Branch <name> picks one by hand.
+# "Latest" = feature/after-testing-iterations, where all changes are committed (see CLAUDE.md), plus any newer
+# commits of it on GitHub. -Branch <name> picks another branch by hand.
 # Data: data\rematerial.sqlite, the same file the development preview uses.
-param([string]$ProjectDir = (Split-Path $PSScriptRoot -Parent), [string]$Branch)
+param([string]$ProjectDir = (Split-Path $PSScriptRoot -Parent), [string]$Branch = 'feature/after-testing-iterations')
 $ErrorActionPreference = 'Stop'
-$frozen = '^(user-test-1008|test/remote-testers|snapshot/.*)$'
 try { [Console]::OutputEncoding = [Text.Encoding]::UTF8 } catch {}
 try {
     $ProjectDir = (Resolve-Path -LiteralPath $ProjectDir).Path
     Set-Location -LiteralPath $ProjectDir
     $node = (Get-Command node -ErrorAction Stop).Source
 
-    Write-Host '1/4 查找最新版本...'
+    Write-Host '1/4 检查最新版本...'
     git fetch --quiet origin
-    if ($LASTEXITCODE -ne 0) { Write-Host '   连不上 GitHub，只看本机的分支。' -ForegroundColor Yellow }
-    if (!$Branch) {
-        foreach ($line in git for-each-ref --sort=-committerdate --format='%(refname:short)' refs/heads refs/remotes/origin) {
-            $name = $line -replace '^origin/', ''
-            if ($line -eq 'origin' -or $name -eq 'HEAD' -or $name -match $frozen) { continue }
-            $Branch = $name; break
-        }
-        if (!$Branch) { throw '没有找到可以切换的分支。' }
-    }
+    if ($LASTEXITCODE -ne 0) { Write-Host '   连不上 GitHub，只用本机的版本。' -ForegroundColor Yellow }
     $previous = (git rev-parse --abbrev-ref HEAD).Trim()
     $hasLocal = [bool](git branch --list $Branch)
     $remote = "origin/$Branch"
