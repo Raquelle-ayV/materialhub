@@ -73,14 +73,17 @@ try {
         try { $online = (Invoke-RestMethod "$url/api/health" -TimeoutSec 10).database } catch { Start-Sleep -Seconds 2 }
     }
     try { Set-Clipboard -Value $url } catch {}
-    $qr = Join-Path $ProjectDir '.logs\phone-preview-qr.png'
+    # A new file each time: an image viewer still showing the last code keeps that file locked.
+    $qr = Join-Path $env:TEMP ('rematerial-qr-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.png')
     & $node -e "require('qrcode').toFile(process.argv[1],process.argv[2],{width:420,margin:2}).catch(e=>{console.error(e.message);process.exit(1)})" $qr $url
-    if ($LASTEXITCODE -eq 0) { Start-Process $qr }
+    $qrShown = $LASTEXITCODE -eq 0
+    if ($qrShown) { Start-Process $qr }
 
     Write-Host ''
     if ($online) { Write-Host "手机打开：$url" -ForegroundColor Green }
     else { Write-Host "本机已启动，但暂时从外网打不开 $url 。cpolar 免费版网址会变，请到 http://localhost:9200 查看 rematerial 隧道的最新网址。" -ForegroundColor Yellow }
-    Write-Host '网址已复制到剪贴板，二维码图片已打开，用手机扫码即可。'
+    if ($qrShown) { Write-Host '网址已复制到剪贴板，二维码图片已打开，用手机扫码即可。' }
+    else { Write-Host '网址已复制到剪贴板。二维码没能生成，请在手机上直接输入网址。' }
     Write-Host "电脑上也可以打开 http://127.0.0.1:3001 。原来的分支是 $previous。"
     exit 0
 } catch {
